@@ -140,12 +140,25 @@ async def save_recipe(path: str, recipe_data: RecipeContent) -> Dict[str, str]:
 
 @router.post("/recipes/{path:path}")
 async def create_recipe(path: str) -> Dict[str, str]:
-    """Create a new empty recipe file"""
+    """Create a new recipe file with basic template"""
     if not path.endswith('.md'):
         path += '.md'
     
-    # Create with basic markdown structure
-    content = f"# {path.replace('.md', '').replace('_', ' ').replace('-', ' ').title()}\n\n"
+    # Create with basic recipe template
+    title = path.replace('.md', '').replace('_', ' ').replace('-', ' ').title()
+    content = f"""# {title}
+
+## Ingredients
+
+- 
+
+## Instructions
+
+1. 
+
+## Notes
+
+"""
     
     return await fs_manager.write_file(path, content)
 

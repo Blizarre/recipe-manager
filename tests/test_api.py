@@ -33,8 +33,8 @@ def test_health_endpoint():
     assert "recipes_dir" in data
 
 def test_root_endpoint():
-    """Test the root endpoint"""
-    response = client.get("/")
+    """Test the API root endpoint"""
+    response = client.get("/api")
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "Recipe Manager API"
@@ -115,3 +115,49 @@ def test_file_not_found():
     """Test accessing a non-existent file"""
     response = client.get("/api/files/nonexistent.md")
     assert response.status_code == 404
+
+def test_search_content():
+    """Test content search functionality"""
+    # Create a test file with searchable content
+    file_content = {"content": "# Test Recipe\n\nThis is about chocolate cake with eggs."}
+    client.post("/api/files/search_test.md", json=file_content)
+    
+    # Search for content
+    response = client.get("/api/search?q=chocolate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["query"] == "chocolate"
+    assert data["total"] >= 1
+    assert any("search_test.md" in result["path"] for result in data["results"])
+
+def test_search_files():
+    """Test filename search functionality"""
+    # Create test files
+    client.post("/api/files/chocolate-cookies.md", json={"content": "# Cookies"})
+    client.post("/api/files/vanilla-cake.md", json={"content": "# Cake"})
+    
+    # Search for files by name
+    response = client.get("/api/search/files?q=chocolate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["query"] == "chocolate"
+    assert data["total"] >= 1
+    assert any("chocolate-cookies.md" in result["name"] for result in data["results"])
+
+def test_directory_operations():
+    """Test directory creation and listing"""
+    # Create a directory
+    response = client.post("/api/directories/test_category")
+    assert response.status_code == 200
+    
+    # Create a file in the directory
+    file_content = {"content": "# Category Recipe"}
+    response = client.post("/api/files/test_category/recipe.md", json=file_content)
+    assert response.status_code == 200
+    
+    # List files in directory
+    response = client.get("/api/files?path=test_category")
+    assert response.status_code == 200
+    items = response.json()
+    assert len(items) >= 1
+    assert any(item["name"] == "recipe.md" for item in items)

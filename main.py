@@ -28,17 +28,17 @@ RECIPES_DIR.mkdir(exist_ok=True)
 # Mount static files for frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Include API routes
+app.include_router(api_router)
+
+@app.get("/api")
+async def root():
+    return {"message": "Recipe Manager API", "status": "running"}
+
 # Serve frontend
 @app.get("/", response_class=FileResponse)
 async def serve_frontend():
     return "static/index.html"
-
-# Include API routes
-app.include_router(api_router)
-
-@app.get("/")
-async def root():
-    return {"message": "Recipe Manager API", "status": "running"}
 
 @app.get("/health")
 async def health_check():
