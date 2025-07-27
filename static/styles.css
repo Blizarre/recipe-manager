@@ -1227,17 +1227,6 @@ body.keyboard-open .modal {
 }
 
 /* Status indicators */
-.validation-success {
-    color: var(--success-color);
-}
-
-.validation-error {
-    color: var(--error-color);
-}
-
-.validation-warning {
-    color: var(--warning-color);
-}
 
 /* Mobile Styles */
 .codemirror-container.focused {

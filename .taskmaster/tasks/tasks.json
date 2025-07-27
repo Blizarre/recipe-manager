@@ -2,111 +2,85 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
-        "title": "Setup FastAPI Backend Infrastructure",
-        "description": "Initialize Python FastAPI project with basic server configuration and file system operations foundation",
-        "details": "Create FastAPI application with Python 3, set up virtual environment, install required dependencies (fastapi, uvicorn, python-multipart). Configure basic server structure with main.py, requirements.txt, and basic CORS settings. Implement file system security measures including path traversal protection and UTF-8 encoding support. Set up directory structure for recipe storage with proper permissions.",
-        "testStrategy": "Unit tests for server startup, basic endpoint accessibility, file system security validation, and CORS configuration verification",
-        "priority": "high",
+        "id": 9,
+        "title": "Remove Recipe Validation System Backend",
+        "description": "Complete removal of server-side validation logic, endpoints, and related infrastructure",
+        "status": "done",
         "dependencies": [],
-        "status": "done",
+        "priority": "high",
+        "details": "Backend validation system has been completely removed including all validation endpoints (/recipes/validate, /recipes/template, /recipes/{path}/info), RecipeValidator class elimination, simplified save_recipe and create_recipe endpoints to direct file operations, complete removal of api/recipes.py file, and RecipeContent model cleanup. Only necessary filesystem path validation remains for security purposes.",
+        "testStrategy": "Verify all recipe save operations work without validation delays, test simplified file write operations complete successfully, ensure no validation endpoints remain accessible, confirm error handling only catches file system issues, validate that filesystem path security checks still function properly",
         "subtasks": []
       },
       {
-        "id": 2,
-        "title": "Implement File System API Endpoints",
-        "description": "Create RESTful API endpoints for all file and directory operations",
-        "details": "Implement all required endpoints: GET /api/files (list files), GET /api/files/{path} (get content), POST /api/files/{path} (create), PUT /api/files/{path} (update), DELETE /api/files/{path} (delete), POST /api/files/{path}/move (move/rename). Add directory operations: GET /api/directories (tree structure), POST /api/directories/{path} (create), DELETE /api/directories/{path} (delete). Include input validation, error handling, and filesystem-safe filename enforcement.",
-        "testStrategy": "Integration tests for each endpoint, error handling tests for invalid paths, validation tests for file operations, and performance tests to ensure <100ms response times",
+        "id": 10,
+        "title": "Remove Recipe Validation System Frontend",
+        "description": "Eliminate client-side validation calls, UI indicators, and validation-related components",
+        "status": "done",
+        "dependencies": [
+          9
+        ],
+        "priority": "high",
+        "details": "Frontend validation system has been completely removed including all validation calls from markdown-editor.js (validate(), updateValidationStatus(), auto-validation), validation UI elements from index.html (validateBtn, validationStatus span), validation functions from api.js (validateRecipe(), getRecipeTemplate(), getRecipeInfo()), simplified saveRecipe() to not require validation parameter, removed validation CSS styling (.validation-success, .validation-error, .validation-warning), removed validation event listeners from app.js and editor.js, removed validation keyboard shortcuts (Shift+Enter), and updated comments to remove validation references. Frontend is now completely validation-free with direct save operations.",
+        "testStrategy": "Verify no validation UI elements remain visible, test save operations complete without validation status indicators, ensure no client-side validation errors occur, confirm simplified save workflow functions correctly, validate that all validation-related code has been completely removed from the codebase",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Research and Select Lightweight Syntax Highlighting Solution",
+        "description": "Evaluate and choose optimal lightweight markdown syntax highlighting library to replace CodeMirror",
+        "details": "Research Prism.js, highlight.js, and custom implementation options for markdown syntax highlighting, evaluate bundle size impact, performance characteristics, and markdown feature support, select solution that provides highlighting for headers, bold, italic, lists, code blocks, and links while maintaining minimal footprint",
+        "testStrategy": "Compare bundle size impact of each option, benchmark rendering performance with large markdown files, test syntax highlighting accuracy for all required markdown elements, verify mobile device compatibility",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Implement Simple Syntax Highlighted Editor",
+        "description": "Replace CodeMirror with lightweight textarea-based editor featuring markdown syntax highlighting",
+        "details": "Remove CodeMirror dependency and complex editor setup, implement textarea with syntax highlighting overlay using selected library, add highlighting for headers (#, ##, ###), bold (**text**), italic (*text*), lists (-, *, 1.), code blocks (```), and links ([text](url)), maintain auto-save functionality with 4-second debouncing, preserve keyboard shortcuts (Ctrl+S, Ctrl+N, Ctrl+F)",
+        "testStrategy": "Test syntax highlighting renders correctly for all markdown elements, verify auto-save continues working with 4-second delay, ensure keyboard shortcuts function properly, confirm editor loads under 100ms, test with large recipe files for performance",
         "priority": "high",
         "dependencies": [
-          1
+          11
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 3,
-        "title": "Create Recipe Template and Validation System",
-        "description": "Implement enforced markdown structure validation and template auto-population for new recipes",
-        "details": "Create markdown template with required sections (# Recipe Title, ## Ingredients, ## Instructions, ## Notes). Implement validation rules: ingredients must use bullet points, instructions must use numbered lists, all sections must be present. Add server-side validation middleware to check recipe structure on save operations. Create template auto-population for new file creation.",
-        "testStrategy": "Unit tests for template generation, validation rule enforcement, section presence checking, and format validation for ingredients and instructions",
-        "priority": "high",
-        "dependencies": [
-          2
-        ],
-        "status": "done",
-        "subtasks": []
-      },
-      {
-        "id": 4,
-        "title": "Build Basic Frontend File Tree Interface",
-        "description": "Create responsive two-panel layout with directory tree navigation using plain JavaScript",
-        "details": "Implement HTML structure with CSS Grid for desktop two-panel layout (file tree + editor). Create JavaScript file tree component with collapsible folders, file icons, and click navigation. Add mobile-first responsive design with navigation drawer for mobile devices. Implement touch-optimized interface with 44px minimum tap targets and swipe gestures. Include basic file operations UI (create, delete, rename) with context menus.",
-        "testStrategy": "Cross-browser testing on Chrome 90+, Firefox 88+, Safari 14+. Mobile responsiveness testing on various screen sizes. User interaction testing for touch and mouse events.",
-        "priority": "high",
-        "dependencies": [
-          2
-        ],
-        "status": "done",
-        "subtasks": []
-      },
-      {
-        "id": 5,
-        "title": "Implement Markdown Editor with Syntax Highlighting",
-        "description": "Create markdown editor component with syntax highlighting and live preview functionality",
-        "details": "Integrate lightweight markdown syntax highlighting library (CodeMirror or Prism.js). Implement edit/preview toggle functionality. Add markdown rendering for live preview using marked.js or similar. Include auto-complete suggestions for common ingredient and instruction patterns. Ensure editor is mobile-optimized with touch support and virtual keyboard compatibility.",
-        "testStrategy": "Testing syntax highlighting accuracy, markdown rendering correctness, mobile editor usability, and auto-complete functionality validation",
+        "id": 13,
+        "title": "Streamline UI and Remove Preview Components",
+        "description": "Eliminate preview panel, split-view functionality, and view toggle buttons for simplified single-panel interface",
+        "details": "Remove preview panel and split-view functionality, eliminate view toggle buttons (Edit/Preview/Split) from editor header, remove markdown rendering and preview generation logic, simplify editor layout to single panel design, remove preview-related CSS and responsive layouts, update mobile UI to reflect simplified editor interface",
+        "testStrategy": "Verify no preview UI elements remain accessible, test single-panel layout renders correctly across screen sizes, ensure mobile interface maintains usability without preview mode, confirm editor header shows only essential controls",
         "priority": "medium",
         "dependencies": [
-          4
+          12
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 6,
-        "title": "Add Auto-Save and Real-time File Operations",
-        "description": "Implement automatic saving with debouncing and real-time file synchronization",
-        "details": "Implement auto-save functionality with 3-5 second debouncing after last edit. Add visual indicators for save status (saving, saved, error). Include conflict resolution for concurrent edits. Implement real-time file tree updates when files are created, modified, or deleted. Add error handling and retry logic for failed save operations.",
-        "testStrategy": "Auto-save timing tests, conflict resolution testing, network failure recovery testing, and visual indicator accuracy validation",
+        "id": 14,
+        "title": "Optimize Performance and Finalize Migration",
+        "description": "Complete performance optimization, dependency cleanup, and comprehensive testing of simplified editor system",
+        "details": "Remove CodeMirror CSS and JavaScript dependencies from bundle, clean up unused preview-related code and imports, optimize editor initialization and event handling, preserve essential features like character/line counting, file status indicators, touch gesture support, and file tree integration, perform comprehensive testing across devices",
+        "testStrategy": "Verify >40% JavaScript bundle size reduction achieved, confirm editor load time under 100ms, test save operations complete under 50ms, ensure all existing file operations continue working, verify search functionality remains intact, test mobile experience maintains current quality",
         "priority": "medium",
         "dependencies": [
-          5
+          13
         ],
-        "status": "done",
-        "subtasks": []
-      },
-      {
-        "id": 7,
-        "title": "Implement Search Functionality",
-        "description": "Create full-text search capabilities for both file names and recipe content",
-        "details": "Implement search API endpoints: GET /api/search?q={query} for content search and GET /api/search/files?q={query} for filename search. Add frontend search interface with real-time filtering of file tree. Include full-text search within recipe content with result highlighting. Optimize search performance to achieve <200ms response times. Add search result ranking and relevance scoring.",
-        "testStrategy": "Search accuracy testing, performance benchmarking for <200ms response times, full-text search validation, and search result relevance testing",
-        "priority": "medium",
-        "dependencies": [
-          3
-        ],
-        "status": "done",
-        "subtasks": []
-      },
-      {
-        "id": 8,
-        "title": "Add Mobile-Optimized User Interface",
-        "description": "Enhance mobile experience with touch gestures, navigation drawer, and mobile-specific interactions",
-        "details": "Implement hamburger menu with slide-out navigation drawer for mobile. Add touch gestures for file tree navigation and editor interactions. Create floating action button for quick recipe creation on mobile. Implement swipe gestures for navigation between files. Add long-press context menus for mobile file operations. Optimize virtual keyboard interactions and prevent viewport scaling issues.",
-        "testStrategy": "Mobile device testing on various screen sizes, touch gesture functionality validation, virtual keyboard compatibility testing, and mobile usability assessment",
-        "priority": "medium",
-        "dependencies": [
-          6
-        ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-07-27T13:35:50.934Z",
-      "updated": "2025-07-27T15:33:21.681Z",
+      "updated": "2025-07-27T18:25:42.276Z",
       "description": "Tasks for master context"
     }
   }

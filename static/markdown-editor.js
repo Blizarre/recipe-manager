@@ -284,10 +284,6 @@ class MarkdownEditor {
             this.updateFileInfo();
             this.updatePreview();
             
-            // Auto-validate if it's a recipe
-            if (path.endsWith('.md')) {
-                setTimeout(() => this.validate(), 500);
-            }
             
         } catch (error) {
             this.showError('Failed to load file: ' + error.message);
@@ -390,26 +386,12 @@ class MarkdownEditor {
             this.updateStatus();
             this.showSuccess('File saved successfully');
             
-            if (this.currentFile.endsWith('.md')) {
-                setTimeout(() => this.validate(), 200);
-            }
             
         } catch (error) {
             this.showError('Failed to save file: ' + error.message);
         }
     }
 
-    async validate() {
-        if (!this.currentFile || !this.currentFile.endsWith('.md')) return;
-
-        try {
-            const content = this.codeMirror.getValue();
-            const result = await window.api.validateRecipe(content);
-            this.updateValidationStatus(result);
-        } catch (error) {
-            this.showError('Validation failed: ' + error.message);
-        }
-    }
 
     scheduleAutoSave() {
         if (this.autoSaveTimeout) {
@@ -428,7 +410,6 @@ class MarkdownEditor {
         const welcomeScreen = document.getElementById('welcomeScreen');
         const editorWrapper = document.getElementById('editorWrapper');
         const saveBtn = document.getElementById('saveBtn');
-        const validateBtn = document.getElementById('validateBtn');
         const previewBtn = document.getElementById('previewBtn');
         const splitBtn = document.getElementById('splitBtn');
         
@@ -442,7 +423,6 @@ class MarkdownEditor {
         }
         
         saveBtn.disabled = !hasFile;
-        validateBtn.disabled = !hasFile || !this.currentFile?.endsWith('.md');
         previewBtn.disabled = !hasFile;
         splitBtn.disabled = !hasFile;
     }
@@ -476,23 +456,6 @@ class MarkdownEditor {
         }
     }
 
-    updateValidationStatus(result) {
-        const validationStatus = document.getElementById('validationStatus');
-        
-        if (result.is_valid) {
-            const info = result.info;
-            validationStatus.innerHTML = `
-                <span class="validation-success">✓ Valid recipe</span>
-                <small>(${info.ingredients_count} ingredients, ${info.instructions_count} steps)</small>
-            `;
-        } else {
-            const errorCount = result.errors.length;
-            validationStatus.innerHTML = `
-                <span class="validation-error">⚠ ${errorCount} validation error${errorCount > 1 ? 's' : ''}</span>
-            `;
-            validationStatus.title = result.errors.join('\n');
-        }
-    }
 
     showSuccess(message) {
         this.showMessage(message, 'success');

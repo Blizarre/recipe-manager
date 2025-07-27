@@ -1,0 +1,197 @@
+# Recipe Manager v2.0 - Simplification & Streamlined Experience
+
+## Product Vision
+Transform the Recipe Manager into a streamlined, fast, and friction-free markdown editor focused purely on content creation and organization. Remove complexity barriers that slow down quick edits and recipe updates.
+
+## Core Philosophy
+- **Speed over validation** - Prioritize quick edits and immediate saving
+- **Simplicity over features** - Focus on core editing experience
+- **Direct manipulation** - What you type is what you get, no preview needed
+- **Minimal friction** - Remove any barriers to quick recipe updates
+
+## Primary Objectives
+
+### 1. Remove Recipe Validation System
+**Problem**: Current validation system creates friction for quick edits and small changes
+**Solution**: Complete removal of validation logic throughout the application
+
+**Specific Changes:**
+- Remove server-side validation endpoints (`/api/recipes/validate`)
+- Remove client-side validation calls and UI indicators
+- Remove validation status displays and error messaging
+- Remove template enforcement and structure requirements
+- Remove validation buttons from UI
+- Simplify save operations to direct file writes without validation
+
+**Benefits:**
+- Instant saving without validation delays
+- Freedom to create any markdown structure
+- No interruptions for "invalid" content during quick edits
+- Simplified codebase with reduced complexity
+
+### 2. Replace CodeMirror with Simple Syntax Highlighted Editor
+**Problem**: CodeMirror preview system adds unnecessary complexity
+**Solution**: Replace with lightweight syntax highlighting editor
+
+**Specific Changes:**
+- Remove CodeMirror dependency and complex editor setup
+- Remove preview panel and split-view functionality
+- Remove view toggle buttons (Edit/Preview/Split)
+- Implement lightweight markdown syntax highlighting
+- Use simple textarea with enhanced syntax highlighting overlay
+- Remove markdown rendering and preview generation
+- Simplify editor initialization and event handling
+
+**Benefits:**
+- Faster editor loading and better performance
+- Simplified UI with single edit mode
+- Reduced bundle size and dependencies
+- More responsive editing experience
+- Cleaner, focused interface
+
+## Technical Implementation Plan
+
+### Phase 1: Validation Removal
+1. **Backend Cleanup**
+   - Remove validation endpoints from `api/routes.py`
+   - Remove `RecipeValidator` class and related logic
+   - Simplify save endpoints to direct file operations
+   - Remove template generation logic
+
+2. **Frontend Cleanup**
+   - Remove validation calls from editor and app components
+   - Remove validation status UI elements
+   - Remove validation-related CSS and styling
+   - Simplify save operations and error handling
+
+### Phase 2: Editor Simplification
+1. **Replace CodeMirror**
+   - Research lightweight syntax highlighting alternatives (Prism.js, highlight.js)
+   - Implement simple textarea with syntax highlighting overlay
+   - Remove CodeMirror CSS and JavaScript dependencies
+   - Remove preview-related components and logic
+
+2. **UI Streamlining**
+   - Remove view toggle buttons from editor header
+   - Simplify editor layout to single panel
+   - Remove preview-related CSS and responsive layouts
+   - Update mobile UI to reflect simplified editor
+
+3. **Enhanced Simple Editor**
+   - Implement markdown syntax highlighting for:
+     - Headers (#, ##, ###)
+     - Bold (**text**)
+     - Italic (*text*)
+     - Lists (-, *, 1.)
+     - Code blocks (```)
+     - Links ([text](url))
+   - Maintain essential editor features:
+     - Auto-save functionality
+     - Keyboard shortcuts
+     - Tab indentation
+     - Line numbers (optional)
+   - Preserve editor enhancements:
+     - Character/line counting
+     - File status indicators
+     - Touch gesture support
+
+## Success Criteria
+
+### Performance Metrics
+- **Editor load time**: < 100ms (vs current CodeMirror setup)
+- **Save operation time**: < 50ms (without validation)
+- **Bundle size reduction**: > 40% smaller JavaScript bundle
+- **Memory usage**: Reduced RAM usage during editing
+
+### User Experience Goals
+- **Instant feedback**: No validation delays during editing
+- **Simplified interface**: Clean, single-purpose editor view
+- **Fast editing**: Immediate response to all user inputs
+- **Reduced cognitive load**: No preview mode or validation concerns
+
+### Technical Objectives
+- **Codebase simplification**: 30% reduction in total code lines
+- **Dependency reduction**: Remove CodeMirror and validation dependencies
+- **Maintainability**: Simpler architecture with fewer moving parts
+- **Mobile optimization**: Better performance on mobile devices
+
+## Implementation Considerations
+
+### Backward Compatibility
+- Existing recipe files remain fully compatible
+- No changes to file storage or organization
+- Search functionality remains unchanged
+- File management operations unchanged
+
+### Syntax Highlighting Options
+1. **Prism.js** - Lightweight, customizable, good markdown support
+2. **highlight.js** - Robust, automatic language detection
+3. **Custom implementation** - Minimal, purpose-built for basic markdown
+
+### Editor Feature Preservation
+- Auto-save with debouncing (keep current 4-second implementation)
+- Keyboard shortcuts (Ctrl+S, Ctrl+N, Ctrl+F, etc.)
+- Touch gestures and mobile optimization
+- File tree integration and context menus
+- Search functionality integration
+- Character and line counting
+
+## Migration Strategy
+
+### Phase 1: Validation Removal (Week 1)
+- Remove server-side validation logic
+- Update save endpoints to bypass validation
+- Remove validation UI elements
+- Test file operations without validation
+
+### Phase 2: Editor Replacement (Week 2)
+- Implement new lightweight editor
+- Remove CodeMirror dependencies
+- Update UI layouts for single-panel design
+- Migrate editor features to new implementation
+
+### Phase 3: Testing & Optimization (Week 3)
+- Performance testing and optimization
+- Mobile device testing
+- User acceptance testing
+- Documentation updates
+
+## Risk Mitigation
+
+### Potential Risks
+1. **Loss of structured content**: Without validation, users might create inconsistent recipes
+   - **Mitigation**: Provide optional templates and examples
+   
+2. **Editor functionality gaps**: Simple editor might lack advanced features
+   - **Mitigation**: Identify and preserve essential features only
+   
+3. **User adaptation**: Users accustomed to preview mode
+   - **Mitigation**: Highlight benefits of simplified workflow
+
+### Testing Strategy
+- Comprehensive regression testing of core functionality
+- Performance benchmarking against current implementation
+- Mobile device testing across various screen sizes
+- User workflow testing for common editing scenarios
+
+## Success Measurement
+
+### Key Performance Indicators
+- Editor responsiveness improvement
+- User editing session frequency increase
+- Time-to-save reduction
+- User satisfaction with simplified interface
+- Reduced support requests related to validation errors
+
+### Quality Assurance
+- All existing file operations continue to work
+- Search functionality remains intact
+- Mobile experience maintains current quality
+- Auto-save reliability preserved
+- Data integrity maintained without validation
+
+## Conclusion
+
+Recipe Manager v2.0 represents a strategic simplification that prioritizes user experience and performance over complex validation systems. By removing friction points and focusing on core editing functionality, we create a more enjoyable and efficient recipe management experience.
+
+The simplified architecture will be easier to maintain, faster to use, and more accessible to users who want to quickly jot down recipes without worrying about format validation or preview generation.

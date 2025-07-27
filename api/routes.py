@@ -4,11 +4,9 @@ from typing import List, Dict, Any, Optional
 import re
 import time
 from .filesystem import FileSystemManager
-from .recipes import RecipeValidator
 
 router = APIRouter(prefix="/api", tags=["files"])
 fs_manager = FileSystemManager()
-recipe_validator = RecipeValidator()
 
 class FileContent(BaseModel):
     content: str
@@ -21,7 +19,6 @@ class DirectoryCreate(BaseModel):
 
 class RecipeContent(BaseModel):
     content: str
-    validate_recipe: bool = True
 
 @router.get("/files")
 async def list_files(path: str = "") -> List[Dict[str, Any]]:
@@ -132,75 +129,26 @@ async def upload_file(file: UploadFile = File(...), path: str = Form(...)) -> Di
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
 # Recipe-specific endpoints
-@router.get("/recipes/template")
-async def get_recipe_template(title: str = "New Recipe") -> Dict[str, str]:
-    """Get a recipe template"""
-    template = recipe_validator.get_template(title)
-    return {"template": template}
-
-@router.post("/recipes/validate")
-async def validate_recipe(recipe_data: RecipeContent) -> Dict[str, Any]:
-    """Validate recipe content structure"""
-    is_valid, errors = recipe_validator.validate_recipe(recipe_data.content)
-    
-    result = {
-        "is_valid": is_valid,
-        "errors": errors
-    }
-    
-    if is_valid:
-        result["info"] = recipe_validator.extract_recipe_info(recipe_data.content)
-    
-    return result
 
 @router.put("/recipes/{path:path}")
 async def save_recipe(path: str, recipe_data: RecipeContent) -> Dict[str, str]:
-    """Save a recipe with optional validation"""
+    """Save a recipe file"""
     if not path.endswith('.md'):
         path += '.md'
     
-    # Validate if requested
-    if recipe_data.validate_recipe:
-        is_valid, errors = recipe_validator.validate_recipe(recipe_data.content)
-        if not is_valid:
-            raise HTTPException(status_code=400, detail={
-                "message": "Recipe validation failed",
-                "errors": errors
-            })
-    
-    # Format the recipe content
-    formatted_content = recipe_validator.format_recipe(recipe_data.content)
-    
-    return await fs_manager.write_file(path, formatted_content)
+    return await fs_manager.write_file(path, recipe_data.content)
 
 @router.post("/recipes/{path:path}")
-async def create_recipe(path: str, use_template: bool = True) -> Dict[str, str]:
-    """Create a new recipe, optionally with template"""
+async def create_recipe(path: str) -> Dict[str, str]:
+    """Create a new empty recipe file"""
     if not path.endswith('.md'):
         path += '.md'
     
-    if use_template:
-        # Auto-populate template based on filename
-        content = recipe_validator.auto_populate_template(path)
-    else:
-        content = ""
+    # Create with basic markdown structure
+    content = f"# {path.replace('.md', '').replace('_', ' ').replace('-', ' ').title()}\n\n"
     
     return await fs_manager.write_file(path, content)
 
-@router.get("/recipes/{path:path}/info")
-async def get_recipe_info(path: str) -> Dict[str, Any]:
-    """Get recipe information and validation status"""
-    content = await fs_manager.read_file(path)
-    
-    is_valid, errors = recipe_validator.validate_recipe(content)
-    info = recipe_validator.extract_recipe_info(content)
-    
-    return {
-        "path": path,
-        "is_valid": is_valid,
-        "errors": errors,
-        "info": info
-    }
 
 class SearchResult(BaseModel):
     path: str

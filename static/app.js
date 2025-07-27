@@ -66,7 +66,6 @@ class RecipeApp {
 
         // Editor actions
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor.save());
-        document.getElementById('validateBtn')?.addEventListener('click', () => this.editor.validate());
         document.getElementById('refreshBtn')?.addEventListener('click', () => this.fileTree.refresh());
 
         // Modal handling
@@ -237,7 +236,7 @@ class RecipeApp {
 
     onEditorChange() {
         // Update UI based on editor state
-        // This could trigger auto-validation, status updates, etc.
+        // This could trigger status updates, etc.
     }
 
     onContextMenu(event, path, type) {

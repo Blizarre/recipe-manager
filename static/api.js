@@ -71,30 +71,15 @@ class RecipeAPI {
     }
 
     // Recipe-specific operations
-    async getRecipeTemplate(title = 'New Recipe') {
-        return this.request('GET', `/recipes/template?title=${encodeURIComponent(title)}`);
-    }
 
-    async validateRecipe(content) {
-        return this.request('POST', '/recipes/validate', { 
-            content, 
-            validate_recipe: true 
-        });
-    }
-
-    async saveRecipe(path, content, validate = true) {
+    async saveRecipe(path, content) {
         return this.request('PUT', `/recipes/${encodeURIComponent(path)}`, { 
-            content, 
-            validate_recipe: validate 
+            content
         });
     }
 
-    async createRecipe(path, useTemplate = true) {
-        return this.request('POST', `/recipes/${encodeURIComponent(path)}?use_template=${useTemplate}`);
-    }
-
-    async getRecipeInfo(path) {
-        return this.request('GET', `/recipes/${encodeURIComponent(path)}/info`);
+    async createRecipe(path) {
+        return this.request('POST', `/recipes/${encodeURIComponent(path)}`);
     }
 
     // Search operations

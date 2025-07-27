@@ -42,12 +42,6 @@ class RecipeEditor {
                         e.preventDefault();
                         this.save();
                         break;
-                    case 'Enter':
-                        if (e.shiftKey) {
-                            e.preventDefault();
-                            this.validate();
-                        }
-                        break;
                 }
             }
         });
@@ -106,10 +100,6 @@ class RecipeEditor {
             this.updateCharCount();
             this.updateFileInfo();
             
-            // Auto-validate if it's a recipe
-            if (path.endsWith('.md')) {
-                setTimeout(() => this.validate(), 500);
-            }
             
         } catch (error) {
             this.showError('Failed to load file: ' + error.message);
@@ -126,8 +116,8 @@ class RecipeEditor {
             const content = this.editor.value;
             
             if (this.currentFile.endsWith('.md')) {
-                // Save as recipe with validation
-                await window.api.saveRecipe(this.currentFile, content, true);
+                // Save as recipe
+                await window.api.saveRecipe(this.currentFile, content);
             } else {
                 // Save as regular file
                 await window.api.saveFile(this.currentFile, content);
@@ -144,10 +134,6 @@ class RecipeEditor {
                 this.showSuccess('File saved successfully');
             }
             
-            // Re-validate after save
-            if (this.currentFile.endsWith('.md')) {
-                setTimeout(() => this.validate(), 200);
-            }
             
             // Trigger file tree refresh for real-time updates
             if (window.app && window.app.fileTree) {
@@ -167,19 +153,6 @@ class RecipeEditor {
         }
     }
 
-    async validate() {
-        if (!this.currentFile || !this.currentFile.endsWith('.md')) return;
-
-        try {
-            const content = this.editor.value;
-            const result = await window.api.validateRecipe(content);
-            
-            this.updateValidationStatus(result);
-            
-        } catch (error) {
-            this.showError('Validation failed: ' + error.message);
-        }
-    }
 
     scheduleAutoSave() {
         if (this.autoSaveTimeout) {
@@ -198,7 +171,6 @@ class RecipeEditor {
         const welcomeScreen = document.getElementById('welcomeScreen');
         const editorWrapper = document.getElementById('editorWrapper');
         const saveBtn = document.getElementById('saveBtn');
-        const validateBtn = document.getElementById('validateBtn');
         
         if (hasFile) {
             welcomeScreen.style.display = 'none';
@@ -210,7 +182,6 @@ class RecipeEditor {
         }
         
         saveBtn.disabled = !hasFile;
-        validateBtn.disabled = !hasFile || !this.currentFile?.endsWith('.md');
     }
 
     updateCharCount() {
@@ -267,28 +238,6 @@ class RecipeEditor {
         }
     }
 
-    updateValidationStatus(result) {
-        const validationStatus = document.getElementById('validationStatus');
-        
-        if (result.is_valid) {
-            const info = result.info;
-            validationStatus.innerHTML = `
-                <span class="validation-success">✓ Valid recipe</span>
-                <small>(${info.ingredients_count} ingredients, ${info.instructions_count} steps)</small>
-            `;
-        } else {
-            const errorCount = result.errors.length;
-            validationStatus.innerHTML = `
-                <span class="validation-error">⚠ ${errorCount} validation error${errorCount > 1 ? 's' : ''}</span>
-            `;
-            
-            // Show detailed errors in console for now
-            console.log('Recipe validation errors:', result.errors);
-            
-            // Could show a tooltip or modal with detailed errors
-            validationStatus.title = result.errors.join('\n');
-        }
-    }
 
     showSuccess(message) {
         this.showMessage(message, 'success');
