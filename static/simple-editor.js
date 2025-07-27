@@ -29,22 +29,7 @@ class SimpleMarkdownEditor {
             return;
         }
         
-        // Ensure textarea has proper styling for overlay
-        this.textarea.style.position = 'relative';
-        this.textarea.style.zIndex = '2';
-        this.textarea.style.background = 'transparent';
-        this.textarea.style.color = 'transparent';
-        this.textarea.style.caretColor = '#333';
-        this.textarea.style.resize = 'none';
-        this.textarea.style.border = 'none';
-        this.textarea.style.outline = 'none';
-        this.textarea.style.fontFamily = '"Fira Code", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace';
-        this.textarea.style.fontSize = '14px';
-        this.textarea.style.lineHeight = '1.5';
-        this.textarea.style.padding = '16px';
-        this.textarea.style.width = '100%';
-        this.textarea.style.height = '100%';
-        this.textarea.style.boxSizing = 'border-box';
+        // Styling is handled by CSS classes
     }
 
     setupSyntaxOverlay() {
@@ -54,24 +39,7 @@ class SimpleMarkdownEditor {
             return;
         }
         
-        // Style the overlay to match textarea exactly
-        this.overlay.style.position = 'absolute';
-        this.overlay.style.top = '0';
-        this.overlay.style.left = '0';
-        this.overlay.style.zIndex = '1';
-        this.overlay.style.pointerEvents = 'none';
-        this.overlay.style.fontFamily = this.textarea.style.fontFamily;
-        this.overlay.style.fontSize = this.textarea.style.fontSize;
-        this.overlay.style.lineHeight = this.textarea.style.lineHeight;
-        this.overlay.style.padding = this.textarea.style.padding;
-        this.overlay.style.margin = '0';
-        this.overlay.style.border = 'none';
-        this.overlay.style.whiteSpace = 'pre-wrap';
-        this.overlay.style.wordWrap = 'break-word';
-        this.overlay.style.overflow = 'hidden';
-        this.overlay.style.width = '100%';
-        this.overlay.style.height = '100%';
-        this.overlay.style.boxSizing = 'border-box';
+        // Styling is handled by CSS classes
     }
 
     setupEventListeners() {

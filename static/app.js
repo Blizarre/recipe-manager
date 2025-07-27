@@ -276,7 +276,6 @@ class RecipeApp {
         
         // Clear previous values
         document.getElementById('newRecipeForm').reset();
-        document.getElementById('useTemplate').checked = true;
     }
 
     hideModal() {
@@ -293,7 +292,6 @@ class RecipeApp {
         try {
             const title = document.getElementById('recipeTitle').value.trim();
             const folder = document.getElementById('recipeFolder').value.trim();
-            const useTemplate = document.getElementById('useTemplate').checked;
 
             if (!title) {
                 alert('Please enter a recipe title');
@@ -321,11 +319,7 @@ class RecipeApp {
             }
 
             // Create the recipe
-            if (useTemplate) {
-                await window.api.createRecipe(fullPath, true);
-            } else {
-                await window.api.createFile(fullPath, '');
-            }
+            await window.api.createRecipe(fullPath);
 
             // Refresh file tree and open the new file
             await this.fileTree.refresh();
