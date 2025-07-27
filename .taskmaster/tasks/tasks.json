@@ -1,0 +1,140 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup FastAPI Backend Infrastructure",
+        "description": "Initialize Python FastAPI project with basic server configuration and file system operations foundation",
+        "details": "Create FastAPI application with Python 3, set up virtual environment, install required dependencies (fastapi, uvicorn, python-multipart). Configure basic server structure with main.py, requirements.txt, and basic CORS settings. Implement file system security measures including path traversal protection and UTF-8 encoding support. Set up directory structure for recipe storage with proper permissions.",
+        "testStrategy": "Unit tests for server startup, basic endpoint accessibility, file system security validation, and CORS configuration verification",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement File System API Endpoints",
+        "description": "Create RESTful API endpoints for all file and directory operations",
+        "details": "Implement all required endpoints: GET /api/files (list files), GET /api/files/{path} (get content), POST /api/files/{path} (create), PUT /api/files/{path} (update), DELETE /api/files/{path} (delete), POST /api/files/{path}/move (move/rename). Add directory operations: GET /api/directories (tree structure), POST /api/directories/{path} (create), DELETE /api/directories/{path} (delete). Include input validation, error handling, and filesystem-safe filename enforcement.",
+        "testStrategy": "Integration tests for each endpoint, error handling tests for invalid paths, validation tests for file operations, and performance tests to ensure <100ms response times",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Create Recipe Template and Validation System",
+        "description": "Implement enforced markdown structure validation and template auto-population for new recipes",
+        "details": "Create markdown template with required sections (# Recipe Title, ## Ingredients, ## Instructions, ## Notes). Implement validation rules: ingredients must use bullet points, instructions must use numbered lists, all sections must be present. Add server-side validation middleware to check recipe structure on save operations. Create template auto-population for new file creation.",
+        "testStrategy": "Unit tests for template generation, validation rule enforcement, section presence checking, and format validation for ingredients and instructions",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Build Basic Frontend File Tree Interface",
+        "description": "Create responsive two-panel layout with directory tree navigation using plain JavaScript",
+        "details": "Implement HTML structure with CSS Grid for desktop two-panel layout (file tree + editor). Create JavaScript file tree component with collapsible folders, file icons, and click navigation. Add mobile-first responsive design with navigation drawer for mobile devices. Implement touch-optimized interface with 44px minimum tap targets and swipe gestures. Include basic file operations UI (create, delete, rename) with context menus.",
+        "testStrategy": "Cross-browser testing on Chrome 90+, Firefox 88+, Safari 14+. Mobile responsiveness testing on various screen sizes. User interaction testing for touch and mouse events.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Markdown Editor with Syntax Highlighting",
+        "description": "Create markdown editor component with syntax highlighting and live preview functionality",
+        "details": "Integrate lightweight markdown syntax highlighting library (CodeMirror or Prism.js). Implement edit/preview toggle functionality. Add markdown rendering for live preview using marked.js or similar. Include auto-complete suggestions for common ingredient and instruction patterns. Ensure editor is mobile-optimized with touch support and virtual keyboard compatibility.",
+        "testStrategy": "Testing syntax highlighting accuracy, markdown rendering correctness, mobile editor usability, and auto-complete functionality validation",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Add Auto-Save and Real-time File Operations",
+        "description": "Implement automatic saving with debouncing and real-time file synchronization",
+        "details": "Implement auto-save functionality with 3-5 second debouncing after last edit. Add visual indicators for save status (saving, saved, error). Include conflict resolution for concurrent edits. Implement real-time file tree updates when files are created, modified, or deleted. Add error handling and retry logic for failed save operations.",
+        "testStrategy": "Auto-save timing tests, conflict resolution testing, network failure recovery testing, and visual indicator accuracy validation",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Search Functionality",
+        "description": "Create full-text search capabilities for both file names and recipe content",
+        "details": "Implement search API endpoints: GET /api/search?q={query} for content search and GET /api/search/files?q={query} for filename search. Add frontend search interface with real-time filtering of file tree. Include full-text search within recipe content with result highlighting. Optimize search performance to achieve <200ms response times. Add search result ranking and relevance scoring.",
+        "testStrategy": "Search accuracy testing, performance benchmarking for <200ms response times, full-text search validation, and search result relevance testing",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Add Mobile-Optimized User Interface",
+        "description": "Enhance mobile experience with touch gestures, navigation drawer, and mobile-specific interactions",
+        "details": "Implement hamburger menu with slide-out navigation drawer for mobile. Add touch gestures for file tree navigation and editor interactions. Create floating action button for quick recipe creation on mobile. Implement swipe gestures for navigation between files. Add long-press context menus for mobile file operations. Optimize virtual keyboard interactions and prevent viewport scaling issues.",
+        "testStrategy": "Mobile device testing on various screen sizes, touch gesture functionality validation, virtual keyboard compatibility testing, and mobile usability assessment",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Keyboard Navigation and Shortcuts",
+        "description": "Add comprehensive keyboard accessibility and shortcuts for power users",
+        "details": "Implement keyboard navigation for file tree (arrow keys, Enter, Tab). Add keyboard shortcuts: Ctrl+N (new recipe), Ctrl+S (manual save), Ctrl+F (search), Esc (close dialogs). Include focus management and visual focus indicators for accessibility. Add keyboard-only file operations and navigation. Ensure full keyboard accessibility compliance.",
+        "testStrategy": "Keyboard-only navigation testing, accessibility compliance validation, keyboard shortcut functionality testing, and focus management verification",
+        "priority": "low",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Performance Optimization and Error Handling",
+        "description": "Optimize application performance and implement comprehensive error handling with user feedback",
+        "details": "Optimize file loading to achieve <100ms response times. Implement comprehensive error handling with user-friendly error messages and recovery options. Add loading states and progress indicators for all async operations. Optimize bundle size and implement lazy loading where appropriate. Add retry mechanisms for failed network requests. Include performance monitoring and logging. Implement proper error boundaries and graceful degradation.",
+        "testStrategy": "Performance benchmarking to validate <100ms file load times, error scenario testing, user experience testing for error states, and load testing for concurrent users",
+        "priority": "medium",
+        "dependencies": [
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-27T13:35:50.934Z",
+      "updated": "2025-07-27T14:58:25.773Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
