@@ -102,33 +102,6 @@
         ],
         "status": "done",
         "subtasks": []
-      },
-      {
-        "id": 9,
-        "title": "Implement Keyboard Navigation and Shortcuts",
-        "description": "Add comprehensive keyboard accessibility and shortcuts for power users",
-        "details": "Implement keyboard navigation for file tree (arrow keys, Enter, Tab). Add keyboard shortcuts: Ctrl+N (new recipe), Ctrl+S (manual save), Ctrl+F (search), Esc (close dialogs). Include focus management and visual focus indicators for accessibility. Add keyboard-only file operations and navigation. Ensure full keyboard accessibility compliance.",
-        "testStrategy": "Keyboard-only navigation testing, accessibility compliance validation, keyboard shortcut functionality testing, and focus management verification",
-        "priority": "low",
-        "dependencies": [
-          7
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 10,
-        "title": "Performance Optimization and Error Handling",
-        "description": "Optimize application performance and implement comprehensive error handling with user feedback",
-        "details": "Optimize file loading to achieve <100ms response times. Implement comprehensive error handling with user-friendly error messages and recovery options. Add loading states and progress indicators for all async operations. Optimize bundle size and implement lazy loading where appropriate. Add retry mechanisms for failed network requests. Include performance monitoring and logging. Implement proper error boundaries and graceful degradation.",
-        "testStrategy": "Performance benchmarking to validate <100ms file load times, error scenario testing, user experience testing for error states, and load testing for concurrent users",
-        "priority": "medium",
-        "dependencies": [
-          8,
-          9
-        ],
-        "status": "pending",
-        "subtasks": []
       }
     ],
     "metadata": {

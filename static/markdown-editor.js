@@ -33,6 +33,8 @@ class MarkdownEditor {
             tabSize: 2,
             autoCloseBrackets: true,
             matchBrackets: true,
+            viewportMargin: 50, // Render extra lines for better scrolling
+            scrollbarStyle: 'native', // Use native scrollbars
             extraKeys: {
                 'Ctrl-S': () => this.save(),
                 'Cmd-S': () => this.save(),
@@ -64,6 +66,11 @@ class MarkdownEditor {
         this.codeMirror.on('blur', () => {
             document.querySelector('.codemirror-container').classList.remove('focused');
         });
+
+        // Ensure proper sizing and scrolling
+        setTimeout(() => {
+            this.codeMirror.refresh();
+        }, 100);
     }
 
     setupEventListeners() {
