@@ -47,6 +47,12 @@ class RecipeApp {
             (path) => this.onFileSelect(path)
         );
 
+        // Initialize touch gestures (mobile only)
+        if (window.innerWidth <= 768) {
+            this.touchGestures = new TouchGesturesHandler(this);
+            this.setupVirtualKeyboardHandling();
+        }
+
         // Setup context menu
         this.contextMenu = document.getElementById('contextMenu');
     }
@@ -56,6 +62,7 @@ class RecipeApp {
         document.getElementById('desktopNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
         document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
         document.getElementById('welcomeNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
+        document.getElementById('fabNewRecipe')?.addEventListener('click', () => this.showNewRecipeModal());
 
         // Editor actions
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor.save());
@@ -129,6 +136,42 @@ class RecipeApp {
                 toggleMobileMenu();
             }
         };
+    }
+
+    setupVirtualKeyboardHandling() {
+        // Handle virtual keyboard show/hide
+        let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        
+        const handleViewportChange = () => {
+            if (window.visualViewport) {
+                const currentHeight = window.visualViewport.height;
+                const heightDiff = initialViewportHeight - currentHeight;
+                
+                // If keyboard is likely open (height reduced by more than 150px)
+                if (heightDiff > 150) {
+                    document.body.classList.add('keyboard-open');
+                } else {
+                    document.body.classList.remove('keyboard-open');
+                }
+            }
+        };
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+        } else {
+            // Fallback for older browsers
+            window.addEventListener('resize', handleViewportChange);
+        }
+
+        // Scroll input into view when focused
+        const inputs = document.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                setTimeout(() => {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            });
+        });
     }
 
     setupModal() {

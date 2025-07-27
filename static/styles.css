@@ -5,6 +5,36 @@
     box-sizing: border-box;
 }
 
+/* Global Scrollbar Styles */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) var(--surface);
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--surface);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 4px;
+    border: 1px solid var(--surface);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--text-primary);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 :root {
     --primary-color: #2563eb;
     --primary-hover: #1d4ed8;
@@ -32,6 +62,7 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     font-size: 14px;
+    overflow: auto; /* Ensure scrollbars can appear */
 }
 
 /* App Layout */
@@ -74,6 +105,18 @@ body {
     align-items: center;
     gap: 4px;
     cursor: pointer;
+    border-radius: var(--radius);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    position: relative;
+}
+
+.menu-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.menu-toggle:active {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(0.95);
 }
 
 .menu-toggle span {
@@ -81,7 +124,8 @@ body {
     width: 20px;
     height: 2px;
     background: var(--text-primary);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1px;
 }
 
 .menu-toggle.active span:nth-child(1) {
@@ -90,6 +134,7 @@ body {
 
 .menu-toggle.active span:nth-child(2) {
     opacity: 0;
+    transform: scale(0);
 }
 
 .menu-toggle.active span:nth-child(3) {
@@ -103,6 +148,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    max-height: 100vh;
     overflow: hidden;
 }
 
@@ -121,8 +167,29 @@ body {
 
 .file-tree-container {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: scroll; /* Force scrollbar to always show */
     padding: 8px 0;
+    min-height: 0; /* Allow flex item to shrink */
+    max-height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) var(--surface);
+}
+
+.file-tree-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-tree-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.file-tree-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.file-tree-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .sidebar-footer {
@@ -311,6 +378,25 @@ body {
 .search-results-list {
     max-height: 250px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.search-results-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.search-results-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.search-results-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .search-result-item {
@@ -465,6 +551,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0; /* Allow flex item to shrink */
 }
 
 .welcome-screen {
@@ -529,12 +616,15 @@ body {
     flex: 1;
     display: flex;
     overflow: hidden;
+    min-height: 0; /* Allow flex item to shrink */
 }
 
 .editor-panel {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* Allow flex item to shrink */
+    overflow: hidden;
 }
 
 .preview-panel {
@@ -542,6 +632,25 @@ body {
     background: var(--background);
     border-left: 1px solid var(--border);
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.preview-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.preview-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.preview-panel::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.preview-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .editor-panels.split-view .editor-panel,
@@ -561,6 +670,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* Allow flex item to shrink */
+    overflow: hidden;
 }
 
 .CodeMirror {
@@ -569,6 +680,34 @@ body {
     font-size: 14px !important;
     line-height: 1.6 !important;
     height: auto;
+}
+
+.CodeMirror-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) var(--surface);
+    overflow: scroll !important; /* Force scrollbars to show */
+}
+
+.CodeMirror-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.CodeMirror-scrollbar-filler {
+    background: transparent;
 }
 
 .CodeMirror-focused .CodeMirror-cursor {
@@ -959,6 +1098,127 @@ body {
 
 .overlay.active {
     display: block;
+    animation: fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Floating Action Button */
+.fab {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    justify-content: center;
+    align-items: center;
+    will-change: transform, box-shadow;
+}
+
+.fab:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.15);
+    transform: scale(1.05);
+}
+
+.fab:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.fab svg {
+    transition: transform 0.2s ease;
+}
+
+.fab:active svg {
+    transform: rotate(45deg);
+}
+
+/* Touch Gesture Feedback */
+.file-tree-item.long-press-active {
+    background: rgba(37, 99, 235, 0.15) !important;
+    transform: scale(0.98);
+    transition: all 0.1s ease;
+}
+
+.pull-refresh-indicator {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    animation: pullRefreshBounce 0.3s ease;
+}
+
+@keyframes pullRefreshBounce {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Virtual Keyboard Optimization */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safari specific optimizations */
+    .search-input,
+    #editor,
+    input[type="text"] {
+        font-size: 16px; /* Prevents zoom on focus */
+    }
+}
+
+/* Prevent viewport shifts when virtual keyboard appears */
+.modal.active {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* Adjust layout when virtual keyboard is open */
+body.keyboard-open .fab {
+    bottom: 80px; /* Move FAB up when keyboard is open */
+}
+
+body.keyboard-open .modal {
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height if supported */
+}
+
+/* Enhanced touch targets for mobile */
+@media (max-width: 768px) {
+    .file-tree-item {
+        min-height: var(--min-touch-target);
+        padding: 12px 16px;
+    }
+    
+    .search-result-item {
+        min-height: var(--min-touch-target);
+        padding: 12px;
+    }
+    
+    .btn {
+        min-height: var(--min-touch-target);
+        padding: 8px 16px;
+    }
+    
+    /* Better touch feedback */
+    .file-tree-item:active,
+    .search-result-item:active,
+    .btn:active {
+        background: rgba(37, 99, 235, 0.1);
+        transform: scale(0.98);
+    }
 }
 
 /* Loading */
@@ -1018,11 +1278,14 @@ body {
         height: calc(100vh - var(--header-height));
         z-index: 95;
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none;
+        will-change: transform;
     }
 
     .sidebar.active {
         transform: translateX(0);
+        box-shadow: var(--shadow-lg);
     }
 
     .main-content {
@@ -1033,6 +1296,10 @@ body {
 
     .desktop-new-btn {
         display: none;
+    }
+
+    .fab {
+        display: flex;
     }
 
     .editor-header {
