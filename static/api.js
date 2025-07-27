@@ -97,6 +97,15 @@ class RecipeAPI {
         return this.request('GET', `/recipes/${encodeURIComponent(path)}/info`);
     }
 
+    // Search operations
+    async searchContent(query, limit = 50) {
+        return this.request('GET', `/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+    }
+
+    async searchFiles(query, limit = 50) {
+        return this.request('GET', `/search/files?q=${encodeURIComponent(query)}&limit=${limit}`);
+    }
+
     // Upload
     async uploadFile(file, path) {
         const formData = new FormData();

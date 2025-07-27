@@ -3,6 +3,7 @@ class RecipeApp {
     constructor() {
         this.fileTree = null;
         this.editor = null;
+        this.search = null;
         this.contextMenu = null;
         this.currentContextPath = null;
         this.currentContextType = null;
@@ -39,6 +40,11 @@ class RecipeApp {
         this.editor = new MarkdownEditor(
             editorContainer,
             () => this.onEditorChange()
+        );
+
+        // Initialize search component
+        this.search = new SearchComponent(
+            (path) => this.onFileSelect(path)
         );
 
         // Setup context menu
@@ -84,12 +90,16 @@ class RecipeApp {
                         e.preventDefault();
                         this.fileTree.refresh();
                         break;
+                    case 'f':
+                        // Search focus is handled in search.js
+                        break;
                 }
             }
             
             if (e.key === 'Escape') {
                 this.hideContextMenu();
                 this.hideModal();
+                // Search escape is handled in search.js
             }
         });
     }
@@ -378,3 +388,6 @@ class RecipeApp {
 
 // Initialize the app
 const app = new RecipeApp();
+
+// Make app globally accessible for editor integration
+window.app = app;

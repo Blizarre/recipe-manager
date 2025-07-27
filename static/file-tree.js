@@ -292,4 +292,35 @@ class FileTree {
             throw new Error(`Failed to rename file: ${error.message}`);
         }
     }
+
+    // Real-time update methods
+    notifyFileChanged(path) {
+        // Update the visual indicator for the changed file
+        const fileElements = this.container.querySelectorAll('.file-tree-item.file');
+        fileElements.forEach(element => {
+            const nameElement = element.querySelector('.name');
+            if (nameElement && this.getFullPathFromElement(element) === path) {
+                // Add a subtle visual indicator that the file was updated
+                element.classList.add('recently-updated');
+                setTimeout(() => {
+                    element.classList.remove('recently-updated');
+                }, 2000);
+            }
+        });
+    }
+
+    getFullPathFromElement(element) {
+        const nameElement = element.querySelector('.name');
+        return nameElement ? nameElement.textContent : '';
+    }
+
+    // Debounced refresh for performance
+    scheduleRefresh() {
+        if (this.refreshTimeout) {
+            clearTimeout(this.refreshTimeout);
+        }
+        this.refreshTimeout = setTimeout(() => {
+            this.refresh();
+        }, 1000);
+    }
 }

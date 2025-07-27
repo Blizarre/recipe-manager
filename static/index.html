@@ -43,6 +43,31 @@
                 <button class="new-recipe-btn desktop-new-btn" id="desktopNewBtn" title="New Recipe">+</button>
             </div>
             
+            <!-- Search component -->
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search recipes..." autocomplete="off">
+                    <button class="search-clear" id="searchClear" style="display: none;" title="Clear search">&times;</button>
+                </div>
+                <div class="search-filters">
+                    <label class="search-filter">
+                        <input type="radio" name="searchType" value="content" checked>
+                        <span>Content</span>
+                    </label>
+                    <label class="search-filter">
+                        <input type="radio" name="searchType" value="files">
+                        <span>Files</span>
+                    </label>
+                </div>
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <div class="search-results-header">
+                        <span class="search-results-count" id="searchResultsCount">0 results</span>
+                        <span class="search-duration" id="searchDuration"></span>
+                    </div>
+                    <div class="search-results-list" id="searchResultsList"></div>
+                </div>
+            </div>
+            
             <div class="file-tree-container">
                 <div class="file-tree" id="fileTree">
                     <div class="loading">Loading recipes...</div>
@@ -151,6 +176,7 @@
 
     <script src="/static/api.js"></script>
     <script src="/static/file-tree.js"></script>
+    <script src="/static/search.js"></script>
     <script src="/static/editor.js"></script>
     <script src="/static/markdown-editor.js"></script>
     <script src="/static/app.js"></script>

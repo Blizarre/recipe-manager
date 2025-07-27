@@ -7,6 +7,12 @@ class RecipeEditor {
         this.isDirty = false;
         this.autoSaveTimeout = null;
         this.lastSavedContent = '';
+        this.saveStatus = 'saved'; // 'saved', 'saving', 'error', 'modified'
+        this.saveRetryAttempts = 0;
+        this.maxRetryAttempts = 3;
+        this.autoSaveDelay = 4000; // 4 seconds
+        this.lastModified = null; // Track server-side last modified time
+        this.conflictCheckInterval = null;
         
         this.init();
     }
@@ -20,6 +26,8 @@ class RecipeEditor {
         // Content change handling
         this.editor.addEventListener('input', () => {
             this.isDirty = true;
+            this.saveStatus = 'modified';
+            this.saveRetryAttempts = 0; // Reset retry attempts on new changes
             this.updateCharCount();
             this.updateStatus();
             this.scheduleAutoSave();
@@ -89,8 +97,12 @@ class RecipeEditor {
             this.editor.value = fileData.content;
             this.lastSavedContent = fileData.content;
             this.isDirty = false;
+            this.saveStatus = 'saved';
+            this.saveRetryAttempts = 0;
+            this.lastModified = fileData.last_modified || Date.now();
             
             this.updateUI();
+            this.startConflictDetection();
             this.updateCharCount();
             this.updateFileInfo();
             
@@ -104,10 +116,13 @@ class RecipeEditor {
         }
     }
 
-    async save() {
+    async save(isAutoSave = false) {
         if (!this.currentFile) return;
 
         try {
+            this.saveStatus = 'saving';
+            this.updateStatus();
+            
             const content = this.editor.value;
             
             if (this.currentFile.endsWith('.md')) {
@@ -120,16 +135,35 @@ class RecipeEditor {
             
             this.lastSavedContent = content;
             this.isDirty = false;
+            this.saveStatus = 'saved';
+            this.saveRetryAttempts = 0;
+            this.lastModified = Date.now(); // Update last modified time
             this.updateStatus();
-            this.showSuccess('File saved successfully');
+            
+            if (!isAutoSave) {
+                this.showSuccess('File saved successfully');
+            }
             
             // Re-validate after save
             if (this.currentFile.endsWith('.md')) {
                 setTimeout(() => this.validate(), 200);
             }
             
+            // Trigger file tree refresh for real-time updates
+            if (window.app && window.app.fileTree) {
+                window.app.fileTree.notifyFileChanged(this.currentFile);
+            }
+            
         } catch (error) {
-            this.showError('Failed to save file: ' + error.message);
+            this.saveStatus = 'error';
+            this.updateStatus();
+            
+            if (isAutoSave && this.saveRetryAttempts < this.maxRetryAttempts) {
+                this.saveRetryAttempts++;
+                setTimeout(() => this.save(true), 2000 * this.saveRetryAttempts); // Exponential backoff
+            } else {
+                this.showError(`Failed to save file: ${error.message}`);
+            }
         }
     }
 
@@ -153,10 +187,10 @@ class RecipeEditor {
         }
         
         this.autoSaveTimeout = setTimeout(() => {
-            if (this.isDirty && this.currentFile) {
-                this.save();
+            if (this.isDirty && this.currentFile && this.saveStatus !== 'saving') {
+                this.save(true); // Pass true to indicate auto-save
             }
-        }, 2000); // Auto-save after 2 seconds of inactivity
+        }, this.autoSaveDelay);
     }
 
     updateUI() {
@@ -203,8 +237,33 @@ class RecipeEditor {
     updateStatus() {
         const fileStatus = document.getElementById('fileStatus');
         if (this.currentFile) {
-            fileStatus.textContent = this.isDirty ? 'Modified' : 'Saved';
-            fileStatus.className = `file-status ${this.isDirty ? 'modified' : 'saved'}`;
+            let statusText = '';
+            let statusClass = '';
+            
+            switch (this.saveStatus) {
+                case 'saving':
+                    statusText = 'Saving...';
+                    statusClass = 'saving';
+                    break;
+                case 'saved':
+                    statusText = 'Saved';
+                    statusClass = 'saved';
+                    break;
+                case 'modified':
+                    statusText = 'Modified';
+                    statusClass = 'modified';
+                    break;
+                case 'error':
+                    statusText = `Error (${this.saveRetryAttempts}/${this.maxRetryAttempts})`;
+                    statusClass = 'error';
+                    break;
+                default:
+                    statusText = this.isDirty ? 'Modified' : 'Saved';
+                    statusClass = this.isDirty ? 'modified' : 'saved';
+            }
+            
+            fileStatus.textContent = statusText;
+            fileStatus.className = `file-status ${statusClass}`;
         }
     }
 
@@ -288,9 +347,90 @@ class RecipeEditor {
         this.editor.value = '';
         this.isDirty = false;
         this.lastSavedContent = '';
+        this.saveStatus = 'saved';
+        this.saveRetryAttempts = 0;
+        this.lastModified = null;
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+            this.autoSaveTimeout = null;
+        }
+        this.stopConflictDetection();
         this.updateUI();
         this.updateCharCount();
         this.updateFileInfo();
+    }
+
+    // Conflict detection methods
+    startConflictDetection() {
+        if (this.conflictCheckInterval) {
+            clearInterval(this.conflictCheckInterval);
+        }
+        
+        // Check for conflicts every 30 seconds
+        this.conflictCheckInterval = setInterval(() => {
+            this.checkForConflicts();
+        }, 30000);
+    }
+
+    stopConflictDetection() {
+        if (this.conflictCheckInterval) {
+            clearInterval(this.conflictCheckInterval);
+            this.conflictCheckInterval = null;
+        }
+    }
+
+    async checkForConflicts() {
+        if (!this.currentFile || this.saveStatus === 'saving') return;
+
+        try {
+            const fileData = await window.api.getFile(this.currentFile);
+            const serverLastModified = fileData.last_modified || 0;
+            
+            // Check if file was modified externally
+            if (serverLastModified > this.lastModified) {
+                this.handleConflict(fileData.content);
+            }
+        } catch (error) {
+            // File might have been deleted - handle gracefully
+            console.warn('Conflict check failed:', error.message);
+        }
+    }
+
+    handleConflict(serverContent) {
+        if (this.isDirty) {
+            // User has unsaved changes - show conflict resolution dialog
+            this.showConflictDialog(serverContent);
+        } else {
+            // No local changes - just reload the file
+            this.editor.value = serverContent;
+            this.lastSavedContent = serverContent;
+            this.lastModified = Date.now();
+            this.showMessage('File updated from server', 'info');
+        }
+    }
+
+    showConflictDialog(serverContent) {
+        const currentContent = this.editor.value;
+        
+        const choice = confirm(
+            'This file has been modified by another user. ' +
+            'Click OK to keep your changes and overwrite the server version, ' +
+            'or Cancel to discard your changes and use the server version.'
+        );
+        
+        if (choice) {
+            // User wants to keep their changes - force save
+            this.save(false);
+        } else {
+            // User wants to use server version
+            this.editor.value = serverContent;
+            this.lastSavedContent = serverContent;
+            this.lastModified = Date.now();
+            this.isDirty = false;
+            this.saveStatus = 'saved';
+            this.updateStatus();
+            this.showMessage('File reverted to server version', 'info');
+        }
     }
 }
 
@@ -313,6 +453,27 @@ style.textContent = `
     
     .file-status.saved {
         color: var(--success-color);
+    }
+    
+    .file-status.saving {
+        color: var(--primary-color);
+        animation: pulse 1.5s infinite;
+    }
+    
+    .file-status.error {
+        color: var(--error-color);
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
     }
 `;
 document.head.appendChild(style);
