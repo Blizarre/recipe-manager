@@ -9,19 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- CodeMirror for syntax highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/github.min.css">
-    
-    <!-- Marked for markdown parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-    
-    <!-- CodeMirror JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/markdown/markdown.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/edit/continuelist.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/hint/show-hint.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/hint/show-hint.min.css">
+    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -87,11 +78,6 @@
                     <span class="file-status" id="fileStatus"></span>
                 </div>
                 <div class="editor-actions">
-                    <div class="view-toggle">
-                        <button class="btn btn-toggle active" id="editBtn">Edit</button>
-                        <button class="btn btn-toggle" id="previewBtn" disabled>Preview</button>
-                        <button class="btn btn-toggle" id="splitBtn" disabled>Split</button>
-                    </div>
                     <div class="action-buttons">
                         <button class="btn btn-primary" id="saveBtn" disabled>Save</button>
                     </div>
@@ -108,16 +94,10 @@
                 </div>
                 
                 <div class="editor-wrapper" id="editorWrapper" style="display: none;">
-                    <div class="editor-panels">
-                        <div class="editor-panel" id="editorPanel">
-                            <div class="codemirror-container" id="codemirrorContainer">
-                                <textarea id="editor" placeholder="Start typing your recipe here..."></textarea>
-                            </div>
-                        </div>
-                        <div class="preview-panel" id="previewPanel" style="display: none;">
-                            <div class="preview-content" id="previewContent">
-                                <div class="preview-loading">Preview will appear here...</div>
-                            </div>
+                    <div class="editor-panel" id="editorPanel">
+                        <div class="simple-editor-container" id="editorContainer">
+                            <div class="syntax-overlay" id="syntaxOverlay"></div>
+                            <textarea id="editor" class="markdown-textarea" placeholder="Start typing your recipe here..."></textarea>
                         </div>
                     </div>
                     <div class="editor-status">
@@ -184,8 +164,7 @@
     <script src="/static/file-tree.js"></script>
     <script src="/static/search.js"></script>
     <script src="/static/touch-gestures.js"></script>
-    <script src="/static/editor.js"></script>
-    <script src="/static/markdown-editor.js"></script>
+    <script src="/static/simple-editor.js"></script>
     <script src="/static/app.js"></script>
 </body>
 </html>

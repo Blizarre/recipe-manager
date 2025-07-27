@@ -531,13 +531,6 @@ body {
     gap: 16px;
 }
 
-.view-toggle {
-    display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-}
 
 .action-buttons {
     display: flex;
@@ -610,262 +603,133 @@ body {
     flex-direction: column;
 }
 
-.editor-panels {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-    min-height: 0; /* Allow flex item to shrink */
-}
-
 .editor-panel {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Allow flex item to shrink */
-    overflow: visible; /* Allow scrolling */
+    min-height: 0;
+    overflow: hidden;
 }
 
-.preview-panel {
-    flex: 1;
-    background: var(--background);
-    border-left: 1px solid var(--border);
-    overflow-y: auto;
-    max-height: calc(100vh - 140px); /* Set explicit height constraint */
-}
 
-.preview-panel::-webkit-scrollbar {
-    width: 8px;
-}
 
-.preview-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.preview-panel::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-}
-
-.preview-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
-}
-
-.editor-panels.split-view .editor-panel,
-.editor-panels.split-view .preview-panel {
-    flex: 1;
-}
-
-.editor-panels.preview-only .editor-panel {
-    display: none;
-}
-
-.editor-panels.preview-only .preview-panel {
-    border-left: none;
-}
-
-.codemirror-container {
+.simple-editor-container {
+    position: relative;
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0; /* Allow flex item to shrink */
-    overflow: visible; /* Allow scrolling */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--background-color);
 }
 
-.CodeMirror {
-    flex: 1;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
-    font-size: 14px !important;
-    line-height: 1.6 !important;
-    height: calc(100vh - 140px) !important; /* Set explicit height */
-    max-height: calc(100vh - 140px) !important;
+.simple-editor-container.focused {
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
-.CodeMirror-scroll {
+.markdown-textarea {
+    position: relative;
+    z-index: 2;
+    background: transparent !important;
+    color: transparent !important;
+    caret-color: #333 !important;
+    resize: none;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 16px;
+    width: 100%;
+    height: calc(100vh - 140px);
+    max-height: calc(100vh - 140px);
+    box-sizing: border-box;
+    overflow: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--text-muted) var(--surface);
 }
 
-.CodeMirror-scroll::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.markdown-textarea::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
 }
 
-.CodeMirror-scroll::-webkit-scrollbar-track {
-    background: transparent;
+.markdown-textarea::-webkit-scrollbar-track {
+    background: var(--surface);
+    border-radius: 6px;
 }
 
-.CodeMirror-scroll::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
+.markdown-textarea::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 6px;
+    border: 2px solid var(--surface);
 }
 
-.CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+.markdown-textarea::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }
 
-.CodeMirror-scrollbar-filler {
-    background: transparent;
-}
-
-.CodeMirror-focused .CodeMirror-cursor {
-    border-left: 2px solid var(--primary-color);
-}
-
-.CodeMirror-selected {
-    background: rgba(37, 99, 235, 0.1) !important;
-}
-
-#editor {
-    flex: 1;
-    border: none;
-    outline: none;
-    padding: 20px;
+.syntax-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     font-size: 14px;
     line-height: 1.6;
-    resize: none;
-    background: var(--background);
-    color: var(--text-primary);
-}
-
-.preview-content {
-    padding: 20px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.7;
-    max-width: none;
-}
-
-.preview-loading {
-    text-align: center;
-    color: var(--text-muted);
-    font-style: italic;
-    padding: 40px 20px;
-}
-
-/* Markdown Preview Styles */
-.preview-content h1 {
-    font-size: 28px;
-    font-weight: 600;
-    margin: 0 0 24px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid var(--border);
-    color: var(--text-primary);
-}
-
-.preview-content h2 {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 32px 0 16px;
-    color: var(--text-primary);
-}
-
-.preview-content h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 24px 0 12px;
-    color: var(--text-primary);
-}
-
-.preview-content p {
-    margin: 0 0 16px;
-    color: var(--text-primary);
-}
-
-.preview-content ul,
-.preview-content ol {
-    margin: 0 0 16px;
-    padding-left: 24px;
-}
-
-.preview-content li {
-    margin: 4px 0;
-    color: var(--text-primary);
-}
-
-.preview-content ul li {
-    list-style-type: disc;
-}
-
-.preview-content ol li {
-    list-style-type: decimal;
-}
-
-.preview-content strong {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.preview-content em {
-    font-style: italic;
-}
-
-.preview-content code {
-    background: var(--surface);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 13px;
-    color: var(--text-primary);
-}
-
-.preview-content pre {
-    background: var(--surface);
     padding: 16px;
-    border-radius: var(--radius);
-    overflow-x: auto;
-    margin: 16px 0;
-    border: 1px solid var(--border);
-}
-
-.preview-content pre code {
-    background: none;
-    padding: 0;
-    border-radius: 0;
-}
-
-.preview-content blockquote {
-    border-left: 4px solid var(--primary-color);
-    margin: 16px 0;
-    padding: 12px 20px;
-    background: rgba(37, 99, 235, 0.05);
-    font-style: italic;
-}
-
-.preview-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-}
-
-.preview-content th,
-.preview-content td {
-    border: 1px solid var(--border);
-    padding: 8px 12px;
-    text-align: left;
-}
-
-.preview-content th {
-    background: var(--surface);
-    font-weight: 600;
-}
-
-.preview-content hr {
+    margin: 0;
     border: none;
-    border-top: 1px solid var(--border);
-    margin: 24px 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    width: 100%;
+    height: calc(100vh - 140px);
+    max-height: calc(100vh - 140px);
+    box-sizing: border-box;
+    color: var(--text-primary);
 }
 
-/* Recipe-specific preview styles */
-.preview-content h2:contains("Ingredients") + ul li,
-.preview-content h2:contains("Instructions") + ol li {
-    margin: 8px 0;
-    line-height: 1.5;
+/* Markdown syntax highlighting styles */
+.syntax-overlay .token.title {
+    color: #0969da;
+    font-weight: bold;
 }
 
-.preview-content h2:contains("Notes") + p {
+.syntax-overlay .token.bold {
+    font-weight: bold;
+    color: #24292f;
+}
+
+.syntax-overlay .token.italic {
     font-style: italic;
-    color: var(--text-secondary);
+    color: #24292f;
 }
+
+.syntax-overlay .token.list {
+    color: #8250df;
+}
+
+.syntax-overlay .token.code {
+    background: rgba(175, 184, 193, 0.2);
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #cf222e;
+}
+
+.syntax-overlay .token.url {
+    color: #0969da;
+    text-decoration: underline;
+}
+
+.syntax-overlay .token.punctuation {
+    color: #656d76;
+}
+
+
 
 .editor-status {
     padding: 8px 20px;
@@ -1229,18 +1093,7 @@ body.keyboard-open .modal {
 /* Status indicators */
 
 /* Mobile Styles */
-.codemirror-container.focused {
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
 
-.preview-error {
-    color: var(--error-color);
-    background: rgba(220, 38, 38, 0.1);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    border: 1px solid rgba(220, 38, 38, 0.2);
-    margin: 16px 0;
-}
 
 @media (max-width: 768px) {
     :root {
@@ -1298,29 +1151,12 @@ body.keyboard-open .modal {
         align-items: stretch;
     }
 
-    .view-toggle {
-        order: 2;
-    }
 
     .action-buttons {
         order: 1;
         justify-content: center;
     }
 
-    .editor-panels.split-view {
-        flex-direction: column;
-    }
-
-    .editor-panels.split-view .editor-panel,
-    .editor-panels.split-view .preview-panel {
-        flex: 1;
-        min-height: 0;
-    }
-
-    .editor-panels.split-view .preview-panel {
-        border-left: none;
-        border-top: 1px solid var(--border);
-    }
 
     .welcome-content {
         padding: 20px;
@@ -1376,5 +1212,9 @@ body.keyboard-open .modal {
         --text-primary: #f1f5f9;
         --text-secondary: #cbd5e1;
         --text-muted: #64748b;
+    }
+    
+    .markdown-textarea {
+        caret-color: #f1f5f9 !important;
     }
 }
