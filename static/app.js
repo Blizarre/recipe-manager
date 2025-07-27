@@ -62,7 +62,6 @@ class RecipeApp {
         document.getElementById('desktopNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
         document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
         document.getElementById('welcomeNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
-        document.getElementById('fabNewRecipe')?.addEventListener('click', () => this.showNewRecipeModal());
 
         // Editor actions
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor.save());

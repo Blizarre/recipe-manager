@@ -967,45 +967,6 @@ body {
     to { opacity: 1; }
 }
 
-/* Floating Action Button */
-.fab {
-    display: none;
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 56px;
-    height: 56px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    z-index: 100;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    justify-content: center;
-    align-items: center;
-    will-change: transform, box-shadow;
-}
-
-.fab:hover {
-    background: var(--primary-hover);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.15);
-    transform: scale(1.05);
-}
-
-.fab:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.fab svg {
-    transition: transform 0.2s ease;
-}
-
-.fab:active svg {
-    transform: rotate(45deg);
-}
 
 /* Touch Gesture Feedback */
 .file-tree-item.long-press-active {
@@ -1047,9 +1008,6 @@ body {
 }
 
 /* Adjust layout when virtual keyboard is open */
-body.keyboard-open .fab {
-    bottom: 80px; /* Move FAB up when keyboard is open */
-}
 
 body.keyboard-open .modal {
     height: 100vh;
@@ -1137,9 +1095,6 @@ body.keyboard-open .modal {
         display: none;
     }
 
-    .fab {
-        display: flex;
-    }
 
     .editor-header {
         padding: 12px 16px;
