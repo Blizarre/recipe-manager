@@ -11,7 +11,7 @@ fs_manager = FileSystemManager()
 class FileContent(BaseModel):
     content: str
 
-class FileMove(BaseModel):
+class FileMoveRequest(BaseModel):
     destination: str
 
 class DirectoryCreate(BaseModel):
@@ -36,18 +36,8 @@ async def update_file_content(path: str, file_data: FileContent) -> Dict[str, st
     """Update the content of a specific file"""
     return await fs_manager.write_file(path, file_data.content)
 
-@router.post("/files/{path:path}")
-async def create_file(path: str, file_data: FileContent) -> Dict[str, str]:
-    """Create a new file with content"""
-    return await fs_manager.write_file(path, file_data.content)
-
-@router.delete("/files/{path:path}")
-async def delete_file(path: str) -> Dict[str, str]:
-    """Delete a specific file"""
-    return await fs_manager.delete_file(path)
-
 @router.post("/files/{path:path}/move")
-async def move_file(path: str, move_data: FileMove) -> Dict[str, str]:
+async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
     """Move/rename a file to a new location"""
     try:
         # Read the file content
@@ -62,6 +52,16 @@ async def move_file(path: str, move_data: FileMove) -> Dict[str, str]:
         return {"message": f"File moved from {path} to {move_data.destination}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to move file: {str(e)}")
+
+@router.post("/files/{path:path}")
+async def create_file(path: str, file_data: FileContent) -> Dict[str, str]:
+    """Create a new file with content"""
+    return await fs_manager.write_file(path, file_data.content)
+
+@router.delete("/files/{path:path}")
+async def delete_file(path: str) -> Dict[str, str]:
+    """Delete a specific file"""
+    return await fs_manager.delete_file(path)
 
 @router.get("/directories")
 async def get_directory_tree(path: str = "") -> Dict[str, Any]:

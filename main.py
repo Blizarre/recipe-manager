@@ -28,6 +28,7 @@ RECIPES_DIR.mkdir(exist_ok=True)
 # Mount static files for frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 # Include API routes
 app.include_router(api_router)
 
