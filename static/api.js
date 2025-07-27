@@ -22,7 +22,30 @@ class RecipeAPI {
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-                throw new Error(errorData.detail || `HTTP ${response.status}`);
+                
+                // Handle different error response formats
+                let errorMessage = 'Unknown error';
+                if (errorData.detail) {
+                    if (typeof errorData.detail === 'string') {
+                        errorMessage = errorData.detail;
+                    } else if (typeof errorData.detail === 'object') {
+                        // Handle FastAPI validation errors or complex error objects
+                        if (errorData.detail.message) {
+                            errorMessage = errorData.detail.message;
+                        } else if (Array.isArray(errorData.detail)) {
+                            // Handle validation error arrays
+                            errorMessage = errorData.detail.map(err => err.msg || err.message || 'Validation error').join(', ');
+                        } else {
+                            errorMessage = JSON.stringify(errorData.detail);
+                        }
+                    }
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else {
+                    errorMessage = `HTTP ${response.status}`;
+                }
+                
+                throw new Error(errorMessage);
             }
 
             return await response.json();

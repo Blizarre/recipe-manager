@@ -15,6 +15,7 @@
 ## Instructions
 
  Preheat oven to 375°F (190°C).
+
 2. In a medium bowl, whisk together flour, baking soda, and salt.
 3. In a large bowl, cream together butter and both sugars until light and fluffy.
 4. Beat in vanilla and eggs one at a time.

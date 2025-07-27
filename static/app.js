@@ -329,7 +329,7 @@ class RecipeApp {
             this.showSuccess('Recipe created successfully');
 
         } catch (error) {
-            this.showError('Failed to create recipe: ' + error.message);
+            this.showError('Failed to create recipe: ' + Utils.extractErrorMessage(error, 'Unknown error'));
         }
     }
 
@@ -344,7 +344,7 @@ class RecipeApp {
                 await this.fileTree.createFile(sanitizedName, true);
                 this.showSuccess('Folder created successfully');
             } catch (error) {
-                this.showError(error.message);
+                this.showError(Utils.extractErrorMessage(error, 'Failed to create folder'));
             }
         }
     }
@@ -362,7 +362,7 @@ class RecipeApp {
                 await this.fileTree.renameFile(this.currentContextPath, newPath);
                 this.showSuccess(`${this.currentContextType} renamed successfully`);
             } catch (error) {
-                this.showError(error.message);
+                this.showError(Utils.extractErrorMessage(error, 'Failed to rename item'));
             }
         }
     }
@@ -379,7 +379,7 @@ class RecipeApp {
                 );
                 this.showSuccess(`${this.currentContextType} deleted successfully`);
             } catch (error) {
-                this.showError(error.message);
+                this.showError(Utils.extractErrorMessage(error, 'Failed to delete item'));
             }
         }
     }
@@ -392,6 +392,7 @@ class RecipeApp {
     showError(message) {
         this.showMessage(message, 'error');
     }
+
 
     showMessage(message, type = 'info') {
         // Simple toast notification

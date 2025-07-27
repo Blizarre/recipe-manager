@@ -156,7 +156,7 @@ class SimpleMarkdownEditor {
             this.updateSyntaxHighlighting();
             
         } catch (error) {
-            this.showError('Failed to load file: ' + error.message);
+            this.showError('Failed to load file: ' + Utils.extractErrorMessage(error));
         }
     }
 
@@ -178,7 +178,7 @@ class SimpleMarkdownEditor {
             this.showSuccess('File saved successfully');
             
         } catch (error) {
-            this.showError('Failed to save file: ' + error.message);
+            this.showError('Failed to save file: ' + Utils.extractErrorMessage(error));
         }
     }
 
@@ -250,6 +250,7 @@ class SimpleMarkdownEditor {
     showError(message) {
         this.showMessage(message, 'error');
     }
+
 
     showMessage(message, type = 'info') {
         const toast = document.createElement('div');

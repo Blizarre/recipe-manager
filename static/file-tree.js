@@ -21,7 +21,7 @@ class FileTree {
             this.files = await window.api.listFiles();
             this.render();
         } catch (error) {
-            this.showError('Failed to load files: ' + error.message);
+            this.showError('Failed to load files: ' + Utils.extractErrorMessage(error));
         }
     }
 
@@ -32,6 +32,7 @@ class FileTree {
     showError(message) {
         this.container.innerHTML = `<div class="loading" style="color: var(--error-color);">${message}</div>`;
     }
+
 
     render() {
         if (this.files.length === 0) {

@@ -97,7 +97,7 @@ class SearchComponent {
             
         } catch (error) {
             console.error('Search failed:', error);
-            this.showError('Search failed: ' + error.message);
+            this.showError('Search failed: ' + Utils.extractErrorMessage(error));
         } finally {
             this.isSearching = false;
         }
@@ -197,13 +197,11 @@ class SearchComponent {
     }
 
     escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return Utils.escapeHtml(text);
     }
 
     escapeRegex(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return Utils.escapeRegex(string);
     }
 
     showError(message) {
@@ -213,6 +211,7 @@ class SearchComponent {
         searchResults.style.display = 'block';
         searchResultsList.innerHTML = `<div class="search-empty" style="color: var(--error-color);">${this.escapeHtml(message)}</div>`;
     }
+
 
     clearSearch() {
         const searchResults = document.getElementById('searchResults');
