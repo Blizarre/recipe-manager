@@ -18,9 +18,6 @@ services:
       - PORT=8000
       - RECIPES_DIR=/app/recipes
       
-      # Optional: Custom CORS origins
-      # - CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
-    
     # Restart policy
     restart: unless-stopped
     
