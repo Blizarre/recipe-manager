@@ -47,9 +47,11 @@ class StandaloneRecipeEditor {
     }
 
     setupEventListeners() {
-        // Editor actions in header
+        // Editor actions in header (both mobile and desktop)
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
+        document.getElementById('saveBtnDesktop')?.addEventListener('click', () => this.editor?.save());
         document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
+        document.getElementById('shareBtnDesktop')?.addEventListener('click', () => this.shareUrl());
 
         // Additional keyboard shortcut for save
         document.addEventListener('keydown', (e) => {
@@ -79,10 +81,15 @@ class StandaloneRecipeEditor {
         const fileName = this.recipePath.split('/').pop();
         document.title = `${fileName} - Recipe Editor`;
         
-        // Update file name display (show just filename, not full path)
-        const fileNameElement = document.getElementById('fileName');
-        if (fileNameElement) {
-            fileNameElement.textContent = fileName;
+        // Update file name displays (both mobile and desktop)
+        const fileNameMobile = document.getElementById('fileName');
+        const fileNameDesktop = document.getElementById('fileNameDesktop');
+        
+        if (fileNameMobile) {
+            fileNameMobile.textContent = fileName;
+        }
+        if (fileNameDesktop) {
+            fileNameDesktop.textContent = fileName;
         }
     }
 

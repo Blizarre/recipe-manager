@@ -7,9 +7,7 @@ class CodeMirrorEditor {
         this.view = null;
         this.currentFile = null;
         this.isDirty = false;
-        this.autoSaveTimeout = null;
         this.lastSavedContent = '';
-        this.autoSaveDelay = 4000; // 4 seconds
         
         this.init();
     }
@@ -56,7 +54,6 @@ class CodeMirrorEditor {
                 if (update.docChanged) {
                     this.isDirty = true;
                     this.updateUI();
-                    this.scheduleAutoSave();
                     this.onContentChange?.();
                 }
             }),
@@ -106,6 +103,9 @@ class CodeMirrorEditor {
         // Add keyboard shortcuts
         this.setupKeyboardShortcuts();
         
+        // Setup beforeunload warning for unsaved changes
+        this.setupBeforeUnloadWarning();
+        
         } catch (error) {
             console.error('Failed to setup CodeMirror editor:', error);
             this.showError('Editor setup failed: ' + error.message);
@@ -124,6 +124,19 @@ class CodeMirrorEditor {
             }
         });
     }
+
+    setupBeforeUnloadWarning() {
+        // Warn user when leaving page with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (this.isDirty && this.currentFile) {
+                // Modern browsers require setting returnValue
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+    }
+
 
     async loadFile(path) {
         if (!path) {
@@ -208,31 +221,31 @@ class CodeMirrorEditor {
         }
     }
 
-    scheduleAutoSave() {
-        if (this.autoSaveTimeout) {
-            clearTimeout(this.autoSaveTimeout);
-        }
-        
-        this.autoSaveTimeout = setTimeout(() => {
-            if (this.isDirty && this.currentFile) {
-                this.save();
-            }
-        }, this.autoSaveDelay);
-    }
 
     updateUI() {
-        // Update save button state
+        // Update save button state (both mobile and desktop)
         const saveBtn = document.getElementById('saveBtn');
+        const saveBtnDesktop = document.getElementById('saveBtnDesktop');
+        
         if (saveBtn) {
-            // Enable/disable save button based on whether a file is loaded
-            saveBtn.disabled = !this.currentFile;
+            // Enable save button only when file is loaded AND there are unsaved changes
+            saveBtn.disabled = !this.currentFile || !this.isDirty;
             
             if (this.isDirty && this.currentFile) {
                 saveBtn.classList.add('dirty');
-                saveBtn.textContent = 'Save*';
             } else {
                 saveBtn.classList.remove('dirty');
-                saveBtn.textContent = 'Save';
+            }
+        }
+        
+        if (saveBtnDesktop) {
+            // Enable desktop save button only when file is loaded AND there are unsaved changes
+            saveBtnDesktop.disabled = !this.currentFile || !this.isDirty;
+            
+            if (this.isDirty && this.currentFile) {
+                saveBtnDesktop.classList.add('dirty');
+            } else {
+                saveBtnDesktop.classList.remove('dirty');
             }
         }
         
@@ -294,9 +307,6 @@ class CodeMirrorEditor {
 
     // Cleanup method
     destroy() {
-        if (this.autoSaveTimeout) {
-            clearTimeout(this.autoSaveTimeout);
-        }
         if (this.view) {
             this.view.destroy();
         }
