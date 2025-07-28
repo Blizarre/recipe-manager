@@ -51,6 +51,7 @@ class CodeMirrorEditor {
             basicSetup,
             markdown(),
             window.CodeMirror.syntaxHighlighting(window.CodeMirror.markdownHighlighting),
+            EditorView.lineWrapping,
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
                     this.isDirty = true;
