@@ -126,7 +126,10 @@
                         </div>
                         <div class="form-group">
                             <label for="recipeFolder">Folder (optional):</label>
-                            <input type="text" id="recipeFolder" placeholder="e.g. desserts">
+                            <div class="autocomplete-container">
+                                <input type="text" id="recipeFolder" placeholder="e.g. desserts" autocomplete="off">
+                                <div class="autocomplete-dropdown" id="recipeFolderDropdown"></div>
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="cancelNew">Cancel</button>

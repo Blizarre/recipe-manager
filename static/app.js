@@ -67,8 +67,11 @@ class RecipeApp {
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor.save());
         document.getElementById('refreshBtn')?.addEventListener('click', () => this.fileTree.refresh());
 
-        // Modal handling
+        // Modal handling  
         this.setupModal();
+        
+        // Setup autocomplete for folder input
+        this.setupFolderAutocomplete();
 
         // Context menu handling
         this.setupContextMenu();
@@ -213,7 +216,9 @@ class RecipeApp {
         });
 
         document.getElementById('contextNewFile')?.addEventListener('click', () => {
-            this.showNewRecipeModal();
+            // Pass directory path if context menu was opened on a directory
+            const defaultFolder = this.currentContextType === 'directory' ? this.currentContextPath : '';
+            this.showNewRecipeModal(defaultFolder);
             this.hideContextMenu();
         });
 
@@ -267,15 +272,24 @@ class RecipeApp {
     }
 
     // Modal methods
-    showNewRecipeModal() {
+    showNewRecipeModal(defaultFolder = '') {
         const modal = document.getElementById('newRecipeModal');
         const titleInput = document.getElementById('recipeTitle');
+        const folderInput = document.getElementById('recipeFolder');
+        
+        // Clear previous values FIRST
+        document.getElementById('newRecipeForm').reset();
+        
+        // Set default folder AFTER reset if provided
+        if (defaultFolder) {
+            folderInput.value = defaultFolder;
+        }
+        
+        // Load directories for autocomplete
+        this.loadDirectoriesForAutocomplete?.();
         
         modal.classList.add('active');
         titleInput.focus();
-        
-        // Clear previous values
-        document.getElementById('newRecipeForm').reset();
     }
 
     hideModal() {
@@ -382,6 +396,107 @@ class RecipeApp {
                 this.showError(Utils.extractErrorMessage(error, 'Failed to delete item'));
             }
         }
+    }
+
+    setupFolderAutocomplete() {
+        const folderInput = document.getElementById('recipeFolder');
+        const dropdown = document.getElementById('recipeFolderDropdown');
+        let directories = [];
+        let selectedIndex = -1;
+
+        // Load directories when modal opens
+        const loadDirectories = async () => {
+            try {
+                const files = await window.api.listFiles();
+                directories = files
+                    .filter(file => file.type === 'directory')
+                    .map(dir => dir.path)
+                    .sort();
+            } catch (error) {
+                console.error('Failed to load directories:', error);
+                directories = [];
+            }
+        };
+
+        // Filter and show matching directories
+        const showMatches = (value) => {
+            if (!value.trim()) {
+                dropdown.classList.remove('show');
+                return;
+            }
+
+            const matches = directories.filter(dir => 
+                dir.toLowerCase().includes(value.toLowerCase())
+            );
+
+            if (matches.length === 0) {
+                dropdown.classList.remove('show');
+                return;
+            }
+
+            dropdown.innerHTML = matches.map((dir, index) => 
+                `<div class="autocomplete-item" data-value="${dir}" data-index="${index}">
+                    <span class="folder-icon">📁</span>${dir}
+                </div>`
+            ).join('');
+
+            dropdown.classList.add('show');
+            selectedIndex = -1;
+        };
+
+        // Handle input events
+        folderInput?.addEventListener('input', (e) => {
+            showMatches(e.target.value);
+        });
+
+        // Handle keyboard navigation
+        folderInput?.addEventListener('keydown', (e) => {
+            const items = dropdown.querySelectorAll('.autocomplete-item');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                updateSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                updateSelection(items);
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                items[selectedIndex].click();
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+                selectedIndex = -1;
+            }
+        });
+
+        // Handle item clicks
+        dropdown?.addEventListener('click', (e) => {
+            const item = e.target.closest('.autocomplete-item');
+            if (item) {
+                folderInput.value = item.dataset.value;
+                dropdown.classList.remove('show');
+                selectedIndex = -1;
+            }
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!folderInput?.contains(e.target) && !dropdown?.contains(e.target)) {
+                dropdown?.classList.remove('show');
+                selectedIndex = -1;
+            }
+        });
+
+        // Update visual selection
+        const updateSelection = (items) => {
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === selectedIndex);
+            });
+        };
+
+        // Load directories when modal is shown
+        this.loadDirectoriesForAutocomplete = loadDirectories;
     }
 
     // Utility methods
