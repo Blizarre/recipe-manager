@@ -1,9 +1,10 @@
-// Standalone Recipe Editor for shareable URLs
+// Standalone Recipe Editor with Shared Sidebar
 class StandaloneRecipeEditor {
     constructor() {
         this.recipePath = null;
         this.editor = null;
         this.isLoading = false;
+        this.sidebar = null;
         
         this.init();
     }
@@ -20,17 +21,45 @@ class StandaloneRecipeEditor {
         // Update page title and file info
         this.updatePageInfo();
         
-        // Initialize editor once CodeMirror is ready
+        // Setup components
+        this.setupComponents();
+        this.setupEventListeners();
+        
+        // Initialize editor once CodeMirror is ready, then load content
         if (window.CodeMirrorReady) {
-            this.setupEditor();
+            this.setupEditor().then(() => this.loadRecipeContent());
         } else {
             window.addEventListener('codemirror-ready', () => {
-                this.setupEditor();
+                this.setupEditor().then(() => this.loadRecipeContent());
             });
         }
+    }
 
-        // Setup event handlers
-        this.setupEventHandlers();
+    setupComponents() {
+        // Initialize shared sidebar manager with editor-specific file selection
+        this.sidebar = new SidebarManager((path) => this.onFileSelect(path));
+        
+        // Set callbacks for file operations that affect current URL
+        this.sidebar.setCallbacks({
+            onFileRenamed: (oldPath, newPath) => this.handleFileRenamed(oldPath, newPath),
+            onFileDeleted: (deletedPath) => this.handleFileDeleted(deletedPath)
+        });
+    }
+
+    setupEventListeners() {
+        // Editor actions in header
+        document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
+        document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
+
+        // Additional keyboard shortcut for save
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (this.editor) {
+                    this.editor.save();
+                }
+            }
+        });
     }
 
     extractPathFromUrl() {
@@ -50,10 +79,10 @@ class StandaloneRecipeEditor {
         const fileName = this.recipePath.split('/').pop();
         document.title = `${fileName} - Recipe Editor`;
         
-        // Update file name display
+        // Update file name display (show just filename, not full path)
         const fileNameElement = document.getElementById('fileName');
         if (fileNameElement) {
-            fileNameElement.textContent = this.recipePath;
+            fileNameElement.textContent = fileName;
         }
     }
 
@@ -65,9 +94,6 @@ class StandaloneRecipeEditor {
                 editorContainer,
                 () => this.onContentChange()
             );
-
-            // Load recipe content
-            await this.loadRecipeContent();
             
         } catch (error) {
             console.error('Failed to setup editor:', error);
@@ -76,7 +102,14 @@ class StandaloneRecipeEditor {
     }
 
     async loadRecipeContent() {
-        if (this.isLoading) return;
+        // Wait for editor to be ready
+        if (!this.editor) {
+            return;
+        }
+        
+        if (this.isLoading) {
+            return;
+        }
         
         this.isLoading = true;
         this.showStatus('Loading recipe...');
@@ -101,35 +134,32 @@ class StandaloneRecipeEditor {
         }
     }
 
-    setupEventHandlers() {
-        // Save button
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn?.addEventListener('click', () => {
-            if (this.editor) {
-                this.editor.save();
-            }
-        });
-
-        // Share button
-        const shareBtn = document.getElementById('shareBtn');
-        shareBtn?.addEventListener('click', () => {
-            this.shareUrl();
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                if (this.editor) {
-                    this.editor.save();
-                }
-            }
-        });
+    // Event handlers
+    async onFileSelect(path) {
+        if (path) {
+            // Navigate to the selected file's edit URL
+            window.location.href = `/edit/${path}`;
+        }
     }
 
     onContentChange() {
         // This is called when editor content changes
         // The CodeMirrorEditor class handles auto-save and UI updates
+    }
+
+    // Handle file operations that affect current URL
+    handleFileRenamed(oldPath, newPath) {
+        // If we renamed the current file, navigate to new URL
+        if (oldPath === this.recipePath) {
+            window.location.href = `/edit/${newPath}`;
+        }
+    }
+
+    handleFileDeleted(deletedPath) {
+        // If we deleted the current file, navigate to main page
+        if (deletedPath === this.recipePath) {
+            window.location.href = '/';
+        }
     }
 
     shareUrl() {
@@ -181,30 +211,35 @@ class StandaloneRecipeEditor {
     }
 
     showToast(message, type = 'info') {
-        // Simple toast notification (similar to app.js)
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'error' ? 'var(--error-color)' : 'var(--success-color)'};
-            color: white;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            z-index: 1001;
-            animation: slideIn 0.3s ease;
-            max-width: 300px;
-        `;
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        // Simple toast notification (reuse sidebar's method if available)
+        if (this.sidebar) {
+            this.sidebar.showToast(message, type);
+        } else {
+            // Fallback implementation
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? 'var(--error-color)' : 'var(--success-color)'};
+                color: white;
+                padding: 12px 16px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-lg);
+                z-index: 1001;
+                animation: slideIn 0.3s ease;
+                max-width: 300px;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
     }
 }
 

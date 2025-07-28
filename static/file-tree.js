@@ -12,7 +12,8 @@ class FileTree {
     }
 
     init() {
-        this.refresh();
+        // Don't auto-refresh - let the app manage file loading
+        this.showLoading();
     }
 
     async refresh() {
@@ -23,6 +24,12 @@ class FileTree {
         } catch (error) {
             this.showError('Failed to load files: ' + Utils.extractErrorMessage(error));
         }
+    }
+
+    setFiles(files) {
+        // Set files without making API call
+        this.files = files;
+        this.render();
     }
 
     showLoading() {
@@ -40,10 +47,29 @@ class FileTree {
             return;
         }
 
-        // Build tree structure
+        // For main content area (no context menu), show flat file list
+        if (!this.onContextMenu) {
+            this.renderFlatFileList();
+            return;
+        }
+
+        // Build tree structure for sidebar
         const tree = this.buildTree(this.files);
         this.container.innerHTML = '';
         this.renderTree(tree, this.container);
+    }
+
+    renderFlatFileList() {
+        this.container.innerHTML = '';
+        
+        // Filter to only show files (not directories) and sort them
+        const files = this.files
+            .filter(item => item.type === 'file')
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        files.forEach(file => {
+            this.renderFile(file, this.container, 0);
+        });
     }
 
     buildTree(files) {
@@ -131,7 +157,12 @@ class FileTree {
     renderFile(file, container, level) {
         const fileElement = document.createElement('a');
         fileElement.className = `file-tree-item file ${this.selectedPath === file.path ? 'active' : ''}`;
-        fileElement.style.paddingLeft = `${16 + level * 20}px`;
+        
+        // For main content area, don't add left padding (flat list)
+        if (this.onContextMenu) {
+            fileElement.style.paddingLeft = `${16 + level * 20}px`;
+        }
+        
         fileElement.href = `/edit/${file.path}`;
         fileElement.style.textDecoration = 'none';
         fileElement.style.color = 'inherit';
@@ -142,14 +173,17 @@ class FileTree {
             <span class="name">${file.name}</span>
         `;
 
-        fileElement.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.onContextMenu?.(e, file.path, 'file');
-        });
+        // Only add context menu if callback is provided (sidebar only)
+        if (this.onContextMenu) {
+            fileElement.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.onContextMenu(e, file.path, 'file');
+            });
 
-        // Add drag and drop functionality
-        this.setupDragAndDrop(fileElement, file.path, 'file');
+            // Add drag and drop functionality only in sidebar
+            this.setupDragAndDrop(fileElement, file.path, 'file');
+        }
 
         container.appendChild(fileElement);
     }

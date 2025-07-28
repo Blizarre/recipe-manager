@@ -117,9 +117,16 @@
             <div class="editor-container">
                 <div class="welcome-screen" id="welcomeScreen">
                     <div class="welcome-content">
-                        <h1>Welcome to Recipe Manager</h1>
-                        <p>Select a recipe from the sidebar to start editing, or create a new one.</p>
-                        <button class="btn btn-primary" id="welcomeNewBtn">Create New Recipe</button>
+                        <!-- Desktop welcome message -->
+                        <div class="desktop-welcome" id="desktopWelcome">
+                            <h1>Recipe Manager</h1>
+                            <p>Select a recipe from the sidebar to start editing, or create a new one.</p>
+                        </div>
+                        
+                        <!-- Mobile file tree (shown when sidebar is hidden) -->
+                        <div class="mobile-file-tree" id="mobileFileTree">
+                            <div class="loading">Loading recipes...</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -185,6 +192,7 @@
     <script src="/static/file-tree.js"></script>
     <script src="/static/search.js"></script>
     <script src="/static/touch-gestures.js"></script>
+    <script src="/static/sidebar-manager.js"></script>
     <script src="/static/codemirror-editor.js"></script>
     <script src="/static/app.js"></script>
 </body>

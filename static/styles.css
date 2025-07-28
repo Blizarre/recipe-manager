@@ -92,6 +92,22 @@ body {
 .mobile-header h1 {
     font-size: 18px;
     font-weight: 600;
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-editor-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.mobile-editor-actions .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: auto;
 }
 
 .menu-toggle {
@@ -589,17 +605,37 @@ body {
     padding: 40px;
 }
 
-.welcome-content h1 {
+.welcome-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+/* Desktop welcome message (hidden on mobile) */
+.desktop-welcome {
+    display: block;
+}
+
+.desktop-welcome h1 {
     font-size: 32px;
     font-weight: 600;
     margin-bottom: 12px;
     color: var(--text-primary);
 }
 
-.welcome-content p {
+.desktop-welcome p {
     font-size: 16px;
     color: var(--text-secondary);
     margin-bottom: 24px;
+}
+
+/* Mobile file tree (hidden on desktop) */
+.mobile-file-tree {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    font-size: 14px;
 }
 
 
@@ -1119,6 +1155,22 @@ body.keyboard-open .modal {
         display: none;
     }
 
+    /* Show mobile file tree, hide desktop welcome */
+    .desktop-welcome {
+        display: none;
+    }
+    
+    .mobile-file-tree {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .welcome-screen {
+        padding: 0;
+        align-items: stretch;
+        justify-content: stretch;
+        text-align: left;
+    }
 
     .editor-header {
         padding: 12px 16px;

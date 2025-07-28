@@ -45,26 +45,66 @@
     </script>
 </head>
 <body>
-    <div class="editor-app-container">
-        <!-- Editor Header -->
-        <header class="editor-header">
-            <div class="editor-nav">
-                <a href="/" class="btn btn-secondary back-btn">← Back to Recipes</a>
-            </div>
-            <div class="file-info">
-                <span class="file-name" id="fileName">Loading...</span>
-                <span class="file-status" id="fileStatus"></span>
-            </div>
-            <div class="editor-actions">
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="saveBtn" disabled>Save</button>
-                    <button class="btn btn-secondary" id="shareBtn">Share URL</button>
-                </div>
+    <div class="app-container">
+        <!-- Mobile header -->
+        <header class="mobile-header">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 id="fileName">Loading...</h1>
+            <div class="mobile-editor-actions">
+                <button class="btn btn-primary" id="saveBtn" disabled>Save</button>
+                <button class="btn btn-secondary" id="shareBtn">Share</button>
             </div>
         </header>
 
-        <!-- Main Editor Area -->
-        <main class="editor-main">
+        <!-- Sidebar for file tree (same as main page) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Recipes</h2>
+                <button class="new-recipe-btn desktop-new-btn" id="desktopNewBtn" title="New Recipe">+</button>
+            </div>
+            
+            <!-- Search component -->
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search recipes..." autocomplete="off">
+                    <button class="search-clear" id="searchClear" style="display: none;" title="Clear search">&times;</button>
+                </div>
+                <div class="search-filters">
+                    <label class="search-filter">
+                        <input type="radio" name="searchType" value="content" checked>
+                        <span>Content</span>
+                    </label>
+                    <label class="search-filter">
+                        <input type="radio" name="searchType" value="files">
+                        <span>Files</span>
+                    </label>
+                </div>
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <div class="search-results-header">
+                        <span class="search-results-count" id="searchResultsCount">0 results</span>
+                        <span class="search-duration" id="searchDuration"></span>
+                    </div>
+                    <div class="search-results-list" id="searchResultsList"></div>
+                </div>
+            </div>
+            
+            <div class="file-tree-container">
+                <div class="file-tree" id="fileTree">
+                    <div class="loading">Loading recipes...</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+            </div>
+        </aside>
+
+        <!-- Main content area -->
+        <main class="main-content">
             <div class="editor-container">
                 <div class="editor-wrapper" id="editorWrapper">
                     <div class="editor-panel" id="editorPanel">
@@ -78,10 +118,56 @@
                 </div>
             </div>
         </main>
+
+        <!-- Overlay for mobile -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Modal for new recipe -->
+        <div class="modal" id="newRecipeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Recipe</h3>
+                    <button class="modal-close" id="modalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="newRecipeForm">
+                        <div class="form-group">
+                            <label for="recipeTitle">Recipe Title:</label>
+                            <input type="text" id="recipeTitle" required placeholder="e.g. Chocolate Chip Cookies">
+                        </div>
+                        <div class="form-group">
+                            <label for="recipeFolder">Folder (optional):</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="recipeFolder" placeholder="e.g. desserts" autocomplete="off">
+                                <div class="autocomplete-dropdown" id="recipeFolderDropdown"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="cancelNew">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Recipe</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Context menu -->
+        <div class="context-menu" id="contextMenu">
+            <button class="context-item" id="contextOpen">Open</button>
+            <button class="context-item" id="contextRename">Rename</button>
+            <button class="context-item" id="contextDelete">Delete</button>
+            <hr class="context-divider">
+            <button class="context-item" id="contextNewFile">New Recipe</button>
+            <button class="context-item" id="contextNewFolder">New Folder</button>
+        </div>
     </div>
 
     <script src="/static/utils.js"></script>
     <script src="/static/api.js"></script>
+    <script src="/static/file-tree.js"></script>
+    <script src="/static/search.js"></script>
+    <script src="/static/touch-gestures.js"></script>
+    <script src="/static/sidebar-manager.js"></script>
     <script src="/static/codemirror-editor.js"></script>
     <script src="/static/editor.js"></script>
 </body>

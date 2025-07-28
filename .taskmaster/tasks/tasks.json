@@ -2,224 +2,77 @@
   "master": {
     "tasks": [
       {
-        "id": 9,
-        "title": "Remove Recipe Validation System Backend",
-        "description": "Complete removal of server-side validation logic, endpoints, and related infrastructure",
-        "status": "done",
+        "id": 27,
+        "title": "Create /edit/{path} Backend Route",
+        "description": "Add FastAPI route to serve static editor HTML page for individual recipe URLs",
+        "details": "Create a new FastAPI route handler @app.get('/edit/{path:path}') that serves the static editor.html file. This route should accept any path parameter and return FileResponse('static/editor.html'). The route enables direct access to individual recipes via shareable URLs while reusing existing API endpoints for loading and saving content.",
+        "testStrategy": "Test that /edit/desserts/chocolate-cake.md serves the editor HTML page correctly, verify path parameter is captured, and ensure existing API endpoints remain unaffected",
+        "priority": "high",
         "dependencies": [],
-        "priority": "high",
-        "details": "Backend validation system has been completely removed including all validation endpoints (/recipes/validate, /recipes/template, /recipes/{path}/info), RecipeValidator class elimination, simplified save_recipe and create_recipe endpoints to direct file operations, complete removal of api/recipes.py file, and RecipeContent model cleanup. Only necessary filesystem path validation remains for security purposes.",
-        "testStrategy": "Verify all recipe save operations work without validation delays, test simplified file write operations complete successfully, ensure no validation endpoints remain accessible, confirm error handling only catches file system issues, validate that filesystem path security checks still function properly",
+        "status": "done",
         "subtasks": []
       },
       {
-        "id": 10,
-        "title": "Remove Recipe Validation System Frontend",
-        "description": "Eliminate client-side validation calls, UI indicators, and validation-related components",
-        "status": "done",
-        "dependencies": [
-          9
-        ],
+        "id": 28,
+        "title": "Create Static Editor HTML Template",
+        "description": "Build standalone editor.html page with CodeMirror integration for individual recipe editing",
+        "details": "Create static/editor.html with CodeMirror editor setup, include necessary CSS/JS dependencies, add 'Back to recipes' navigation link to /, and create container structure for the editor. Template should be minimal but functional, reusing existing styles.css and codemirror-editor.js components.",
+        "testStrategy": "Verify HTML loads correctly, CodeMirror initializes properly, back navigation works, and styling matches existing editor appearance",
         "priority": "high",
-        "details": "Frontend validation system has been completely removed including all validation calls from markdown-editor.js (validate(), updateValidationStatus(), auto-validation), validation UI elements from index.html (validateBtn, validationStatus span), validation functions from api.js (validateRecipe(), getRecipeTemplate(), getRecipeInfo()), simplified saveRecipe() to not require validation parameter, removed validation CSS styling (.validation-success, .validation-error, .validation-warning), removed validation event listeners from app.js and editor.js, removed validation keyboard shortcuts (Shift+Enter), and updated comments to remove validation references. Frontend is now completely validation-free with direct save operations.",
-        "testStrategy": "Verify no validation UI elements remain visible, test save operations complete without validation status indicators, ensure no client-side validation errors occur, confirm simplified save workflow functions correctly, validate that all validation-related code has been completely removed from the codebase",
+        "dependencies": [
+          27
+        ],
+        "status": "done",
         "subtasks": []
       },
       {
-        "id": 11,
-        "title": "Research and Select Lightweight Syntax Highlighting Solution",
-        "description": "Evaluate and choose optimal lightweight markdown syntax highlighting library to replace CodeMirror",
-        "status": "done",
-        "dependencies": [
-          10
-        ],
-        "priority": "medium",
-        "details": "Research completed: Prism.js selected as optimal solution. Achieves 92% bundle size reduction (from ~250KB to ~18KB), exceeding 40% target. Performance: 1-2ms highlighting for 1000 characters. Technical approach: Use Prism.js core (~8KB) + markdown language (~2KB) + custom CSS (~3KB) + implementation (~5KB). Implement textarea with transparent text over syntax-highlighted overlay. Alternative options rejected: highlight.js (too large at ~25KB), custom implementation (excessive maintenance overhead). Solution provides complete markdown support for headers, bold, italic, lists, code blocks, and links while maintaining minimal footprint.",
-        "testStrategy": "Confirmed bundle size reduction of 92% vs CodeMirror, verified rendering performance under 2ms for large content, validated syntax highlighting accuracy for all required markdown elements (headers, bold, italic, lists, code blocks, links), confirmed mobile device compatibility and integration approach",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Research available syntax highlighting libraries",
-            "description": "Evaluate Prism.js, highlight.js, and custom implementation options",
-            "status": "done",
-            "dependencies": [],
-            "details": "Completed comprehensive evaluation of three approaches: Prism.js (optimal choice), highlight.js (rejected - too large), and custom implementation (rejected - maintenance overhead)",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Compare bundle size impact",
-            "description": "Analyze size implications of each library option",
-            "status": "done",
-            "dependencies": [],
-            "details": "Prism.js: ~18KB total (92% reduction), highlight.js: ~25KB minimum, custom: variable but high development cost",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Benchmark performance characteristics",
-            "description": "Test rendering speed and efficiency for markdown content",
-            "status": "done",
-            "dependencies": [],
-            "details": "Prism.js achieves 1-2ms highlighting for 1000 characters, suitable for real-time editing",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Validate markdown feature support",
-            "description": "Ensure coverage for headers, bold, italic, lists, code blocks, and links",
-            "status": "done",
-            "dependencies": [],
-            "details": "Prism.js markdown language provides excellent support for all required markdown elements",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Define technical implementation approach",
-            "description": "Document integration strategy for selected solution",
-            "status": "done",
-            "dependencies": [],
-            "details": "Textarea with transparent text over syntax-highlighted overlay approach maintains existing functionality while adding highlighting",
-            "testStrategy": ""
-          }
-        ]
-      },
-      {
-        "id": 12,
-        "title": "Implement Simple Syntax Highlighted Editor",
-        "description": "Replace CodeMirror with lightweight textarea-based editor featuring markdown syntax highlighting",
-        "status": "done",
-        "dependencies": [
-          11
-        ],
+        "id": 29,
+        "title": "Implement Editor JavaScript for URL Handling",
+        "description": "Create editor.js to extract recipe path from URL and handle load/save operations",
+        "details": "Create static/editor.js that extracts path from window.location.pathname (removing '/edit/' prefix), loads recipe content via GET /api/files/{path}, initializes CodeMirror with the content, implements auto-save using PUT /api/files/{path}, and provides visual save status feedback. Reuse existing codemirror-editor.js component for consistency.",
+        "testStrategy": "Test path extraction from various URLs, verify content loading from API, confirm save functionality works, and validate auto-save triggers appropriately",
         "priority": "high",
-        "details": "✅ COMPLETED: Successfully replaced CodeMirror with Prism.js-based solution achieving 97% bundle size reduction (250KB → 18KB). Implemented SimpleMarkdownEditor class with textarea + syntax overlay approach, real-time highlighting for all markdown elements (headers, bold, italic, lists, code blocks, links), preserved auto-save (4s debouncing) and keyboard shortcuts (Ctrl+S). Updated HTML structure (editorContainer + syntaxOverlay), CSS styling, scroll synchronization, tab handling, focus states, and toast notifications. Load time <100ms achieved with no performance lag.",
-        "testStrategy": "✅ All core functionality verified: syntax highlighting renders correctly for all markdown elements, auto-save works with 4-second delay, keyboard shortcuts function properly, editor loads under 100ms, performance tested with large files. Ready for final testing and transition to Task 13 UI streamlining.",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Replace CodeMirror with Prism.js implementation",
-            "description": "Remove CodeMirror dependency and implement Prism.js-based syntax highlighting",
-            "status": "done",
-            "dependencies": [],
-            "details": "✅ COMPLETED: Successfully integrated Prism.js CDN (~8KB), created SimpleMarkdownEditor class, implemented textarea + syntax overlay architecture, achieved 97% bundle size reduction",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Implement markdown syntax highlighting",
-            "description": "Add real-time highlighting for all required markdown elements",
-            "status": "done",
-            "dependencies": [],
-            "details": "✅ COMPLETED: Implemented highlighting for headers (#, ##, ###), bold (**text**), italic (*text*), lists (-, *, 1.), code blocks (```), and links ([text](url)) with proper token styling",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Preserve existing functionality",
-            "description": "Maintain auto-save, keyboard shortcuts, and core editor features",
-            "status": "done",
-            "dependencies": [],
-            "details": "✅ COMPLETED: Preserved auto-save with 4-second debouncing, keyboard shortcuts (Ctrl+S), scroll synchronization, tab handling, focus states, toast notifications, and file status indicators",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Update HTML and CSS structure",
-            "description": "Replace CodeMirror DOM structure with new editor layout",
-            "status": "done",
-            "dependencies": [],
-            "details": "✅ COMPLETED: Replaced codemirrorContainer with editorContainer + syntaxOverlay, removed all CodeMirror CSS, added simple-editor-container styles with proper responsive design",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Performance optimization and testing",
-            "description": "Verify load time under 100ms and test with large files",
-            "status": "done",
-            "dependencies": [],
-            "details": "✅ COMPLETED: Achieved <100ms load time, verified real-time highlighting performance with no lag, tested with large recipe files successfully",
-            "testStrategy": ""
-          }
-        ]
-      },
-      {
-        "id": 13,
-        "title": "Streamline UI and Remove Preview Components",
-        "description": "Eliminate preview panel, split-view functionality, and view toggle buttons for simplified single-panel interface",
-        "status": "done",
         "dependencies": [
-          12
+          28
         ],
-        "priority": "medium",
-        "details": "Remove preview panel and split-view functionality, eliminate view toggle buttons (Edit/Preview/Split) from editor header, remove markdown rendering and preview generation logic, simplify editor layout to single panel design, remove preview-related CSS and responsive layouts, update mobile UI to reflect simplified editor interface",
-        "testStrategy": "Verify no preview UI elements remain accessible, test single-panel layout renders correctly across screen sizes, ensure mobile interface maintains usability without preview mode, confirm editor header shows only essential controls",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Remove view toggle buttons from editor header",
-            "description": "Eliminate Edit/Preview/Split buttons from the editor interface",
-            "status": "done",
-            "dependencies": [],
-            "details": "Successfully removed view toggle buttons (Edit/Preview/Split) from editor header in HTML structure",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Eliminate preview panel and split-view structure",
-            "description": "Remove preview panel HTML elements and split-view layout",
-            "status": "done",
-            "dependencies": [],
-            "details": "Eliminated preview panel and split-view structure entirely, simplified to single editor-panel containing the simple-editor-container",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Remove preview-related CSS styling",
-            "description": "Clean up all CSS related to preview functionality",
-            "status": "done",
-            "dependencies": [],
-            "details": "Removed all preview-related CSS (.preview-content, .preview-panel, .preview-loading, etc.), removed view toggle button styling (.view-toggle, .btn-toggle states), removed split-view and preview-only responsive layouts",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Simplify mobile CSS for single-panel design",
-            "description": "Update mobile responsive layouts for streamlined interface",
-            "status": "done",
-            "dependencies": [],
-            "details": "Cleaned up mobile CSS to remove preview mode references, simplified editor layout to single panel design",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Remove preview functionality from JavaScript",
-            "description": "Eliminate view switching logic and preview generation code",
-            "status": "done",
-            "dependencies": [],
-            "details": "No preview functionality remaining in simple-editor.js (already single-panel focused), no preview button references in app.js, eliminated all view switching logic",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Verify streamlined interface functionality",
-            "description": "Test that clean single-panel editor interface works correctly",
-            "status": "done",
-            "dependencies": [],
-            "details": "Clean, single-panel editor interface with no preview complexity achieved. UI now shows only essential controls (Save button) in header and focuses entirely on markdown editing experience with real-time syntax highlighting. Mobile interface maintains full usability without preview mode overhead. Interface optimized for streamlined editing workflow specified in v2.0 requirements.",
-            "testStrategy": ""
-          }
-        ]
+        "status": "done",
+        "subtasks": []
       },
       {
-        "id": 14,
-        "title": "Optimize Performance and Finalize Migration",
-        "description": "Complete performance optimization, dependency cleanup, and comprehensive testing of simplified editor system",
-        "details": "Remove CodeMirror CSS and JavaScript dependencies from bundle, clean up unused preview-related code and imports, optimize editor initialization and event handling, preserve essential features like character/line counting, file status indicators, touch gesture support, and file tree integration, perform comprehensive testing across devices",
-        "testStrategy": "Verify >40% JavaScript bundle size reduction achieved, confirm editor load time under 100ms, test save operations complete under 50ms, ensure all existing file operations continue working, verify search functionality remains intact, test mobile experience maintains current quality",
+        "id": 30,
+        "title": "Update File Tree Navigation Links",
+        "description": "Modify home page file tree to link to /edit/{path} URLs instead of JavaScript handlers",
+        "details": "Update the file tree component in index.html/app.js to generate anchor tags with href='/edit/{path}' instead of onclick JavaScript handlers. Preserve existing file tree structure, search functionality, and visual styling while enabling direct navigation to shareable recipe URLs.",
+        "testStrategy": "Verify file tree links navigate to correct /edit/{path} URLs, confirm search results also use new URL format, and ensure home page functionality remains intact",
         "priority": "medium",
         "dependencies": [
-          13
+          29
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "Add Recipe URL Sharing Feature",
+        "description": "Implement URL copying functionality for easy recipe sharing",
+        "details": "Add a 'Share' button to the editor page that copies the current recipe URL to clipboard using navigator.clipboard.writeText(). Include visual feedback (toast notification or button state change) to confirm successful copying. Position button near the 'Back to recipes' link for intuitive access.",
+        "testStrategy": "Test clipboard copying functionality across modern browsers, verify visual feedback appears, and confirm copied URLs are correctly formatted and functional",
+        "priority": "low",
+        "dependencies": [
+          30
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 32,
+        "title": "Integration Testing and Polish",
+        "description": "Comprehensive testing of shareable URL functionality and user experience refinements",
+        "details": "Test complete user flow: accessing recipes via direct URLs, editing and saving content, navigation between home and editor pages, URL sharing functionality, and browser back/forward/bookmark behavior. Verify all existing functionality remains unchanged, API endpoints work correctly, and editor experience matches current v2 implementation.",
+        "testStrategy": "Perform end-to-end testing of shareable URL workflow, validate backward compatibility with existing features, test edge cases with special characters in file paths, and confirm performance remains acceptable",
+        "priority": "medium",
+        "dependencies": [
+          31
         ],
         "status": "done",
         "subtasks": []
@@ -227,7 +80,7 @@
     ],
     "metadata": {
       "created": "2025-07-27T13:35:50.934Z",
-      "updated": "2025-07-27T20:04:03.369Z",
+      "updated": "2025-07-28T15:29:48.028Z",
       "description": "Tasks for master context"
     }
   }
