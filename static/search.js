@@ -2,8 +2,6 @@
 class SearchComponent {
     constructor(onFileSelect) {
         this.onFileSelect = onFileSelect;
-        this.searchTimeout = null;
-        this.searchDelay = 300; // 300ms debouncing
         this.isSearching = false;
         this.currentQuery = '';
         this.currentSearchType = 'content';
@@ -20,7 +18,7 @@ class SearchComponent {
         const searchClear = document.getElementById('searchClear');
         const searchFilters = document.querySelectorAll('input[name="searchType"]');
         
-        // Search input handling with debouncing
+        // Search input handling - immediate search
         searchInput?.addEventListener('input', (e) => {
             const query = e.target.value.trim();
             this.currentQuery = query;
@@ -28,16 +26,9 @@ class SearchComponent {
             // Show/hide clear button
             searchClear.style.display = query ? 'block' : 'none';
             
-            // Clear previous timeout
-            if (this.searchTimeout) {
-                clearTimeout(this.searchTimeout);
-            }
-            
-            // Debounce search
+            // Immediate search
             if (query.length >= 2) {
-                this.searchTimeout = setTimeout(() => {
-                    this.performSearch(query, this.currentSearchType);
-                }, this.searchDelay);
+                this.performSearch(query, this.currentSearchType);
             } else if (query.length === 0) {
                 this.clearSearch();
             }
@@ -220,11 +211,6 @@ class SearchComponent {
         
         searchResults.style.display = 'none';
         this.currentQuery = '';
-        
-        if (this.searchTimeout) {
-            clearTimeout(this.searchTimeout);
-            this.searchTimeout = null;
-        }
     }
 
     // Public method to focus search input
