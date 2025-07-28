@@ -12,32 +12,17 @@ services:
     volumes:
       # Persist recipes outside container
       - ./recipes:/app/recipes
-      # Optional: Mount custom config
-      # - ./config:/app/config
     environment:
       # Server configuration
       - HOST=0.0.0.0
       - PORT=8000
       - RECIPES_DIR=/app/recipes
       
-      # Optional: Enable debug mode
-      # - DEBUG=true
-      
       # Optional: Custom CORS origins
       # - CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
     
     # Restart policy
     restart: unless-stopped
-    
-    # Resource limits (optional)
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.25'
     
     # Health check
     healthcheck:
@@ -47,47 +32,6 @@ services:
       retries: 3
       start_period: 40s
     
-    # Logging configuration
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-# Optional: Add a reverse proxy (nginx) for production
-# Uncomment the sections below if you want nginx in front
-
-#  nginx:
-#    image: nginx:alpine
-#    container_name: recipe-manager-nginx
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    volumes:
-#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-#      # SSL certificates (if using HTTPS)
-#      # - ./ssl:/etc/nginx/ssl:ro
-#    depends_on:
-#      - recipe-manager
-#    restart: unless-stopped
-
-# Optional: Add a backup service
-#  backup:
-#    image: alpine:latest
-#    container_name: recipe-manager-backup
-#    volumes:
-#      - ./recipes:/data/recipes:ro
-#      - ./backups:/backups
-#    command: |
-#      sh -c "
-#        while true; do
-#          tar -czf /backups/recipes-backup-$$(date +%Y%m%d-%H%M%S).tar.gz -C /data recipes
-#          find /backups -name 'recipes-backup-*.tar.gz' -type f -mtime +7 -delete
-#          sleep 86400
-#        done
-#      "
-#    restart: unless-stopped
-
 # Networks (optional)
 networks:
   default:
