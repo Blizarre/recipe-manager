@@ -584,7 +584,7 @@ body {
 
 
 
-.simple-editor-container {
+.codemirror-container {
     position: relative;
     flex: 1;
     display: flex;
@@ -596,109 +596,52 @@ body {
     background: var(--background);
 }
 
-.simple-editor-container.focused {
+.codemirror-container.focused {
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
-.markdown-textarea {
-    position: relative;
-    z-index: 2;
-    background: transparent !important;
-    color: transparent !important;
-    caret-color: #333 !important;
-    resize: none;
+/* CodeMirror editor styling */
+.codemirror-container .cm-editor {
+    width: 100%;
+    height: calc(100vh - 140px);
     border: none;
     outline: none;
+    background: var(--background);
+}
+
+.codemirror-container .cm-content {
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     font-size: 14px;
     line-height: 1.6;
-    padding: 16px;
-    width: 100%;
-    height: calc(100vh - 140px);
-    max-height: calc(100vh - 140px);
-    box-sizing: border-box;
-    overflow: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--text-muted) var(--surface);
-}
-
-.markdown-textarea::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-}
-
-.markdown-textarea::-webkit-scrollbar-track {
-    background: var(--surface);
-    border-radius: 6px;
-}
-
-.markdown-textarea::-webkit-scrollbar-thumb {
-    background: #94a3b8;
-    border-radius: 6px;
-    border: 2px solid var(--surface);
-}
-
-.markdown-textarea::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
-}
-
-.syntax-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-    pointer-events: none;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 14px;
-    line-height: 1.6;
-    padding: 16px;
-    margin: 0;
-    border: none;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow: hidden;
-    width: 100%;
-    height: calc(100vh - 140px);
-    max-height: calc(100vh - 140px);
-    box-sizing: border-box;
     color: var(--text-primary);
 }
 
-/* Markdown syntax highlighting styles */
-.syntax-overlay .token.title {
-    color: #0969da;
-    font-weight: bold;
+.codemirror-container .cm-focused {
+    outline: none;
 }
 
-.syntax-overlay .token.bold {
-    font-weight: bold;
-    color: #24292f;
+
+/* Custom scrollbar styling for CodeMirror editor */
+.codemirror-container .cm-scroller::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-.syntax-overlay .token.italic {
-    font-style: italic;
-    color: #24292f;
+.codemirror-container .cm-scroller::-webkit-scrollbar-track {
+    background: var(--surface);
+    border-radius: 4px;
 }
 
-.syntax-overlay .token.list {
-    color: #8250df;
+.codemirror-container .cm-scroller::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
 }
 
-.syntax-overlay .token.code {
-    background: rgba(175, 184, 193, 0.2);
-    padding: 2px 4px;
-    border-radius: 3px;
-    color: #cf222e;
+.codemirror-container .cm-scroller::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
-.syntax-overlay .token.url {
-    color: #0969da;
-    text-decoration: underline;
-}
-
-.syntax-overlay .token.punctuation {
-    color: #656d76;
-}
+/* CodeMirror editor will handle syntax highlighting internally */
 
 
 

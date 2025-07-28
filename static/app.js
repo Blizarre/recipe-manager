@@ -35,9 +35,9 @@ class RecipeApp {
             (event, path, type) => this.onContextMenu(event, path, type)
         );
 
-        // Initialize simple markdown editor
+        // Initialize CodeMirror editor
         const editorContainer = document.getElementById('editorContainer');
-        this.editor = new SimpleMarkdownEditor(
+        this.editor = new CodeMirrorEditor(
             editorContainer,
             () => this.onEditorChange()
         );
