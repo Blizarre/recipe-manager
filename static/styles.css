@@ -1151,18 +1151,3 @@ body.keyboard-open .modal {
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0f172a;
-        --surface: #1e293b;
-        --border: #334155;
-        --text-primary: #f1f5f9;
-        --text-secondary: #cbd5e1;
-        --text-muted: #64748b;
-    }
-    
-    .markdown-textarea {
-        caret-color: #f1f5f9 !important;
-    }
-}
