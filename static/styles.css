@@ -676,7 +676,7 @@ body {
     background: var(--text-muted);
 }
 
-/* CodeMirror editor will handle syntax highlighting internally */
+/* CodeMirror editor styling is handled via HighlightStyle in codemirror-editor.js */
 
 
 

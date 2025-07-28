@@ -15,8 +15,16 @@ class CodeMirrorEditor {
     }
 
     init() {
-        this.setupEditor();
-        this.updateUI();
+        // Wait for CodeMirror to load from ES modules
+        if (window.CodeMirrorReady) {
+            this.setupEditor();
+            this.updateUI();
+        } else {
+            window.addEventListener('codemirror-ready', () => {
+                this.setupEditor();
+                this.updateUI();
+            });
+        }
     }
 
     setupEditor() {
@@ -27,18 +35,22 @@ class CodeMirrorEditor {
         }
 
         // Check if CodeMirror is available
-        if (typeof CodeMirror === 'undefined') {
-            console.error('CodeMirror not loaded');
+        if (!window.CodeMirror || !window.CodeMirror.EditorView) {
+            console.error('CodeMirror not loaded properly');
+            this.showError('Editor failed to load. Please refresh the page.');
             return;
         }
 
+        try {
+
         // Create CodeMirror 6 editor with basic configuration
-        const { EditorView, basicSetup } = CodeMirror;
-        const { EditorState } = CodeMirror;
+        const { EditorView, basicSetup, EditorState, markdown } = window.CodeMirror;
         
         // Create extensions array
         const extensions = [
             basicSetup,
+            markdown(),
+            window.CodeMirror.syntaxHighlighting(window.CodeMirror.markdownHighlighting),
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
                     this.isDirty = true;
@@ -92,6 +104,11 @@ class CodeMirrorEditor {
 
         // Add keyboard shortcuts
         this.setupKeyboardShortcuts();
+        
+        } catch (error) {
+            console.error('Failed to setup CodeMirror editor:', error);
+            this.showError('Editor setup failed: ' + error.message);
+        }
     }
 
 
@@ -206,6 +223,9 @@ class CodeMirrorEditor {
         // Update save button state
         const saveBtn = document.getElementById('saveBtn');
         if (saveBtn) {
+            // Enable/disable save button based on whether a file is loaded
+            saveBtn.disabled = !this.currentFile;
+            
             if (this.isDirty && this.currentFile) {
                 saveBtn.classList.add('dirty');
                 saveBtn.textContent = 'Save*';

@@ -9,9 +9,40 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- CodeMirror 6 for syntax highlighting editor -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <!-- CodeMirror 6 modules -->
+    <script type="module">
+        import { EditorView } from 'https://esm.sh/@codemirror/view';
+        import { EditorState } from 'https://esm.sh/@codemirror/state';
+        import { basicSetup } from 'https://esm.sh/codemirror';
+        import { markdown } from 'https://esm.sh/@codemirror/lang-markdown';
+        import { HighlightStyle, syntaxHighlighting } from 'https://esm.sh/@codemirror/language';
+        import { tags } from 'https://esm.sh/@lezer/highlight';
+        
+        // Create custom highlight style for markdown
+        const markdownHighlighting = HighlightStyle.define([
+            { tag: tags.heading1, color: '#1e40af', fontWeight: 'bold', fontSize: '1.2em' },
+            { tag: tags.heading2, color: '#1e40af', fontWeight: 'bold', fontSize: '1.1em' },
+            { tag: tags.heading3, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading4, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading5, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading6, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading, color: '#1e40af', fontWeight: 'bold' }
+        ]);
+        
+        // Make CodeMirror available globally
+        window.CodeMirror = {
+            EditorView,
+            EditorState,
+            basicSetup,
+            markdown,
+            syntaxHighlighting,
+            markdownHighlighting
+        };
+        
+        // Signal that CodeMirror is ready
+        window.CodeMirrorReady = true;
+        window.dispatchEvent(new Event('codemirror-ready'));
+    </script>
 </head>
 <body>
     <div class="app-container">
