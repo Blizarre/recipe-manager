@@ -129,20 +129,18 @@ class FileTree {
     }
 
     renderFile(file, container, level) {
-        const fileElement = document.createElement('div');
+        const fileElement = document.createElement('a');
         fileElement.className = `file-tree-item file ${this.selectedPath === file.path ? 'active' : ''}`;
         fileElement.style.paddingLeft = `${16 + level * 20}px`;
+        fileElement.href = `/edit/${file.path}`;
+        fileElement.style.textDecoration = 'none';
+        fileElement.style.color = 'inherit';
         
         const icon = this.getFileIcon(file.name);
         fileElement.innerHTML = `
             <span class="icon">${icon}</span>
             <span class="name">${file.name}</span>
         `;
-
-        fileElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.selectFile(file.path, fileElement);
-        });
 
         fileElement.addEventListener('contextmenu', (e) => {
             e.preventDefault();

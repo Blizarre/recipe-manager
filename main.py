@@ -34,6 +34,13 @@ async def serve_frontend():
     return "static/index.html"
 
 
+# Serve individual recipe editor pages
+@app.get("/edit/{path:path}", response_class=FileResponse)
+async def serve_recipe_editor(path: str):
+    """Serve static editor HTML page for individual recipe URLs"""
+    return "static/editor.html"
+
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "recipes_dir": str(RECIPES_DIR.absolute())}

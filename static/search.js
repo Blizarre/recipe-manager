@@ -131,8 +131,11 @@ class SearchComponent {
     }
 
     createResultElement(result, searchType) {
-        const div = document.createElement('div');
-        div.className = 'search-result-item';
+        const a = document.createElement('a');
+        a.className = 'search-result-item';
+        a.href = `/edit/${result.path}`;
+        a.style.textDecoration = 'none';
+        a.style.color = 'inherit';
         
         let typeLabel = '';
         let preview = '';
@@ -154,7 +157,7 @@ class SearchComponent {
             preview = result.path;
         }
         
-        div.innerHTML = `
+        a.innerHTML = `
             <div class="search-result-title">
                 ${this.escapeHtml(result.title || result.name)}
                 ${typeLabel}
@@ -164,13 +167,7 @@ class SearchComponent {
             ${matches}
         `;
         
-        // Add click handler
-        div.addEventListener('click', () => {
-            this.onFileSelect(result.path);
-            this.clearSearch(); // Optional: clear search after selection
-        });
-        
-        return div;
+        return a;
     }
 
     highlightSearchTerms(text, query) {
