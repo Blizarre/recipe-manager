@@ -190,6 +190,41 @@ body {
     background: var(--text-muted);
 }
 
+/* Drag and Drop Styles */
+.file-tree-item[draggable="true"] {
+    cursor: grab !important;
+}
+
+.file-tree-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.file-tree-item.drag-over {
+    background: rgba(37, 99, 235, 0.1);
+    border: 2px dashed var(--primary-color);
+    border-radius: var(--radius);
+}
+
+.file-tree-item.drop-target {
+    background: rgba(34, 197, 94, 0.1);
+    border: 2px solid var(--success-color);
+    border-radius: var(--radius);
+}
+
+.drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+}
+
 .sidebar-footer {
     padding: 16px;
     border-top: 1px solid var(--border);

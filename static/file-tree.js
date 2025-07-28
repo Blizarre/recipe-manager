@@ -104,6 +104,9 @@ class FileTree {
             this.onContextMenu?.(e, directory.path, 'directory');
         });
 
+        // Add drag and drop functionality
+        this.setupDragAndDrop(dirElement, directory.path, 'directory');
+
         container.appendChild(dirElement);
 
         // Render children if expanded
@@ -146,6 +149,9 @@ class FileTree {
             e.stopPropagation();
             this.onContextMenu?.(e, file.path, 'file');
         });
+
+        // Add drag and drop functionality
+        this.setupDragAndDrop(fileElement, file.path, 'file');
 
         container.appendChild(fileElement);
     }
@@ -323,5 +329,203 @@ class FileTree {
         this.refreshTimeout = setTimeout(() => {
             this.refresh();
         }, 1000);
+    }
+
+    // Drag and Drop functionality
+    setupDragAndDrop(element, path, type) {
+        // Make element draggable
+        element.draggable = true;
+        element.dataset.path = path;
+        element.dataset.type = type;
+
+        // Drag start
+        element.addEventListener('dragstart', (e) => {
+            element.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                path: path,
+                type: type,
+                name: this.getFileName(path)
+            }));
+            e.dataTransfer.effectAllowed = 'move';
+
+            // Create custom drag image
+            this.createDragGhost(e, this.getFileName(path), type);
+        });
+
+        // Drag end
+        element.addEventListener('dragend', (e) => {
+            element.classList.remove('dragging');
+            this.removeDragGhost();
+            // Clean up any drag-over states
+            this.clearDragStates();
+        });
+
+        // Only directories can be drop targets
+        if (type === 'directory') {
+            this.setupDropTarget(element, path);
+        }
+
+        // Also setup root drop target (files can be moved to root)
+        this.setupRootDropTarget();
+    }
+
+    setupDropTarget(element, targetPath) {
+        element.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const dragData = this.getDragData(e);
+            if (dragData && dragData.path !== targetPath) {
+                element.classList.add('drag-over');
+                e.dataTransfer.dropEffect = 'move';
+            }
+        });
+
+        element.addEventListener('dragleave', (e) => {
+            // Only remove if we're actually leaving this element
+            if (!element.contains(e.relatedTarget)) {
+                element.classList.remove('drag-over');
+            }
+        });
+
+        element.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            element.classList.remove('drag-over');
+            
+            const dragData = this.getDragData(e);
+            if (dragData && dragData.path !== targetPath) {
+                this.handleDrop(dragData, targetPath);
+            }
+        });
+    }
+
+    setupRootDropTarget() {
+        if (this.rootDropSetup) return; // Avoid duplicate setup
+
+        const fileTreeContainer = this.container;
+        
+        fileTreeContainer.addEventListener('dragover', (e) => {
+            // Only allow drop on empty space (not on file/folder elements)
+            if (!e.target.closest('.file-tree-item')) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            }
+        });
+
+        fileTreeContainer.addEventListener('drop', (e) => {
+            // Only handle drop on empty space
+            if (!e.target.closest('.file-tree-item')) {
+                e.preventDefault();
+                
+                const dragData = this.getDragData(e);
+                if (dragData) {
+                    this.handleDrop(dragData, ''); // Empty string means root
+                }
+            }
+        });
+
+        this.rootDropSetup = true;
+    }
+
+    getDragData(e) {
+        try {
+            return JSON.parse(e.dataTransfer.getData('text/plain'));
+        } catch {
+            return null;
+        }
+    }
+
+    async handleDrop(dragData, targetPath) {
+        const sourcePath = dragData.path;
+        const fileName = this.getFileName(sourcePath);
+        
+        // Calculate destination path
+        let destinationPath;
+        if (targetPath === '') {
+            // Dropped on root
+            destinationPath = fileName;
+        } else {
+            // Dropped on a directory
+            destinationPath = `${targetPath}/${fileName}`;
+        }
+
+        // Don't move if it's the same location
+        if (sourcePath === destinationPath) {
+            return;
+        }
+
+        // Prevent moving a directory into itself
+        if (dragData.type === 'directory' && targetPath.startsWith(sourcePath + '/')) {
+            window.app?.showError('Cannot move a folder into itself');
+            return;
+        }
+
+        try {
+            await window.api.moveFile(sourcePath, destinationPath);
+            
+            // Update current file selection if needed
+            if (this.selectedPath === sourcePath) {
+                this.selectedPath = destinationPath;
+                // Update editor if this file is currently open
+                if (window.app?.editor?.getCurrentFile() === sourcePath) {
+                    window.app.editor.currentFile = destinationPath;
+                }
+            }
+            
+            await this.refresh();
+            window.app?.showSuccess(`Moved ${fileName} successfully`);
+            
+        } catch (error) {
+            console.error('Failed to move file:', error);
+            window.app?.showError('Failed to move file: ' + Utils.extractErrorMessage(error));
+        }
+    }
+
+    createDragGhost(e, fileName, type) {
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.textContent = `${type === 'directory' ? '📁' : '📄'} ${fileName}`;
+        
+        document.body.appendChild(ghost);
+        this.dragGhost = ghost;
+        
+        // Position the ghost element
+        this.updateDragGhost(e);
+        
+        // Hide the default drag image
+        const emptyImg = new Image();
+        emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+        e.dataTransfer.setDragImage(emptyImg, 0, 0);
+        
+        // Track mouse movement to update ghost position
+        document.addEventListener('dragover', this.updateDragGhost.bind(this));
+    }
+
+    updateDragGhost(e) {
+        if (this.dragGhost) {
+            this.dragGhost.style.left = (e.clientX + 10) + 'px';
+            this.dragGhost.style.top = (e.clientY - 10) + 'px';
+        }
+    }
+
+    removeDragGhost() {
+        if (this.dragGhost) {
+            document.removeEventListener('dragover', this.updateDragGhost.bind(this));
+            this.dragGhost.remove();
+            this.dragGhost = null;
+        }
+    }
+
+    clearDragStates() {
+        // Remove all drag-over classes
+        this.container.querySelectorAll('.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    }
+
+    getFileName(path) {
+        return path.split('/').pop() || path;
     }
 }
