@@ -9,7 +9,7 @@ from api.routes import router as api_router
 app = FastAPI(
     title="Recipe Manager API",
     description="A FastAPI backend for managing recipe files",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 # Configure CORS
@@ -32,19 +32,24 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Include API routes
 app.include_router(api_router)
 
+
 @app.get("/api")
 async def root():
     return {"message": "Recipe Manager API", "status": "running"}
+
 
 # Serve frontend
 @app.get("/", response_class=FileResponse)
 async def serve_frontend():
     return "static/index.html"
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "recipes_dir": str(RECIPES_DIR.absolute())}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
