@@ -4,14 +4,10 @@
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
+ENV UV_COMPILE_BYTECODE=1 \
     RECIPES_DIR=/app/recipes \
     HOST=0.0.0.0 \
     PORT=8000
-
-# Create non-root user for security
-RUN groupadd -r recipes && useradd -r -g recipes recipes
 
 # Set working directory
 WORKDIR /app
@@ -20,10 +16,13 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install Python dependencies using uv
-RUN uv sync --frozen
+RUN uv sync --locked --no-install-project --no-dev
 
 # Copy application code
 COPY . .
+
+# Create non-root user for security
+RUN groupadd -r recipes && useradd -m -r -g recipes recipes
 
 # Create recipes directory and set permissions
 RUN mkdir -p /app/recipes && \
@@ -35,9 +34,11 @@ USER recipes
 # Expose port
 EXPOSE 8000
 
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD uv run python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
 # Start command
-CMD ["uv", "run", "python", "main.py"]
+CMD ["python", "main.py"]
