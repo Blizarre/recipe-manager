@@ -829,6 +829,27 @@ body {
     min-height: var(--min-touch-target);
 }
 
+.new-folder-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+}
+
+.new-folder-btn:hover {
+    background: var(--text-secondary);
+    transform: scale(1.05);
+}
+
 /* Modal */
 .modal {
     display: none;
@@ -970,46 +991,6 @@ body {
 .autocomplete-item .folder-icon {
     color: var(--text-muted);
     margin-right: 8px;
-}
-
-/* Context Menu */
-.context-menu {
-    position: fixed;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    padding: 4px 0;
-    z-index: 1000;
-    display: none;
-    min-width: 150px;
-}
-
-.context-menu.active {
-    display: block;
-}
-
-.context-item {
-    display: block;
-    width: 100%;
-    padding: 8px 16px;
-    background: none;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--text-primary);
-    min-height: var(--min-touch-target);
-}
-
-.context-item:hover {
-    background: var(--surface);
-}
-
-.context-divider {
-    margin: 4px 0;
-    border: none;
-    border-top: 1px solid var(--border);
 }
 
 /* Overlay */

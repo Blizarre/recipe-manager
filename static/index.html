@@ -66,6 +66,7 @@
             <div class="sidebar-header">
                 <h2>Recipes</h2>
                 <button class="new-recipe-btn desktop-new-btn" id="desktopNewBtn" title="New Recipe">+</button>
+                <button class="new-folder-btn" id="newFolderBtn" title="New Folder">📁+</button>
             </div>
             
             <!-- Search component -->
@@ -187,15 +188,28 @@
             </div>
         </div>
 
-        <!-- Context menu -->
-        <div class="context-menu" id="contextMenu">
-            <button class="context-item" id="contextOpen">Open</button>
-            <button class="context-item" id="contextRename">Rename</button>
-            <button class="context-item" id="contextDelete">Delete</button>
-            <hr class="context-divider">
-            <button class="context-item" id="contextNewFile">New Recipe</button>
-            <button class="context-item" id="contextNewFolder">New Folder</button>
+        <!-- New Folder Modal -->
+        <div class="modal" id="newFolderModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Folder</h3>
+                    <button class="modal-close" id="folderModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="newFolderForm">
+                        <div class="form-group">
+                            <label for="folderName">Folder Name:</label>
+                            <input type="text" id="folderName" required placeholder="e.g. desserts">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="cancelNewFolder">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Folder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
+
     </div>
 
     <script src="/static/utils.js"></script>

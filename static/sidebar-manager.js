@@ -5,9 +5,6 @@ class SidebarManager {
         this.onFilesLoaded = onFilesLoaded || (() => {});
         this.fileTree = null;
         this.search = null;
-        this.contextMenu = null;
-        this.currentContextPath = null;
-        this.currentContextType = null;
         this.cachedFiles = [];
         
         this.init();
@@ -18,8 +15,8 @@ class SidebarManager {
         this.setupEventListeners();
         this.setupMobile();
         this.setupModal();
+        this.setupFolderModal();
         this.setupFolderAutocomplete();
-        this.setupContextMenu();
         
         // Initial load of file tree
         this.refreshFileTree();
@@ -30,8 +27,7 @@ class SidebarManager {
         const fileTreeContainer = document.getElementById('fileTree');
         this.fileTree = new FileTree(
             fileTreeContainer,
-            (path) => this.handleFileSelect(path),
-            (event, path, type) => this.onContextMenu(event, path, type)
+            (path) => this.handleFileSelect(path)
         );
 
         // Initialize search component
@@ -45,26 +41,18 @@ class SidebarManager {
             this.setupVirtualKeyboardHandling();
         }
 
-        // Setup context menu
-        this.contextMenu = document.getElementById('contextMenu');
     }
 
     setupEventListeners() {
         // New recipe buttons
         document.getElementById('desktopNewBtn')?.addEventListener('click', () => this.showNewRecipeModal());
+        
+        // New folder button
+        document.getElementById('newFolderBtn')?.addEventListener('click', () => this.showNewFolderModal());
 
         // Refresh button
         document.getElementById('refreshBtn')?.addEventListener('click', () => this.refreshFileTree());
 
-        // Global click handler to close context menu
-        document.addEventListener('click', () => this.hideContextMenu());
-        
-        // Prevent context menu on right click (we handle it ourselves)
-        document.addEventListener('contextmenu', (e) => {
-            if (!e.target.closest('.file-tree-item')) {
-                e.preventDefault();
-            }
-        });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -85,8 +73,8 @@ class SidebarManager {
             }
             
             if (e.key === 'Escape') {
-                this.hideContextMenu();
                 this.hideModal();
+                this.hideFolderModal();
                 // Search escape is handled in search.js
             }
         });
@@ -173,34 +161,25 @@ class SidebarManager {
         });
     }
 
-    setupContextMenu() {
-        document.getElementById('contextOpen')?.addEventListener('click', () => {
-            if (this.currentContextType === 'file') {
-                this.handleFileSelect(this.currentContextPath);
+    setupFolderModal() {
+        const modal = document.getElementById('newFolderModal');
+        const form = document.getElementById('newFolderForm');
+        const closeBtn = document.getElementById('folderModalClose');
+        const cancelBtn = document.getElementById('cancelNewFolder');
+
+        closeBtn?.addEventListener('click', () => this.hideFolderModal());
+        cancelBtn?.addEventListener('click', () => this.hideFolderModal());
+
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.createNewFolder();
+        });
+
+        // Close modal when clicking outside
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideFolderModal();
             }
-            this.hideContextMenu();
-        });
-
-        document.getElementById('contextRename')?.addEventListener('click', () => {
-            this.renameItem();
-            this.hideContextMenu();
-        });
-
-        document.getElementById('contextDelete')?.addEventListener('click', () => {
-            this.deleteItem();
-            this.hideContextMenu();
-        });
-
-        document.getElementById('contextNewFile')?.addEventListener('click', () => {
-            // Pass directory path if context menu was opened on a directory
-            const defaultFolder = this.currentContextType === 'directory' ? this.currentContextPath : '';
-            this.showNewRecipeModal(defaultFolder);
-            this.hideContextMenu();
-        });
-
-        document.getElementById('contextNewFolder')?.addEventListener('click', () => {
-            this.createNewFolder();
-            this.hideContextMenu();
         });
     }
 
@@ -212,34 +191,6 @@ class SidebarManager {
         this.onFileSelect(path);
     }
 
-    // Context menu handler
-    onContextMenu(event, path, type) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        this.currentContextPath = path;
-        this.currentContextType = type;
-        
-        // Position context menu
-        const rect = this.contextMenu.getBoundingClientRect();
-        let x = event.clientX;
-        let y = event.clientY;
-        
-        // Ensure menu stays within viewport
-        if (x + rect.width > window.innerWidth) {
-            x = window.innerWidth - rect.width - 10;
-        }
-        if (y + rect.height > window.innerHeight) {
-            y = window.innerHeight - rect.height - 10;
-        }
-        
-        this.contextMenu.style.left = `${x}px`;
-        this.contextMenu.style.top = `${y}px`;
-        this.contextMenu.classList.add('active');
-        
-        // Update context menu items based on type
-        document.getElementById('contextOpen').style.display = type === 'file' ? 'block' : 'none';
-    }
 
     // Modal methods
     showNewRecipeModal(defaultFolder = '') {
@@ -267,9 +218,22 @@ class SidebarManager {
         modal.classList.remove('active');
     }
 
-    hideContextMenu() {
-        this.contextMenu.classList.remove('active');
+    showNewFolderModal() {
+        const modal = document.getElementById('newFolderModal');
+        const folderInput = document.getElementById('folderName');
+        
+        // Clear previous values
+        document.getElementById('newFolderForm').reset();
+        
+        modal.classList.add('active');
+        folderInput.focus();
     }
+
+    hideFolderModal() {
+        const modal = document.getElementById('newFolderModal');
+        modal.classList.remove('active');
+    }
+
 
     // File operations
     async createNewRecipe() {
@@ -318,18 +282,46 @@ class SidebarManager {
     }
 
     async createNewFolder() {
-        const folderName = prompt('Enter folder name:');
-        if (folderName) {
-            try {
-                const sanitizedName = folderName.toLowerCase()
-                                               .replace(/[^a-z0-9\s-]/g, '')
-                                               .replace(/\s+/g, '-');
-                
-                await this.fileTree.createFile(sanitizedName, true);
-                this.showSuccess('Folder created successfully');
-            } catch (error) {
-                this.showError(Utils.extractErrorMessage(error, 'Failed to create folder'));
+        try {
+            const folderName = document.getElementById('folderName').value.trim();
+
+            if (!folderName) {
+                alert('Please enter a folder name');
+                return;
             }
+
+            // Validate and sanitize folder name
+            const sanitizedName = folderName.toLowerCase()
+                                           .replace(/[^a-z0-9\s-]/g, '')
+                                           .replace(/\s+/g, '-')
+                                           .replace(/-+/g, '-')
+                                           .trim();
+
+            if (!sanitizedName) {
+                alert('Please enter a valid folder name');
+                return;
+            }
+
+            // Check for duplicates by looking at existing directories
+            const existingFolders = this.cachedFiles
+                .filter(file => file.type === 'directory')
+                .map(dir => dir.name.toLowerCase());
+
+            if (existingFolders.includes(sanitizedName)) {
+                alert('A folder with this name already exists');
+                return;
+            }
+
+            // Create the folder
+            await this.fileTree.createFile(sanitizedName, true);
+
+            // Refresh file tree and close modal
+            await this.refreshFileTree();
+            this.hideFolderModal();
+            this.showSuccess('Folder created successfully');
+
+        } catch (error) {
+            this.showError('Failed to create folder: ' + Utils.extractErrorMessage(error, 'Unknown error'));
         }
     }
 
