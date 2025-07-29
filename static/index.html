@@ -106,8 +106,11 @@
 
         <!-- Main content area -->
         <main class="main-content">
+            <!-- Default loading state -->
+            <div class="loading" id="initialLoading">Loading...</div>
+            
             <!-- Welcome screen (shown when no file selected) -->
-            <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-screen" id="welcomeScreen" style="display: none;">
                 <div class="welcome-content">
                     <!-- Desktop welcome message -->
                     <div class="desktop-welcome" id="desktopWelcome">
@@ -138,12 +141,13 @@
                 
                 <div class="editor-container">
                     <div class="editor-wrapper" id="editorWrapper">
-                        <div class="editor-panel" id="editorPanel">
+                        <div class="loading" id="editorLoading">Loading...</div>
+                        <div class="editor-panel" id="editorPanel" style="display: none;">
                             <div class="codemirror-container" id="editorContainer">
                                 <div id="editor"></div>
                             </div>
                         </div>
-                        <div class="editor-status">
+                        <div class="editor-status" style="display: none;">
                             <span id="charCount">0 characters</span>
                         </div>
                     </div>

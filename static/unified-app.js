@@ -116,9 +116,15 @@ class UnifiedRecipeApp {
     }
 
     updateInterface() {
+        const initialLoading = document.getElementById('initialLoading');
         const welcomeScreen = document.getElementById('welcomeScreen');
         const editorInterface = document.getElementById('editorInterface');
         const sidebar = document.getElementById('sidebar');
+        
+        // Hide initial loading
+        if (initialLoading) {
+            initialLoading.style.display = 'none';
+        }
         
         if (this.currentFile) {
             // Editor mode - hide welcome, show editor
@@ -203,13 +209,34 @@ class UnifiedRecipeApp {
             this.editor.isDirty = false;
             this.editor.updateUI();
             
+            // Hide loading and show editor
+            this.showEditorContent();
+            
             this.showStatus('Recipe loaded');
             
         } catch (error) {
             console.error('Failed to load recipe:', error);
             this.showError('Failed to load recipe: ' + Utils.extractErrorMessage(error));
+            // Still show editor on error (user can see the error)
+            this.showEditorContent();
         } finally {
             this.isLoading = false;
+        }
+    }
+
+    showEditorContent() {
+        const editorLoading = document.getElementById('editorLoading');
+        const editorPanel = document.getElementById('editorPanel');
+        const editorStatus = document.querySelector('.editor-status');
+        
+        if (editorLoading) {
+            editorLoading.style.display = 'none';
+        }
+        if (editorPanel) {
+            editorPanel.style.display = 'block';
+        }
+        if (editorStatus) {
+            editorStatus.style.display = 'block';
         }
     }
 
