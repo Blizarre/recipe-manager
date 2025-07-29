@@ -55,9 +55,8 @@ class UnifiedRecipeApp {
         // Mobile new recipe button
         document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.sidebar.showNewRecipeModal());
         
-        // Save and share buttons (only active in editor mode)
+        // Action buttons (only active in editor mode)
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
-        document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
         document.getElementById('renameBtn')?.addEventListener('click', () => this.showRenameModal());
         document.getElementById('deleteBtn')?.addEventListener('click', () => this.showDeleteConfirmation());
 
@@ -79,21 +78,17 @@ class UnifiedRecipeApp {
     setupResponsiveButtons() {
         const moveButtons = () => {
             const saveBtn = document.getElementById('saveBtn');
-            const shareBtn = document.getElementById('shareBtn');
             const renameBtn = document.getElementById('renameBtn');
             const deleteBtn = document.getElementById('deleteBtn');
             const headerActions = document.querySelector('.header-actions');
             const actionButtons = document.querySelector('.action-buttons');
             
-            if (!saveBtn || !shareBtn || !renameBtn || !deleteBtn || !headerActions || !actionButtons) return;
+            if (!saveBtn || !renameBtn || !deleteBtn || !headerActions || !actionButtons) return;
             
             if (window.innerWidth <= 768) {
                 // Mobile: keep buttons in header
                 if (!headerActions.contains(saveBtn)) {
                     headerActions.insertBefore(saveBtn, document.getElementById('mobileNewBtn'));
-                }
-                if (!headerActions.contains(shareBtn)) {
-                    headerActions.insertBefore(shareBtn, document.getElementById('mobileNewBtn'));
                 }
                 if (!headerActions.contains(renameBtn)) {
                     headerActions.insertBefore(renameBtn, document.getElementById('mobileNewBtn'));
@@ -105,9 +100,6 @@ class UnifiedRecipeApp {
                 // Desktop: move buttons to editor header
                 if (!actionButtons.contains(saveBtn)) {
                     actionButtons.appendChild(saveBtn);
-                }
-                if (!actionButtons.contains(shareBtn)) {
-                    actionButtons.appendChild(shareBtn);
                 }
                 if (!actionButtons.contains(renameBtn)) {
                     actionButtons.appendChild(renameBtn);
@@ -318,39 +310,6 @@ class UnifiedRecipeApp {
         }
     }
 
-    shareUrl() {
-        if (!this.currentFile) return;
-        
-        const currentUrl = window.location.href;
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(currentUrl).then(() => {
-                this.showSuccess('Recipe URL copied to clipboard!');
-            }).catch(() => {
-                this.fallbackCopyUrl(currentUrl);
-            });
-        } else {
-            this.fallbackCopyUrl(currentUrl);
-        }
-    }
-
-    fallbackCopyUrl(url) {
-        const textArea = document.createElement('textarea');
-        textArea.value = url;
-        textArea.style.position = 'fixed';
-        textArea.style.opacity = '0';
-        document.body.appendChild(textArea);
-        textArea.select();
-        
-        try {
-            document.execCommand('copy');
-            this.showSuccess('Recipe URL copied to clipboard!');
-        } catch (err) {
-            this.showError('Could not copy URL. Please copy manually from address bar.');
-        } finally {
-            document.body.removeChild(textArea);
-        }
-    }
 
     showStatus(message) {
         const statusElement = document.getElementById('fileStatus');

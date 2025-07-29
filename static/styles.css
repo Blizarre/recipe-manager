@@ -645,6 +645,49 @@ body {
     gap: 8px;
 }
 
+/* Button icon and text styling */
+.btn-icon {
+    margin-right: 6px;
+}
+
+.btn-text {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        gap: 4px;
+    }
+    
+    /* Hide text on mobile, show only icons */
+    .header-actions .btn-text {
+        display: none;
+    }
+    
+    .header-actions .btn-icon {
+        margin-right: 0;
+    }
+}
+
+/* Extra small screens - further optimize spacing */
+@media (max-width: 480px) {
+    .header-actions {
+        gap: 2px;
+    }
+    
+    .mobile-header {
+        padding: 8px 12px;
+    }
+    
+    .mobile-header h1 {
+        font-size: 16px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 
 .editor-wrapper {
     flex: 1;
@@ -1179,7 +1222,12 @@ body.keyboard-open .modal {
     /* Mobile header actions styling - keep buttons touch-friendly */
     .header-actions .btn {
         min-height: var(--min-touch-target);
-        padding: 8px 16px;
+        min-width: var(--min-touch-target);
+        padding: 8px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .editor-header {
