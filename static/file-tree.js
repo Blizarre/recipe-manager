@@ -6,6 +6,8 @@ class FileTree {
         this.files = [];
         this.selectedPath = null;
         this.expandedFolders = new Set();
+        this.editMode = false;
+        this.selectedItems = new Set();
         
         this.init();
     }
@@ -95,6 +97,7 @@ class FileTree {
         dirElement.style.paddingLeft = `${16 + level * 20}px`;
         
         dirElement.innerHTML = `
+            <input type="checkbox" class="file-tree-checkbox" data-path="${directory.path}">
             <span class="expand-icon">${isExpanded ? '▼' : '▶'}</span>
             <span class="icon">📁</span>
             <span class="name">${directory.name}</span>
@@ -102,7 +105,27 @@ class FileTree {
 
         dirElement.addEventListener('click', async (e) => {
             e.stopPropagation();
-            await this.toggleDirectory(directory.path, dirElement);
+            
+            // If in edit mode, handle selection
+            if (this.editMode) {
+                // If clicking directly on checkbox, use its state
+                if (e.target.type === 'checkbox') {
+                    this.onCheckboxChange(directory.path, e.target.checked);
+                } else if (!e.target.classList.contains('expand-icon')) {
+                    // If not clicking on expand icon, toggle checkbox
+                    const checkbox = dirElement.querySelector('.file-tree-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        this.onCheckboxChange(directory.path, checkbox.checked);
+                    }
+                }
+                return;
+            }
+            
+            // Normal mode: expand/collapse directory (unless clicking checkbox)
+            if (e.target.type !== 'checkbox') {
+                await this.toggleDirectory(directory.path, dirElement);
+            }
         });
 
 
@@ -141,9 +164,45 @@ class FileTree {
         
         const icon = this.getFileIcon(file.name);
         fileElement.innerHTML = `
+            <input type="checkbox" class="file-tree-checkbox" data-path="${file.path}">
             <span class="icon">${icon}</span>
             <span class="name">${file.name}</span>
         `;
+
+        // Handle clicks on file elements
+        fileElement.addEventListener('click', (e) => {
+            // If in edit mode, always prevent navigation and handle as selection
+            if (this.editMode) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // If clicking directly on checkbox, use its state
+                if (e.target.type === 'checkbox') {
+                    this.onCheckboxChange(file.path, e.target.checked);
+                } else {
+                    // If clicking elsewhere on the item, toggle the checkbox
+                    const checkbox = fileElement.querySelector('.file-tree-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        this.onCheckboxChange(file.path, checkbox.checked);
+                    }
+                }
+                return;
+            }
+            
+            // Normal navigation (let the default link behavior happen)
+        });
+
+        // Add separate event listener for checkbox to ensure it works properly
+        const checkbox = fileElement.querySelector('.file-tree-checkbox');
+        if (checkbox) {
+            checkbox.addEventListener('click', (e) => {
+                if (this.editMode) {
+                    e.stopPropagation();
+                    this.onCheckboxChange(file.path, e.target.checked);
+                }
+            });
+        }
 
         // Add drag and drop functionality
         this.setupDragAndDrop(fileElement, file.path, 'file');
@@ -522,5 +581,64 @@ class FileTree {
 
     getFileName(path) {
         return path.split('/').pop() || path;
+    }
+
+    // Edit mode functionality
+    toggleEditMode() {
+        this.editMode = !this.editMode;
+        this.selectedItems.clear();
+        
+        if (this.editMode) {
+            this.container.classList.add('edit-mode');
+        } else {
+            this.container.classList.remove('edit-mode');
+        }
+        
+        this.updateEditModeUI();
+        this.render(); // Re-render to show/hide checkboxes
+    }
+
+    updateEditModeUI() {
+        const editBtn = document.getElementById('editModeBtn');
+        const editActions = document.getElementById('editModeActions');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        if (this.editMode) {
+            editBtn?.classList.add('active');
+            editActions?.classList.add('show');
+        } else {
+            editBtn?.classList.remove('active');
+            editActions?.classList.remove('show');
+        }
+        
+        if (selectedCount) {
+            const count = this.selectedItems.size;
+            selectedCount.textContent = `${count} selected`;
+        }
+    }
+
+    onCheckboxChange(path, checked) {
+        if (checked) {
+            this.selectedItems.add(path);
+        } else {
+            this.selectedItems.delete(path);
+        }
+        
+        this.updateEditModeUI();
+        
+        // Update item visual state and checkbox state
+        const items = this.container.querySelectorAll('.file-tree-item');
+        items.forEach(item => {
+            const checkbox = item.querySelector('.file-tree-checkbox');
+            if (checkbox && checkbox.dataset.path === path) {
+                // Ensure checkbox visual state matches
+                checkbox.checked = checked;
+                item.classList.toggle('selected', checked);
+            }
+        });
+    }
+
+    getSelectedItems() {
+        return Array.from(this.selectedItems);
     }
 }
