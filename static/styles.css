@@ -803,6 +803,17 @@ body {
     background: var(--border);
 }
 
+.btn-danger {
+    background: var(--error-color);
+    color: white;
+    border: 1px solid var(--error-color);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}
+
 .new-recipe-btn {
     width: 32px;
     height: 32px;

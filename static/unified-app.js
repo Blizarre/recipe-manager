@@ -59,6 +59,7 @@ class UnifiedRecipeApp {
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
         document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
         document.getElementById('renameBtn')?.addEventListener('click', () => this.showRenameModal());
+        document.getElementById('deleteBtn')?.addEventListener('click', () => this.showDeleteConfirmation());
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -80,10 +81,11 @@ class UnifiedRecipeApp {
             const saveBtn = document.getElementById('saveBtn');
             const shareBtn = document.getElementById('shareBtn');
             const renameBtn = document.getElementById('renameBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
             const headerActions = document.querySelector('.header-actions');
             const actionButtons = document.querySelector('.action-buttons');
             
-            if (!saveBtn || !shareBtn || !renameBtn || !headerActions || !actionButtons) return;
+            if (!saveBtn || !shareBtn || !renameBtn || !deleteBtn || !headerActions || !actionButtons) return;
             
             if (window.innerWidth <= 768) {
                 // Mobile: keep buttons in header
@@ -96,6 +98,9 @@ class UnifiedRecipeApp {
                 if (!headerActions.contains(renameBtn)) {
                     headerActions.insertBefore(renameBtn, document.getElementById('mobileNewBtn'));
                 }
+                if (!headerActions.contains(deleteBtn)) {
+                    headerActions.insertBefore(deleteBtn, document.getElementById('mobileNewBtn'));
+                }
             } else {
                 // Desktop: move buttons to editor header
                 if (!actionButtons.contains(saveBtn)) {
@@ -106,6 +111,9 @@ class UnifiedRecipeApp {
                 }
                 if (!actionButtons.contains(renameBtn)) {
                     actionButtons.appendChild(renameBtn);
+                }
+                if (!actionButtons.contains(deleteBtn)) {
+                    actionButtons.appendChild(deleteBtn);
                 }
             }
         };
@@ -132,6 +140,7 @@ class UnifiedRecipeApp {
         const editorInterface = document.getElementById('editorInterface');
         const sidebar = document.getElementById('sidebar');
         const renameBtn = document.getElementById('renameBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
         
         // Hide initial loading
         if (initialLoading) {
@@ -143,9 +152,12 @@ class UnifiedRecipeApp {
             welcomeScreen.style.display = 'none';
             editorInterface.style.display = 'block';
             
-            // Show rename button when file is open
+            // Show action buttons when file is open
             if (renameBtn) {
                 renameBtn.style.display = 'block';
+            }
+            if (deleteBtn) {
+                deleteBtn.style.display = 'block';
             }
             
             // Update page info
@@ -155,9 +167,12 @@ class UnifiedRecipeApp {
             welcomeScreen.style.display = 'block';
             editorInterface.style.display = 'none';
             
-            // Hide rename button when no file is open
+            // Hide action buttons when no file is open
             if (renameBtn) {
                 renameBtn.style.display = 'none';
+            }
+            if (deleteBtn) {
+                deleteBtn.style.display = 'none';
             }
             
             // Ensure sidebar is visible in welcome mode
@@ -463,6 +478,43 @@ class UnifiedRecipeApp {
         } catch (error) {
             console.error('Failed to rename file:', error);
             this.showError('Failed to rename file: ' + Utils.extractErrorMessage(error));
+        }
+    }
+
+    // Delete functionality
+    showDeleteConfirmation() {
+        if (!this.currentFile) return;
+        
+        const fileName = this.currentFile.split('/').pop();
+        const confirmed = confirm(`Are you sure you want to delete "${fileName}"?\n\nThis action cannot be undone.`);
+        
+        if (confirmed) {
+            this.deleteCurrentFile();
+        }
+    }
+
+    async deleteCurrentFile() {
+        if (!this.currentFile) return;
+
+        try {
+            const fileName = this.currentFile.split('/').pop();
+            
+            // Use the existing file delete API
+            await window.api.deleteFile(this.currentFile);
+
+            // Navigate back to welcome screen since the file is deleted
+            window.history.pushState({}, '', '/');
+            this.currentFile = null;
+            this.updateInterface();
+
+            // Refresh file tree
+            await this.sidebar.refreshFileTree();
+            
+            this.showSuccess(`File "${fileName}" deleted successfully`);
+
+        } catch (error) {
+            console.error('Failed to delete file:', error);
+            this.showError('Failed to delete file: ' + Utils.extractErrorMessage(error));
         }
     }
 }
