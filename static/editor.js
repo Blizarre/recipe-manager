@@ -37,7 +37,10 @@ class StandaloneRecipeEditor {
 
     setupComponents() {
         // Initialize shared sidebar manager with editor-specific file selection
-        this.sidebar = new SidebarManager((path) => this.onFileSelect(path));
+        this.sidebar = new SidebarManager(
+            (path) => this.onFileSelect(path),
+            () => {} // No files loaded callback needed for editor page
+        );
         
         // Set callbacks for file operations that affect current URL
         this.sidebar.setCallbacks({

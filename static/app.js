@@ -23,8 +23,11 @@ class RecipeApp {
     }
 
     setupComponents() {
-        // Initialize shared sidebar manager
-        this.sidebar = new SidebarManager((path) => this.onFileSelect(path));
+        // Initialize shared sidebar manager with callback for file loading
+        this.sidebar = new SidebarManager(
+            (path) => this.onFileSelect(path),
+            (files) => this.onFilesLoaded(files)
+        );
 
         // Initialize mobile file tree (for the welcome screen)
         const mobileFileTreeContainer = document.getElementById('mobileFileTree');
@@ -40,20 +43,13 @@ class RecipeApp {
             editorContainer,
             () => this.onEditorChange()
         );
-
-        // Share files between sidebar and mobile tree
-        this.shareFileData();
     }
 
-    async shareFileData() {
-        // Override sidebar's refresh to also update mobile tree
-        const originalRefresh = this.sidebar.refreshFileTree.bind(this.sidebar);
-        this.sidebar.refreshFileTree = async () => {
-            await originalRefresh();
-            if (this.mobileFileTree) {
-                this.mobileFileTree.setFiles(this.sidebar.cachedFiles);
-            }
-        };
+    onFilesLoaded(files) {
+        // Update mobile file tree whenever sidebar loads files
+        if (this.mobileFileTree) {
+            this.mobileFileTree.setFiles(files);
+        }
     }
 
     setupEventListeners() {

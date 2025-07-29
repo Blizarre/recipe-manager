@@ -1,7 +1,8 @@
 // Shared Sidebar Management Component
 class SidebarManager {
-    constructor(onFileSelect) {
+    constructor(onFileSelect, onFilesLoaded) {
         this.onFileSelect = onFileSelect || (() => {});
+        this.onFilesLoaded = onFilesLoaded || (() => {});
         this.fileTree = null;
         this.search = null;
         this.contextMenu = null;
@@ -486,6 +487,9 @@ class SidebarManager {
             
             // Update cached files for autocomplete
             this.cachedFiles = files;
+            
+            // Notify that files are loaded
+            this.onFilesLoaded(files);
         } catch (error) {
             console.error('Failed to load files:', error);
             this.showError('Failed to load files: ' + Utils.extractErrorMessage(error));
