@@ -223,17 +223,27 @@ class CodeMirrorEditor {
 
 
     updateUI() {
-        // Update save button state (desktop only now)
+        // Update save button state (both desktop and mobile)
         const saveBtnDesktop = document.getElementById('saveBtnDesktop');
+        const saveBtnMobile = document.getElementById('saveBtnMobile');
+        
+        const isEnabled = this.currentFile && this.isDirty;
         
         if (saveBtnDesktop) {
-            // Enable desktop save button only when file is loaded AND there are unsaved changes
-            saveBtnDesktop.disabled = !this.currentFile || !this.isDirty;
-            
-            if (this.isDirty && this.currentFile) {
+            saveBtnDesktop.disabled = !isEnabled;
+            if (isEnabled) {
                 saveBtnDesktop.classList.add('dirty');
             } else {
                 saveBtnDesktop.classList.remove('dirty');
+            }
+        }
+        
+        if (saveBtnMobile) {
+            saveBtnMobile.disabled = !isEnabled;
+            if (isEnabled) {
+                saveBtnMobile.classList.add('dirty');
+            } else {
+                saveBtnMobile.classList.remove('dirty');
             }
         }
         

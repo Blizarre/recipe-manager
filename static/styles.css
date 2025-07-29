@@ -638,6 +638,11 @@ body {
     font-size: 14px;
 }
 
+/* Mobile actions (hidden on desktop) */
+.mobile-actions {
+    display: none;
+}
+
 
 .editor-wrapper {
     flex: 1;
@@ -1170,6 +1175,24 @@ body.keyboard-open .modal {
         align-items: stretch;
         justify-content: stretch;
         text-align: left;
+    }
+    
+    /* Hide desktop editor header on mobile */
+    .editor-header {
+        display: none;
+    }
+    
+    /* Mobile actions in header */
+    .mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: auto;
     }
 
     .editor-header {

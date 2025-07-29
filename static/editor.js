@@ -56,6 +56,10 @@ class StandaloneRecipeEditor {
         // Desktop editor actions
         document.getElementById('saveBtnDesktop')?.addEventListener('click', () => this.editor?.save());
         document.getElementById('shareBtnDesktop')?.addEventListener('click', () => this.shareUrl());
+        
+        // Mobile editor actions
+        document.getElementById('saveBtnMobile')?.addEventListener('click', () => this.editor?.save());
+        document.getElementById('shareBtnMobile')?.addEventListener('click', () => this.shareUrl());
 
         // Additional keyboard shortcut for save
         document.addEventListener('keydown', (e) => {
