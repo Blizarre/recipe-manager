@@ -3,7 +3,6 @@ class RecipeApp {
     constructor() {
         this.sidebar = null;
         this.mobileFileTree = null;
-        this.editor = null;
         
         this.init();
     }
@@ -36,13 +35,6 @@ class RecipeApp {
             (path) => this.onFileSelect(path),
             (event, path, type) => this.sidebar.onContextMenu(event, path, type)
         );
-
-        // Initialize CodeMirror editor
-        const editorContainer = document.getElementById('editorContainer');
-        this.editor = new CodeMirrorEditor(
-            editorContainer,
-            () => this.onEditorChange()
-        );
     }
 
     onFilesLoaded(files) {
@@ -55,24 +47,16 @@ class RecipeApp {
     setupEventListeners() {
         // Mobile new recipe button
         document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.sidebar.showNewRecipeModal());
-
-        // Editor actions
-        document.getElementById('saveBtn')?.addEventListener('click', () => this.editor.save());
     }
 
     // Event handlers
     async onFileSelect(path) {
         if (path) {
-            await this.editor.loadFile(path);
-        } else {
-            this.editor.clear();
+            // Navigate to editor page for consistent experience
+            window.location.href = `/edit/${path}`;
         }
     }
 
-    onEditorChange() {
-        // Update UI based on editor state
-        // This could trigger status updates, etc.
-    }
 }
 
 // Initialize the app

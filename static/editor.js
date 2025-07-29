@@ -50,10 +50,11 @@ class StandaloneRecipeEditor {
     }
 
     setupEventListeners() {
-        // Editor actions in header (both mobile and desktop)
-        document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
+        // Mobile new recipe button
+        document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.sidebar.showNewRecipeModal());
+        
+        // Desktop editor actions
         document.getElementById('saveBtnDesktop')?.addEventListener('click', () => this.editor?.save());
-        document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
         document.getElementById('shareBtnDesktop')?.addEventListener('click', () => this.shareUrl());
 
         // Additional keyboard shortcut for save
