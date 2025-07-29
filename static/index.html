@@ -8,6 +8,41 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- CodeMirror 6 modules -->
+    <script type="module">
+        import { EditorView } from 'https://esm.sh/@codemirror/view';
+        import { EditorState } from 'https://esm.sh/@codemirror/state';
+        import { basicSetup } from 'https://esm.sh/codemirror';
+        import { markdown } from 'https://esm.sh/@codemirror/lang-markdown';
+        import { HighlightStyle, syntaxHighlighting } from 'https://esm.sh/@codemirror/language';
+        import { tags } from 'https://esm.sh/@lezer/highlight';
+        
+        // Create custom highlight style for markdown
+        const markdownHighlighting = HighlightStyle.define([
+            { tag: tags.heading1, color: '#1e40af', fontWeight: 'bold', fontSize: '1.2em' },
+            { tag: tags.heading2, color: '#1e40af', fontWeight: 'bold', fontSize: '1.1em' },
+            { tag: tags.heading3, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading4, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading5, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading6, color: '#1e40af', fontWeight: 'bold' },
+            { tag: tags.heading, color: '#1e40af', fontWeight: 'bold' }
+        ]);
+        
+        // Make CodeMirror available globally
+        window.CodeMirror = {
+            EditorView,
+            EditorState,
+            basicSetup,
+            markdown,
+            syntaxHighlighting,
+            markdownHighlighting
+        };
+        
+        // Signal that CodeMirror is ready
+        window.CodeMirrorReady = true;
+        window.dispatchEvent(new Event('codemirror-ready'));
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -18,11 +53,15 @@
                 <span></span>
                 <span></span>
             </button>
-            <h1>Recipe Manager</h1>
-            <button class="new-recipe-btn mobile-new-btn" id="mobileNewBtn" aria-label="New recipe">+</button>
+            <h1 id="fileName">Recipe Manager</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="saveBtn" disabled>Save</button>
+                <button class="btn btn-secondary" id="shareBtn">Share</button>
+                <button class="new-recipe-btn mobile-new-btn" id="mobileNewBtn" aria-label="New recipe">+</button>
+            </div>
         </header>
 
-        <!-- Sidebar for file tree -->
+        <!-- Sidebar for file tree (same as main page) -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Recipes</h2>
@@ -67,18 +106,45 @@
 
         <!-- Main content area -->
         <main class="main-content">
-            <div class="editor-container">
-                <div class="welcome-screen" id="welcomeScreen">
-                    <div class="welcome-content">
-                        <!-- Desktop welcome message -->
-                        <div class="desktop-welcome" id="desktopWelcome">
-                            <h1>Recipe Manager</h1>
-                            <p>Select a recipe from the sidebar to start editing, or create a new one.</p>
+            <!-- Welcome screen (shown when no file selected) -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <!-- Desktop welcome message -->
+                    <div class="desktop-welcome" id="desktopWelcome">
+                        <h1>Recipe Manager</h1>
+                        <p>Select a recipe from the sidebar to start editing, or create a new one.</p>
+                    </div>
+                    
+                    <!-- Mobile file tree (shown when sidebar is hidden) -->
+                    <div class="mobile-file-tree" id="mobileFileTree">
+                        <div class="loading">Loading recipes...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor interface (shown when file selected) -->
+            <div class="editor-interface" id="editorInterface" style="display: none;">
+                <div class="editor-header">
+                    <div class="file-info">
+                        <span class="file-name" id="fileNameDesktop">Loading...</span>
+                        <span class="file-status" id="fileStatus"></span>
+                    </div>
+                    <div class="editor-actions">
+                        <div class="action-buttons">
+                            <!-- Buttons moved to mobile header, styled via CSS -->
                         </div>
-                        
-                        <!-- Mobile file tree (shown when sidebar is hidden) -->
-                        <div class="mobile-file-tree" id="mobileFileTree">
-                            <div class="loading">Loading recipes...</div>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <div class="editor-wrapper" id="editorWrapper">
+                        <div class="editor-panel" id="editorPanel">
+                            <div class="codemirror-container" id="editorContainer">
+                                <div id="editor"></div>
+                            </div>
+                        </div>
+                        <div class="editor-status">
+                            <span id="charCount">0 characters</span>
                         </div>
                     </div>
                 </div>
@@ -87,7 +153,6 @@
 
         <!-- Overlay for mobile -->
         <div class="overlay" id="overlay"></div>
-
 
         <!-- Modal for new recipe -->
         <div class="modal" id="newRecipeModal">
@@ -135,6 +200,7 @@
     <script src="/static/search.js"></script>
     <script src="/static/touch-gestures.js"></script>
     <script src="/static/sidebar-manager.js"></script>
-    <script src="/static/app.js"></script>
+    <script src="/static/codemirror-editor.js"></script>
+    <script src="/static/unified-app.js"></script>
 </body>
 </html>

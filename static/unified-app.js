@@ -1,50 +1,50 @@
-// Standalone Recipe Editor with Shared Sidebar
-class StandaloneRecipeEditor {
+// Unified Recipe Manager Application
+class UnifiedRecipeApp {
     constructor() {
-        this.recipePath = null;
+        this.currentFile = null;
         this.editor = null;
         this.isLoading = false;
         this.sidebar = null;
+        this.mobileFileTree = null;
         
         this.init();
     }
 
     init() {
-        // Extract recipe path from URL
-        this.recipePath = this.extractPathFromUrl();
-        
-        if (!this.recipePath) {
-            this.showError('Invalid recipe URL');
-            return;
-        }
-
-        // Update page title and file info
-        this.updatePageInfo();
-        
-        // Setup responsive button positioning
-        this.setupResponsiveButtons();
+        // Extract recipe path from URL if present
+        this.currentFile = this.extractPathFromUrl();
         
         // Setup components
         this.setupComponents();
         this.setupEventListeners();
+        this.setupResponsiveButtons();
         
-        // Initialize editor once CodeMirror is ready, then load content
-        if (window.CodeMirrorReady) {
-            this.setupEditor().then(() => this.loadRecipeContent());
-        } else {
-            window.addEventListener('codemirror-ready', () => {
-                this.setupEditor().then(() => this.loadRecipeContent());
-            });
+        // Show appropriate interface based on whether we have a file
+        this.updateInterface();
+        
+        // If we have a file to load, setup editor and load content
+        if (this.currentFile) {
+            this.initializeEditorMode();
         }
     }
 
     setupComponents() {
-        // Initialize shared sidebar manager with editor-specific file selection
+        // Initialize shared sidebar manager
         this.sidebar = new SidebarManager(
             (path) => this.onFileSelect(path),
-            () => {} // No files loaded callback needed for editor page
+            (files) => this.onFilesLoaded(files)
         );
-        
+
+        // Initialize mobile file tree (for the welcome screen)
+        const mobileFileTreeContainer = document.getElementById('mobileFileTree');
+        if (mobileFileTreeContainer) {
+            this.mobileFileTree = new FileTree(
+                mobileFileTreeContainer,
+                (path) => this.onFileSelect(path),
+                (event, path, type) => this.sidebar.onContextMenu(event, path, type)
+            );
+        }
+
         // Set callbacks for file operations that affect current URL
         this.sidebar.setCallbacks({
             onFileRenamed: (oldPath, newPath) => this.handleFileRenamed(oldPath, newPath),
@@ -52,48 +52,15 @@ class StandaloneRecipeEditor {
         });
     }
 
-    setupResponsiveButtons() {
-        const moveButtons = () => {
-            const saveBtn = document.getElementById('saveBtn');
-            const shareBtn = document.getElementById('shareBtn');
-            const headerActions = document.querySelector('.header-actions');
-            const actionButtons = document.querySelector('.action-buttons');
-            
-            if (window.innerWidth <= 768) {
-                // Mobile: keep buttons in header
-                if (saveBtn && !headerActions.contains(saveBtn)) {
-                    headerActions.insertBefore(saveBtn, document.getElementById('mobileNewBtn'));
-                }
-                if (shareBtn && !headerActions.contains(shareBtn)) {
-                    headerActions.insertBefore(shareBtn, document.getElementById('mobileNewBtn'));
-                }
-            } else {
-                // Desktop: move buttons to editor header
-                if (saveBtn && !actionButtons.contains(saveBtn)) {
-                    actionButtons.appendChild(saveBtn);
-                }
-                if (shareBtn && !actionButtons.contains(shareBtn)) {
-                    actionButtons.appendChild(shareBtn);
-                }
-            }
-        };
-        
-        // Initial positioning
-        moveButtons();
-        
-        // Listen for window resize
-        window.addEventListener('resize', moveButtons);
-    }
-
     setupEventListeners() {
         // Mobile new recipe button
         document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.sidebar.showNewRecipeModal());
         
-        // Save and share buttons (single buttons that move between mobile/desktop)
+        // Save and share buttons (only active in editor mode)
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
         document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
 
-        // Additional keyboard shortcut for save
+        // Keyboard shortcut for save
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
@@ -104,24 +71,83 @@ class StandaloneRecipeEditor {
         });
     }
 
+    setupResponsiveButtons() {
+        const moveButtons = () => {
+            const saveBtn = document.getElementById('saveBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const headerActions = document.querySelector('.header-actions');
+            const actionButtons = document.querySelector('.action-buttons');
+            
+            if (!saveBtn || !shareBtn || !headerActions || !actionButtons) return;
+            
+            if (window.innerWidth <= 768) {
+                // Mobile: keep buttons in header
+                if (!headerActions.contains(saveBtn)) {
+                    headerActions.insertBefore(saveBtn, document.getElementById('mobileNewBtn'));
+                }
+                if (!headerActions.contains(shareBtn)) {
+                    headerActions.insertBefore(shareBtn, document.getElementById('mobileNewBtn'));
+                }
+            } else {
+                // Desktop: move buttons to editor header
+                if (!actionButtons.contains(saveBtn)) {
+                    actionButtons.appendChild(saveBtn);
+                }
+                if (!actionButtons.contains(shareBtn)) {
+                    actionButtons.appendChild(shareBtn);
+                }
+            }
+        };
+        
+        // Initial positioning and resize listener
+        moveButtons();
+        window.addEventListener('resize', moveButtons);
+    }
+
     extractPathFromUrl() {
-        // Extract path from /edit/{path} URL
         const pathname = window.location.pathname;
         const editPrefix = '/edit/';
         
-        if (!pathname.startsWith(editPrefix)) {
+        if (pathname === '/' || !pathname.startsWith(editPrefix)) {
             return null;
         }
         
         return pathname.substring(editPrefix.length);
     }
 
-    updatePageInfo() {
-        // Update page title
-        const fileName = this.recipePath.split('/').pop();
-        document.title = `${fileName} - Recipe Editor`;
+    updateInterface() {
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const editorInterface = document.getElementById('editorInterface');
+        const sidebar = document.getElementById('sidebar');
         
-        // Update file name displays (both mobile and desktop)
+        if (this.currentFile) {
+            // Editor mode - hide welcome, show editor
+            welcomeScreen.style.display = 'none';
+            editorInterface.style.display = 'block';
+            
+            // Update page info
+            this.updatePageInfo();
+        } else {
+            // Welcome mode - show welcome, hide editor, ensure sidebar is visible
+            welcomeScreen.style.display = 'block';
+            editorInterface.style.display = 'none';
+            
+            // Ensure sidebar is visible in welcome mode
+            sidebar.classList.add('sidebar-open');
+            
+            // Update title
+            document.title = 'Recipe Manager';
+            document.getElementById('fileName').textContent = 'Recipe Manager';
+        }
+    }
+
+    updatePageInfo() {
+        if (!this.currentFile) return;
+        
+        const fileName = this.currentFile.split('/').pop();
+        document.title = `${fileName} - Recipe Manager`;
+        
+        // Update file name displays
         const fileNameMobile = document.getElementById('fileName');
         const fileNameDesktop = document.getElementById('fileNameDesktop');
         
@@ -133,15 +159,26 @@ class StandaloneRecipeEditor {
         }
     }
 
+    async initializeEditorMode() {
+        // Initialize editor when CodeMirror is ready
+        if (window.CodeMirrorReady) {
+            await this.setupEditor();
+            this.loadRecipeContent();
+        } else {
+            window.addEventListener('codemirror-ready', async () => {
+                await this.setupEditor();
+                this.loadRecipeContent();
+            });
+        }
+    }
+
     async setupEditor() {
         try {
-            // Initialize CodeMirror editor using existing class
             const editorContainer = document.getElementById('editorContainer');
             this.editor = new CodeMirrorEditor(
                 editorContainer,
                 () => this.onContentChange()
             );
-            
         } catch (error) {
             console.error('Failed to setup editor:', error);
             this.showError('Failed to initialize editor');
@@ -149,12 +186,7 @@ class StandaloneRecipeEditor {
     }
 
     async loadRecipeContent() {
-        // Wait for editor to be ready
-        if (!this.editor) {
-            return;
-        }
-        
-        if (this.isLoading) {
+        if (!this.editor || !this.currentFile || this.isLoading) {
             return;
         }
         
@@ -162,10 +194,10 @@ class StandaloneRecipeEditor {
         this.showStatus('Loading recipe...');
 
         try {
-            const response = await window.api.getFile(this.recipePath);
+            const response = await window.api.getFile(this.currentFile);
             
             // Load content into editor
-            this.editor.currentFile = this.recipePath;
+            this.editor.currentFile = this.currentFile;
             this.editor.setContent(response.content || '');
             this.editor.lastSavedContent = response.content || '';
             this.editor.isDirty = false;
@@ -182,34 +214,49 @@ class StandaloneRecipeEditor {
     }
 
     // Event handlers
+    onFilesLoaded(files) {
+        // Update mobile file tree whenever sidebar loads files
+        if (this.mobileFileTree) {
+            this.mobileFileTree.setFiles(files);
+        }
+    }
+
     async onFileSelect(path) {
         if (path) {
-            // Navigate to the selected file's edit URL
-            window.location.href = `/edit/${path}`;
+            // Navigate to editor mode with selected file
+            window.history.pushState({}, '', `/edit/${path}`);
+            this.currentFile = path;
+            this.updateInterface();
+            this.initializeEditorMode();
         }
     }
 
     onContentChange() {
-        // This is called when editor content changes
+        // Called when editor content changes
         // The CodeMirrorEditor class handles auto-save and UI updates
     }
 
     // Handle file operations that affect current URL
     handleFileRenamed(oldPath, newPath) {
-        // If we renamed the current file, navigate to new URL
-        if (oldPath === this.recipePath) {
-            window.location.href = `/edit/${newPath}`;
+        if (oldPath === this.currentFile) {
+            window.history.replaceState({}, '', `/edit/${newPath}`);
+            this.currentFile = newPath;
+            this.updatePageInfo();
         }
     }
 
     handleFileDeleted(deletedPath) {
-        // If we deleted the current file, navigate to main page
-        if (deletedPath === this.recipePath) {
-            window.location.href = '/';
+        if (deletedPath === this.currentFile) {
+            // Navigate back to welcome screen
+            window.history.pushState({}, '', '/');
+            this.currentFile = null;
+            this.updateInterface();
         }
     }
 
     shareUrl() {
+        if (!this.currentFile) return;
+        
         const currentUrl = window.location.href;
         
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -224,7 +271,6 @@ class StandaloneRecipeEditor {
     }
 
     fallbackCopyUrl(url) {
-        // Fallback for older browsers
         const textArea = document.createElement('textarea');
         textArea.value = url;
         textArea.style.position = 'fixed';
@@ -258,39 +304,19 @@ class StandaloneRecipeEditor {
     }
 
     showToast(message, type = 'info') {
-        // Simple toast notification (reuse sidebar's method if available)
         if (this.sidebar) {
             this.sidebar.showToast(message, type);
-        } else {
-            // Fallback implementation
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'error' ? 'var(--error-color)' : 'var(--success-color)'};
-                color: white;
-                padding: 12px 16px;
-                border-radius: var(--radius);
-                box-shadow: var(--shadow-lg);
-                z-index: 1001;
-                animation: slideIn 0.3s ease;
-                max-width: 300px;
-            `;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
         }
     }
 }
 
-// Initialize the standalone editor when page loads
+// Initialize the unified app
 document.addEventListener('DOMContentLoaded', () => {
-    new StandaloneRecipeEditor();
+    new UnifiedRecipeApp();
+});
+
+// Handle browser back/forward navigation
+window.addEventListener('popstate', () => {
+    // Reload the page to handle navigation properly
+    window.location.reload();
 });

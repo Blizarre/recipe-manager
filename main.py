@@ -34,11 +34,11 @@ async def serve_frontend():
     return "static/index.html"
 
 
-# Serve individual recipe editor pages
+# Serve individual recipe editor pages (now unified with main page)
 @app.get("/edit/{path:path}", response_class=FileResponse)
 async def serve_recipe_editor(path: str):
-    """Serve static editor HTML page for individual recipe URLs"""
-    return "static/editor.html"
+    """Serve unified HTML page for individual recipe URLs"""
+    return "static/index.html"
 
 
 @app.get("/health")
