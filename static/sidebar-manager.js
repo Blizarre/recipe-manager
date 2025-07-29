@@ -49,6 +49,12 @@ class SidebarManager {
         
         // New folder button
         document.getElementById('newFolderBtn')?.addEventListener('click', () => this.showNewFolderModal());
+        
+        // Edit mode button
+        document.getElementById('editModeBtn')?.addEventListener('click', () => this.toggleEditMode());
+        
+        // Delete selected button
+        document.getElementById('deleteSelectedBtn')?.addEventListener('click', () => this.deleteSelectedItems());
 
         // Refresh button
         document.getElementById('refreshBtn')?.addEventListener('click', () => this.refreshFileTree());
@@ -521,6 +527,64 @@ class SidebarManager {
             toast.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+
+    // Edit mode functionality
+    toggleEditMode() {
+        if (this.fileTree) {
+            this.fileTree.toggleEditMode();
+        }
+    }
+
+    async deleteSelectedItems() {
+        if (!this.fileTree) return;
+        
+        const selectedItems = this.fileTree.getSelectedItems();
+        if (selectedItems.length === 0) {
+            alert('No items selected');
+            return;
+        }
+        
+        const itemNames = selectedItems.map(path => path.split('/').pop()).join(', ');
+        const confirmed = confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?\n\n${itemNames}\n\nThis action cannot be undone.`);
+        
+        if (!confirmed) return;
+        
+        try {
+            // Delete items in parallel
+            const deletePromises = selectedItems.map(async (path) => {
+                // Determine if it's a directory by checking if the item itself is marked as directory
+                // or if any files exist within this path
+                const fileObject = this.cachedFiles.find(file => file.path === path);
+                const isDirectory = (fileObject && fileObject.type === 'directory') ||
+                    this.cachedFiles.some(file => 
+                        file.path !== path && file.path.startsWith(path + '/')
+                    );
+                
+                if (isDirectory) {
+                    return window.api.deleteDirectory(path);
+                } else {
+                    return window.api.deleteFile(path);
+                }
+            });
+            
+            await Promise.all(deletePromises);
+            
+            // Exit edit mode and refresh
+            this.fileTree.toggleEditMode();
+            await this.refreshFileTree();
+            
+            // Notify about deletions for URL updates
+            selectedItems.forEach(path => {
+                this.onFileDeleted?.(path);
+            });
+            
+            this.showSuccess(`Successfully deleted ${selectedItems.length} item(s)`);
+            
+        } catch (error) {
+            console.error('Failed to delete items:', error);
+            this.showError('Failed to delete some items: ' + Utils.extractErrorMessage(error));
+        }
     }
 
     // Optional callbacks that can be set by parent classes
