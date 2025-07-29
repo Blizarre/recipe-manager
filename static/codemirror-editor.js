@@ -223,27 +223,17 @@ class CodeMirrorEditor {
 
 
     updateUI() {
-        // Update save button state (both desktop and mobile)
-        const saveBtnDesktop = document.getElementById('saveBtnDesktop');
-        const saveBtnMobile = document.getElementById('saveBtnMobile');
+        // Update save button state (single button that moves between mobile/desktop)
+        const saveBtn = document.getElementById('saveBtn');
         
         const isEnabled = this.currentFile && this.isDirty;
         
-        if (saveBtnDesktop) {
-            saveBtnDesktop.disabled = !isEnabled;
+        if (saveBtn) {
+            saveBtn.disabled = !isEnabled;
             if (isEnabled) {
-                saveBtnDesktop.classList.add('dirty');
+                saveBtn.classList.add('dirty');
             } else {
-                saveBtnDesktop.classList.remove('dirty');
-            }
-        }
-        
-        if (saveBtnMobile) {
-            saveBtnMobile.disabled = !isEnabled;
-            if (isEnabled) {
-                saveBtnMobile.classList.add('dirty');
-            } else {
-                saveBtnMobile.classList.remove('dirty');
+                saveBtn.classList.remove('dirty');
             }
         }
         

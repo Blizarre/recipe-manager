@@ -638,9 +638,11 @@ body {
     font-size: 14px;
 }
 
-/* Mobile actions (hidden on desktop) */
-.mobile-actions {
-    display: none;
+/* Header actions - positioned differently on mobile vs desktop */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 
@@ -1182,17 +1184,10 @@ body.keyboard-open .modal {
         display: none;
     }
     
-    /* Mobile actions in header */
-    .mobile-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .btn-small {
-        padding: 6px 12px;
-        font-size: 12px;
-        min-height: auto;
+    /* Mobile header actions styling - keep buttons touch-friendly */
+    .header-actions .btn {
+        min-height: var(--min-touch-target);
+        padding: 8px 16px;
     }
 
     .editor-header {

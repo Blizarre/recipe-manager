@@ -21,6 +21,9 @@ class StandaloneRecipeEditor {
         // Update page title and file info
         this.updatePageInfo();
         
+        // Setup responsive button positioning
+        this.setupResponsiveButtons();
+        
         // Setup components
         this.setupComponents();
         this.setupEventListeners();
@@ -49,17 +52,46 @@ class StandaloneRecipeEditor {
         });
     }
 
+    setupResponsiveButtons() {
+        const moveButtons = () => {
+            const saveBtn = document.getElementById('saveBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const headerActions = document.querySelector('.header-actions');
+            const actionButtons = document.querySelector('.action-buttons');
+            
+            if (window.innerWidth <= 768) {
+                // Mobile: keep buttons in header
+                if (saveBtn && !headerActions.contains(saveBtn)) {
+                    headerActions.insertBefore(saveBtn, document.getElementById('mobileNewBtn'));
+                }
+                if (shareBtn && !headerActions.contains(shareBtn)) {
+                    headerActions.insertBefore(shareBtn, document.getElementById('mobileNewBtn'));
+                }
+            } else {
+                // Desktop: move buttons to editor header
+                if (saveBtn && !actionButtons.contains(saveBtn)) {
+                    actionButtons.appendChild(saveBtn);
+                }
+                if (shareBtn && !actionButtons.contains(shareBtn)) {
+                    actionButtons.appendChild(shareBtn);
+                }
+            }
+        };
+        
+        // Initial positioning
+        moveButtons();
+        
+        // Listen for window resize
+        window.addEventListener('resize', moveButtons);
+    }
+
     setupEventListeners() {
         // Mobile new recipe button
         document.getElementById('mobileNewBtn')?.addEventListener('click', () => this.sidebar.showNewRecipeModal());
         
-        // Desktop editor actions
-        document.getElementById('saveBtnDesktop')?.addEventListener('click', () => this.editor?.save());
-        document.getElementById('shareBtnDesktop')?.addEventListener('click', () => this.shareUrl());
-        
-        // Mobile editor actions
-        document.getElementById('saveBtnMobile')?.addEventListener('click', () => this.editor?.save());
-        document.getElementById('shareBtnMobile')?.addEventListener('click', () => this.shareUrl());
+        // Save and share buttons (single buttons that move between mobile/desktop)
+        document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
+        document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
 
         // Additional keyboard shortcut for save
         document.addEventListener('keydown', (e) => {
