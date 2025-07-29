@@ -16,28 +16,13 @@ class TouchGesturesHandler {
     }
 
     init() {
-        this.setupSwipeGestures();
         this.setupLongPressGestures();
-        this.setupPullToRefresh();
+        this.setupOverlayTap();
     }
 
-    setupSwipeGestures() {
-        // Add swipe gesture support for sidebar navigation
-        const sidebar = document.getElementById('sidebar');
+    setupOverlayTap() {
+        // Overlay tap to close sidebar
         const overlay = document.getElementById('overlay');
-        const mainContent = document.querySelector('.main-content');
-        
-        // Swipe from edge to open sidebar
-        mainContent?.addEventListener('touchstart', (e) => this.handleEdgeSwipeStart(e), { passive: false });
-        mainContent?.addEventListener('touchmove', (e) => this.handleEdgeSwipeMove(e), { passive: false });
-        mainContent?.addEventListener('touchend', (e) => this.handleEdgeSwipeEnd(e), { passive: false });
-        
-        // Swipe on sidebar to close
-        sidebar?.addEventListener('touchstart', (e) => this.handleSidebarSwipeStart(e), { passive: false });
-        sidebar?.addEventListener('touchmove', (e) => this.handleSidebarSwipeMove(e), { passive: false });
-        sidebar?.addEventListener('touchend', (e) => this.handleSidebarSwipeEnd(e), { passive: false });
-        
-        // Overlay tap/swipe to close
         overlay?.addEventListener('touchstart', (e) => this.handleOverlayTouch(e), { passive: false });
     }
 
@@ -51,134 +36,7 @@ class TouchGesturesHandler {
         fileTree?.addEventListener('touchcancel', (e) => this.handleLongPressCancel(e), { passive: false });
     }
 
-    setupPullToRefresh() {
-        // Add pull-to-refresh for file tree
-        const fileTreeContainer = document.querySelector('.file-tree-container');
-        let startY = 0;
-        let isPulling = false;
-        
-        fileTreeContainer?.addEventListener('touchstart', (e) => {
-            if (fileTreeContainer.scrollTop === 0) {
-                startY = e.touches[0].clientY;
-            }
-        }, { passive: true });
-        
-        fileTreeContainer?.addEventListener('touchmove', (e) => {
-            if (fileTreeContainer.scrollTop === 0) {
-                const currentY = e.touches[0].clientY;
-                const diff = currentY - startY;
-                
-                if (diff > 50 && !isPulling) {
-                    isPulling = true;
-                    this.showPullToRefreshIndicator();
-                }
-            }
-        }, { passive: true });
-        
-        fileTreeContainer?.addEventListener('touchend', () => {
-            if (isPulling) {
-                isPulling = false;
-                this.hidePullToRefreshIndicator();
-                this.app.fileTree?.refresh();
-            }
-        }, { passive: true });
-    }
 
-    // Edge swipe handlers
-    handleEdgeSwipeStart(e) {
-        if (e.touches.length !== 1) return;
-        
-        const touch = e.touches[0];
-        this.touchStartX = touch.clientX;
-        this.touchStartY = touch.clientY;
-        this.touchStartTime = Date.now();
-        
-        // Only start gesture if touching near left edge (first 20px)
-        if (this.touchStartX > 20) return;
-        
-        this.isSwiping = true;
-    }
-
-    handleEdgeSwipeMove(e) {
-        if (!this.isSwiping || e.touches.length !== 1) return;
-        
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - this.touchStartX;
-        const deltaY = Math.abs(touch.clientY - this.touchStartY);
-        
-        // If moving more vertically than horizontally, cancel swipe
-        if (deltaY > Math.abs(deltaX)) {
-            this.isSwiping = false;
-            return;
-        }
-        
-        // Prevent default scrolling when swiping
-        if (Math.abs(deltaX) > 10) {
-            e.preventDefault();
-        }
-    }
-
-    handleEdgeSwipeEnd(e) {
-        if (!this.isSwiping) return;
-        
-        const touch = e.changedTouches[0];
-        const deltaX = touch.clientX - this.touchStartX;
-        const deltaTime = Date.now() - this.touchStartTime;
-        const velocity = Math.abs(deltaX) / deltaTime;
-        
-        this.isSwiping = false;
-        
-        // Open sidebar if swipe is long enough or fast enough
-        if (deltaX > this.swipeThreshold || velocity > this.swipeVelocityThreshold) {
-            this.openSidebar();
-        }
-    }
-
-    // Sidebar swipe handlers
-    handleSidebarSwipeStart(e) {
-        if (e.touches.length !== 1) return;
-        
-        const touch = e.touches[0];
-        this.touchStartX = touch.clientX;
-        this.touchStartY = touch.clientY;
-        this.touchStartTime = Date.now();
-        this.isSwiping = true;
-    }
-
-    handleSidebarSwipeMove(e) {
-        if (!this.isSwiping || e.touches.length !== 1) return;
-        
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - this.touchStartX;
-        const deltaY = Math.abs(touch.clientY - this.touchStartY);
-        
-        // If moving more vertically than horizontally, cancel swipe
-        if (deltaY > Math.abs(deltaX)) {
-            this.isSwiping = false;
-            return;
-        }
-        
-        // Prevent default scrolling when swiping
-        if (Math.abs(deltaX) > 10) {
-            e.preventDefault();
-        }
-    }
-
-    handleSidebarSwipeEnd(e) {
-        if (!this.isSwiping) return;
-        
-        const touch = e.changedTouches[0];
-        const deltaX = touch.clientX - this.touchStartX;
-        const deltaTime = Date.now() - this.touchStartTime;
-        const velocity = Math.abs(deltaX) / deltaTime;
-        
-        this.isSwiping = false;
-        
-        // Close sidebar if swiping left
-        if (deltaX < -this.swipeThreshold || velocity > this.swipeVelocityThreshold) {
-            this.closeSidebar();
-        }
-    }
 
     // Long press handlers
     handleLongPressStart(e) {
@@ -298,19 +156,4 @@ class TouchGesturesHandler {
         return nameElement ? nameElement.textContent : null;
     }
 
-    showPullToRefreshIndicator() {
-        // Simple visual indicator
-        const fileTree = document.getElementById('fileTree');
-        if (fileTree && !fileTree.querySelector('.pull-refresh-indicator')) {
-            const indicator = document.createElement('div');
-            indicator.className = 'pull-refresh-indicator';
-            indicator.textContent = '⟳ Release to refresh';
-            fileTree.insertBefore(indicator, fileTree.firstChild);
-        }
-    }
-
-    hidePullToRefreshIndicator() {
-        const indicator = document.querySelector('.pull-refresh-indicator');
-        indicator?.remove();
-    }
 }
