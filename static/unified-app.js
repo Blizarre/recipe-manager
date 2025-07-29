@@ -40,8 +40,7 @@ class UnifiedRecipeApp {
         if (mobileFileTreeContainer) {
             this.mobileFileTree = new FileTree(
                 mobileFileTreeContainer,
-                (path) => this.onFileSelect(path),
-                (event, path, type) => this.sidebar.onContextMenu(event, path, type)
+                (path) => this.onFileSelect(path)
             );
         }
 
@@ -59,14 +58,19 @@ class UnifiedRecipeApp {
         // Save and share buttons (only active in editor mode)
         document.getElementById('saveBtn')?.addEventListener('click', () => this.editor?.save());
         document.getElementById('shareBtn')?.addEventListener('click', () => this.shareUrl());
+        document.getElementById('renameBtn')?.addEventListener('click', () => this.showRenameModal());
 
-        // Keyboard shortcut for save
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 if (this.editor) {
                     this.editor.save();
                 }
+            }
+            
+            if (e.key === 'Escape') {
+                this.hideRenameModal();
             }
         });
     }
@@ -75,10 +79,11 @@ class UnifiedRecipeApp {
         const moveButtons = () => {
             const saveBtn = document.getElementById('saveBtn');
             const shareBtn = document.getElementById('shareBtn');
+            const renameBtn = document.getElementById('renameBtn');
             const headerActions = document.querySelector('.header-actions');
             const actionButtons = document.querySelector('.action-buttons');
             
-            if (!saveBtn || !shareBtn || !headerActions || !actionButtons) return;
+            if (!saveBtn || !shareBtn || !renameBtn || !headerActions || !actionButtons) return;
             
             if (window.innerWidth <= 768) {
                 // Mobile: keep buttons in header
@@ -88,6 +93,9 @@ class UnifiedRecipeApp {
                 if (!headerActions.contains(shareBtn)) {
                     headerActions.insertBefore(shareBtn, document.getElementById('mobileNewBtn'));
                 }
+                if (!headerActions.contains(renameBtn)) {
+                    headerActions.insertBefore(renameBtn, document.getElementById('mobileNewBtn'));
+                }
             } else {
                 // Desktop: move buttons to editor header
                 if (!actionButtons.contains(saveBtn)) {
@@ -95,6 +103,9 @@ class UnifiedRecipeApp {
                 }
                 if (!actionButtons.contains(shareBtn)) {
                     actionButtons.appendChild(shareBtn);
+                }
+                if (!actionButtons.contains(renameBtn)) {
+                    actionButtons.appendChild(renameBtn);
                 }
             }
         };
@@ -120,6 +131,7 @@ class UnifiedRecipeApp {
         const welcomeScreen = document.getElementById('welcomeScreen');
         const editorInterface = document.getElementById('editorInterface');
         const sidebar = document.getElementById('sidebar');
+        const renameBtn = document.getElementById('renameBtn');
         
         // Hide initial loading
         if (initialLoading) {
@@ -131,12 +143,22 @@ class UnifiedRecipeApp {
             welcomeScreen.style.display = 'none';
             editorInterface.style.display = 'block';
             
+            // Show rename button when file is open
+            if (renameBtn) {
+                renameBtn.style.display = 'block';
+            }
+            
             // Update page info
             this.updatePageInfo();
         } else {
             // Welcome mode - show welcome, hide editor, ensure sidebar is visible
             welcomeScreen.style.display = 'block';
             editorInterface.style.display = 'none';
+            
+            // Hide rename button when no file is open
+            if (renameBtn) {
+                renameBtn.style.display = 'none';
+            }
             
             // Ensure sidebar is visible in welcome mode
             sidebar.classList.add('sidebar-open');
@@ -333,6 +355,114 @@ class UnifiedRecipeApp {
     showToast(message, type = 'info') {
         if (this.sidebar) {
             this.sidebar.showToast(message, type);
+        }
+    }
+
+    // Rename functionality
+    showRenameModal() {
+        if (!this.currentFile) return;
+        
+        const modal = document.getElementById('renameFileModal');
+        const fileNameInput = document.getElementById('newFileName');
+        
+        // Pre-fill with current filename
+        const currentFileName = this.currentFile.split('/').pop();
+        fileNameInput.value = currentFileName;
+        
+        // Setup modal event listeners
+        this.setupRenameModal();
+        
+        modal.classList.add('active');
+        fileNameInput.focus();
+        fileNameInput.select();
+    }
+
+    setupRenameModal() {
+        const modal = document.getElementById('renameFileModal');
+        const form = document.getElementById('renameFileForm');
+        const closeBtn = document.getElementById('renameModalClose');
+        const cancelBtn = document.getElementById('cancelRename');
+
+        // Remove existing listeners to avoid duplicates
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        closeBtn?.addEventListener('click', () => this.hideRenameModal());
+        cancelBtn?.addEventListener('click', () => this.hideRenameModal());
+
+        document.getElementById('renameFileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.renameCurrentFile();
+        });
+
+        // Close modal when clicking outside
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideRenameModal();
+            }
+        });
+    }
+
+    hideRenameModal() {
+        const modal = document.getElementById('renameFileModal');
+        modal.classList.remove('active');
+    }
+
+    async renameCurrentFile() {
+        if (!this.currentFile) return;
+
+        try {
+            const newFileName = document.getElementById('newFileName').value.trim();
+            
+            if (!newFileName) {
+                alert('Please enter a new file name');
+                return;
+            }
+
+            // Ensure .md extension
+            const finalFileName = newFileName.endsWith('.md') ? newFileName : newFileName + '.md';
+            
+            // Validate filename
+            if (!/^[a-zA-Z0-9\s\-_.]+$/.test(finalFileName.replace('.md', ''))) {
+                alert('Please use only letters, numbers, spaces, hyphens, underscores, and dots');
+                return;
+            }
+
+            // Build new path
+            const pathParts = this.currentFile.split('/');
+            pathParts[pathParts.length - 1] = finalFileName;
+            const newPath = pathParts.join('/');
+
+            // Don't rename if it's the same
+            if (newPath === this.currentFile) {
+                this.hideRenameModal();
+                return;
+            }
+
+            // Use the existing file rename API
+            await window.api.moveFile(this.currentFile, newPath);
+
+            // Update current file and URL
+            this.currentFile = newPath;
+            window.history.replaceState({}, '', `/edit/${newPath}`);
+            
+            // Update page info
+            this.updatePageInfo();
+            
+            // Update editor's current file reference
+            if (this.editor) {
+                this.editor.currentFile = newPath;
+            }
+
+            // Refresh file tree
+            await this.sidebar.refreshFileTree();
+            
+            this.hideRenameModal();
+            this.showSuccess('File renamed successfully');
+
+        } catch (error) {
+            console.error('Failed to rename file:', error);
+            this.showError('Failed to rename file: ' + Utils.extractErrorMessage(error));
         }
     }
 }

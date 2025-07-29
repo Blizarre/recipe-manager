@@ -57,6 +57,7 @@
             <div class="header-actions">
                 <button class="btn btn-primary" id="saveBtn" disabled>Save</button>
                 <button class="btn btn-secondary" id="shareBtn">Share</button>
+                <button class="btn btn-secondary" id="renameBtn">Rename</button>
                 <button class="new-recipe-btn mobile-new-btn" id="mobileNewBtn" aria-label="New recipe">+</button>
             </div>
         </header>
@@ -204,6 +205,28 @@
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="cancelNewFolder">Cancel</button>
                             <button type="submit" class="btn btn-primary">Create Folder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rename File Modal -->
+        <div class="modal" id="renameFileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Rename File</h3>
+                    <button class="modal-close" id="renameModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="renameFileForm">
+                        <div class="form-group">
+                            <label for="newFileName">New File Name:</label>
+                            <input type="text" id="newFileName" required placeholder="e.g. chocolate-cake.md">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="cancelRename">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Rename</button>
                         </div>
                     </form>
                 </div>
