@@ -1,280 +1,428 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <title>Recipe Manager</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- CodeMirror 6 modules -->
     <script type="module">
-        import { EditorView } from 'https://esm.sh/@codemirror/view';
-        import { EditorState } from 'https://esm.sh/@codemirror/state';
-        import { basicSetup } from 'https://esm.sh/codemirror';
-        import { markdown } from 'https://esm.sh/@codemirror/lang-markdown';
-        import { HighlightStyle, syntaxHighlighting } from 'https://esm.sh/@codemirror/language';
-        import { tags } from 'https://esm.sh/@lezer/highlight';
-        
-        // Create custom highlight style for markdown
-        const markdownHighlighting = HighlightStyle.define([
-            { tag: tags.heading1, color: '#1e40af', fontWeight: 'bold', fontSize: '1.2em' },
-            { tag: tags.heading2, color: '#1e40af', fontWeight: 'bold', fontSize: '1.1em' },
-            { tag: tags.heading3, color: '#1e40af', fontWeight: 'bold' },
-            { tag: tags.heading4, color: '#1e40af', fontWeight: 'bold' },
-            { tag: tags.heading5, color: '#1e40af', fontWeight: 'bold' },
-            { tag: tags.heading6, color: '#1e40af', fontWeight: 'bold' },
-            { tag: tags.heading, color: '#1e40af', fontWeight: 'bold' }
-        ]);
-        
-        // Make CodeMirror available globally
-        window.CodeMirror = {
-            EditorView,
-            EditorState,
-            basicSetup,
-            markdown,
-            syntaxHighlighting,
-            markdownHighlighting
-        };
-        
-        // Signal that CodeMirror is ready
-        window.CodeMirrorReady = true;
-        window.dispatchEvent(new Event('codemirror-ready'));
+      import { EditorView } from "https://esm.sh/@codemirror/view";
+      import { EditorState } from "https://esm.sh/@codemirror/state";
+      import { basicSetup } from "https://esm.sh/codemirror";
+      import { markdown } from "https://esm.sh/@codemirror/lang-markdown";
+      import {
+        HighlightStyle,
+        syntaxHighlighting,
+      } from "https://esm.sh/@codemirror/language";
+      import { tags } from "https://esm.sh/@lezer/highlight";
+
+      // Create custom highlight style for markdown
+      const markdownHighlighting = HighlightStyle.define([
+        {
+          tag: tags.heading1,
+          color: "#1e40af",
+          fontWeight: "bold",
+          fontSize: "1.2em",
+        },
+        {
+          tag: tags.heading2,
+          color: "#1e40af",
+          fontWeight: "bold",
+          fontSize: "1.1em",
+        },
+        { tag: tags.heading3, color: "#1e40af", fontWeight: "bold" },
+        { tag: tags.heading4, color: "#1e40af", fontWeight: "bold" },
+        { tag: tags.heading5, color: "#1e40af", fontWeight: "bold" },
+        { tag: tags.heading6, color: "#1e40af", fontWeight: "bold" },
+        { tag: tags.heading, color: "#1e40af", fontWeight: "bold" },
+      ]);
+
+      // Make CodeMirror available globally
+      window.CodeMirror = {
+        EditorView,
+        EditorState,
+        basicSetup,
+        markdown,
+        syntaxHighlighting,
+        markdownHighlighting,
+      };
+
+      // Signal that CodeMirror is ready
+      window.CodeMirrorReady = true;
+      window.dispatchEvent(new Event("codemirror-ready"));
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="app-container">
-        <!-- Mobile header -->
-        <header class="mobile-header">
-            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
+      <!-- Mobile header -->
+      <header class="mobile-header">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <h1 id="fileName">Recipe Manager</h1>
+        <div class="header-actions">
+          <button class="btn btn-primary" id="saveBtn" disabled title="Save">
+            <span class="btn-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                />
+                <polyline points="17,21 17,13 7,13 7,21" />
+                <polyline points="7,3 7,8 15,8" />
+              </svg>
+            </span>
+            <span class="btn-text">Save</span>
+          </button>
+          <button class="btn btn-secondary" id="renameBtn" title="Rename">
+            <span class="btn-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                />
+                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </span>
+            <span class="btn-text">Rename</span>
+          </button>
+          <button class="btn btn-danger" id="deleteBtn" title="Delete">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="3,6 5,6 21,6" />
+              <path
+                d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1 2-2h4a2,2 0 0,1 2,2v2"
+              />
+              <line x1="10" y1="11" x2="10" y2="17" />
+              <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>
+          </button>
+          <button
+            class="new-recipe-btn mobile-new-btn"
+            id="mobileNewBtn"
+            aria-label="New recipe"
+          >
+            +
+          </button>
+        </div>
+      </header>
+
+      <!-- Sidebar for file tree (same as main page) -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h2>Recipes</h2>
+          <button
+            class="new-recipe-btn desktop-new-btn"
+            id="desktopNewBtn"
+            title="New Recipe"
+          >
+            +
+          </button>
+          <button class="new-folder-btn" id="newFolderBtn" title="New Folder">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+              />
+              <line x1="12" y1="11" x2="12" y2="17" />
+              <line x1="9" y1="14" x2="15" y2="14" />
+            </svg>
+          </button>
+          <button class="edit-mode-btn" id="editModeBtn" title="Edit">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              />
+              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Search component -->
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <input
+              type="text"
+              id="searchInput"
+              class="search-input"
+              placeholder="Search recipes..."
+              autocomplete="off"
+            />
+            <button
+              class="search-clear"
+              id="searchClear"
+              style="display: none"
+              title="Clear search"
+            >
+              &times;
             </button>
-            <h1 id="fileName">Recipe Manager</h1>
-            <div class="header-actions">
-                <button class="btn btn-primary" id="saveBtn" disabled title="Save">
-                    <span class="btn-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                            <polyline points="17,21 17,13 7,13 7,21"/>
-                            <polyline points="7,3 7,8 15,8"/>
-                        </svg>
-                    </span>
-                    <span class="btn-text">Save</span>
-                </button>
-                <button class="btn btn-secondary" id="renameBtn" title="Rename">
-                    <span class="btn-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </span>
-                    <span class="btn-text">Rename</span>
-                </button>
-                <button class="btn btn-danger" id="deleteBtn" title="Delete">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3,6 5,6 21,6"/>
-                        <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1 2-2h4a2,2 0 0,1 2,2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                    </svg>
-                </button>
-                <button class="new-recipe-btn mobile-new-btn" id="mobileNewBtn" aria-label="New recipe">+</button>
+          </div>
+          <div class="search-filters">
+            <label class="search-filter">
+              <input type="radio" name="searchType" value="content" checked />
+              <span>Content</span>
+            </label>
+            <label class="search-filter">
+              <input type="radio" name="searchType" value="files" />
+              <span>Files</span>
+            </label>
+          </div>
+          <div class="search-results" id="searchResults" style="display: none">
+            <div class="search-results-header">
+              <span class="search-results-count" id="searchResultsCount"
+                >0 results</span
+              >
+              <span class="search-duration" id="searchDuration"></span>
             </div>
-        </header>
-
-        <!-- Sidebar for file tree (same as main page) -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>Recipes</h2>
-                <button class="new-recipe-btn desktop-new-btn" id="desktopNewBtn" title="New Recipe">+</button>
-                <button class="new-folder-btn" id="newFolderBtn" title="New Folder">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                        <line x1="12" y1="11" x2="12" y2="17"/>
-                        <line x1="9" y1="14" x2="15" y2="14"/>
-                    </svg>
-                </button>
-                <button class="edit-mode-btn" id="editModeBtn" title="Edit">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Search component -->
-            <div class="search-container">
-                <div class="search-input-wrapper">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search recipes..." autocomplete="off">
-                    <button class="search-clear" id="searchClear" style="display: none;" title="Clear search">&times;</button>
-                </div>
-                <div class="search-filters">
-                    <label class="search-filter">
-                        <input type="radio" name="searchType" value="content" checked>
-                        <span>Content</span>
-                    </label>
-                    <label class="search-filter">
-                        <input type="radio" name="searchType" value="files">
-                        <span>Files</span>
-                    </label>
-                </div>
-                <div class="search-results" id="searchResults" style="display: none;">
-                    <div class="search-results-header">
-                        <span class="search-results-count" id="searchResultsCount">0 results</span>
-                        <span class="search-duration" id="searchDuration"></span>
-                    </div>
-                    <div class="search-results-list" id="searchResultsList"></div>
-                </div>
-            </div>
-            
-            <div class="file-tree-container">
-                <div class="file-tree" id="fileTree">
-                    <div class="loading">Loading recipes...</div>
-                </div>
-            </div>
-            
-            <!-- Edit mode actions -->
-            <div class="edit-mode-actions" id="editModeActions">
-                <span class="selected-count" id="selectedCount">0 selected</span>
-                <button class="btn btn-danger" id="deleteSelectedBtn">Delete</button>
-            </div>
-            
-            <div class="sidebar-footer">
-                <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
-            </div>
-        </aside>
-
-        <!-- Main content area -->
-        <main class="main-content">
-            <!-- Default loading state -->
-            <div class="loading" id="initialLoading">Loading...</div>
-            
-            <!-- Welcome screen (shown when no file selected) -->
-            <div class="welcome-screen" id="welcomeScreen" style="display: none;">
-                <div class="welcome-content">
-                    <!-- Desktop welcome message -->
-                    <div class="desktop-welcome" id="desktopWelcome">
-                        <h1>Recipe Manager</h1>
-                        <p>Select a recipe from the sidebar to start editing, or create a new one.</p>
-                    </div>
-                    
-                    <!-- Mobile file tree (shown when sidebar is hidden) -->
-                    <div class="mobile-file-tree" id="mobileFileTree">
-                        <div class="loading">Loading recipes...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Editor interface (shown when file selected) -->
-            <div class="editor-interface" id="editorInterface" style="display: none;">
-                <div class="editor-header">
-                    <div class="file-info">
-                        <span class="file-name" id="fileNameDesktop">Loading...</span>
-                        <span class="file-status" id="fileStatus"></span>
-                    </div>
-                    <div class="editor-actions">
-                        <div class="action-buttons">
-                            <!-- Buttons moved to mobile header, styled via CSS -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="editor-container">
-                    <div class="editor-wrapper" id="editorWrapper">
-                        <div class="loading" id="editorLoading">Loading...</div>
-                        <div class="editor-panel" id="editorPanel" style="display: none;">
-                            <div class="codemirror-container" id="editorContainer">
-                                <div id="editor"></div>
-                            </div>
-                        </div>
-                        <div class="editor-status" style="display: none;">
-                            <span id="charCount">0 characters</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Overlay for mobile -->
-        <div class="overlay" id="overlay"></div>
-
-        <!-- Modal for new recipe -->
-        <div class="modal" id="newRecipeModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Create New Recipe</h3>
-                    <button class="modal-close" id="modalClose">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="newRecipeForm">
-                        <div class="form-group">
-                            <label for="recipeTitle">Recipe Title:</label>
-                            <input type="text" id="recipeTitle" required placeholder="e.g. Chocolate Chip Cookies">
-                        </div>
-                        <div class="form-group">
-                            <label for="recipeFolder">Folder (optional):</label>
-                            <div class="autocomplete-container">
-                                <input type="text" id="recipeFolder" placeholder="e.g. desserts" autocomplete="off">
-                                <div class="autocomplete-dropdown" id="recipeFolderDropdown"></div>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="cancelNew">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Create Recipe</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <div class="search-results-list" id="searchResultsList"></div>
+          </div>
         </div>
 
-        <!-- New Folder Modal -->
-        <div class="modal" id="newFolderModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Create New Folder</h3>
-                    <button class="modal-close" id="folderModalClose">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="newFolderForm">
-                        <div class="form-group">
-                            <label for="folderName">Folder Name:</label>
-                            <input type="text" id="folderName" required placeholder="e.g. desserts">
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="cancelNewFolder">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Create Folder</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="file-tree-container">
+          <div class="file-tree" id="fileTree">
+            <div class="loading">Loading recipes...</div>
+          </div>
         </div>
 
-        <!-- Rename File Modal -->
-        <div class="modal" id="renameFileModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Rename File</h3>
-                    <button class="modal-close" id="renameModalClose">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="renameFileForm">
-                        <div class="form-group">
-                            <label for="newFileName">New File Name:</label>
-                            <input type="text" id="newFileName" required placeholder="e.g. chocolate-cake.md">
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="cancelRename">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Rename</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <!-- Edit mode actions -->
+        <div class="edit-mode-actions" id="editModeActions">
+          <span class="selected-count" id="selectedCount">0 selected</span>
+          <button class="btn btn-danger" id="deleteSelectedBtn">Delete</button>
         </div>
 
+        <div class="sidebar-footer">
+          <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+        </div>
+      </aside>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <!-- Default loading state -->
+        <div class="loading" id="initialLoading">Loading...</div>
+
+        <!-- Welcome screen (shown when no file selected) -->
+        <div class="welcome-screen" id="welcomeScreen" style="display: none">
+          <div class="welcome-content">
+            <!-- Desktop welcome message -->
+            <div class="desktop-welcome" id="desktopWelcome">
+              <h1>Recipe Manager</h1>
+              <p>
+                Select a recipe from the sidebar to start editing, or create a
+                new one.
+              </p>
+            </div>
+
+            <!-- Mobile file tree (shown when sidebar is hidden) -->
+            <div class="mobile-file-tree" id="mobileFileTree">
+              <div class="loading">Loading recipes...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editor interface (shown when file selected) -->
+        <div
+          class="editor-interface"
+          id="editorInterface"
+          style="display: none"
+        >
+          <div class="editor-header">
+            <div class="file-info">
+              <span class="file-name" id="fileNameDesktop">Loading...</span>
+              <span class="file-status" id="fileStatus"></span>
+            </div>
+            <div class="editor-actions">
+              <div class="action-buttons">
+                <!-- Buttons moved to mobile header, styled via CSS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-container">
+            <div class="editor-wrapper" id="editorWrapper">
+              <div class="loading" id="editorLoading">Loading...</div>
+              <div class="editor-panel" id="editorPanel" style="display: none">
+                <div class="codemirror-container" id="editorContainer">
+                  <div id="editor"></div>
+                </div>
+              </div>
+              <div class="editor-status" style="display: none">
+                <span id="charCount">0 characters</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Overlay for mobile -->
+      <div class="overlay" id="overlay"></div>
+
+      <!-- Modal for new recipe -->
+      <div class="modal" id="newRecipeModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Create New Recipe</h3>
+            <button class="modal-close" id="modalClose">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="newRecipeForm">
+              <div class="form-group">
+                <label for="recipeTitle">Recipe Title:</label>
+                <input
+                  type="text"
+                  id="recipeTitle"
+                  required
+                  placeholder="e.g. Chocolate Chip Cookies"
+                />
+              </div>
+              <div class="form-group">
+                <label for="recipeFolder">Folder (optional):</label>
+                <div class="autocomplete-container">
+                  <input
+                    type="text"
+                    id="recipeFolder"
+                    placeholder="e.g. desserts"
+                    autocomplete="off"
+                  />
+                  <div
+                    class="autocomplete-dropdown"
+                    id="recipeFolderDropdown"
+                  ></div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelNew">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Create Recipe
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Folder Modal -->
+      <div class="modal" id="newFolderModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Create New Folder</h3>
+            <button class="modal-close" id="folderModalClose">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="newFolderForm">
+              <div class="form-group">
+                <label for="folderName">Folder Name:</label>
+                <input
+                  type="text"
+                  id="folderName"
+                  required
+                  placeholder="e.g. desserts"
+                />
+              </div>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelNewFolder"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Create Folder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rename File Modal -->
+      <div class="modal" id="renameFileModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Rename File</h3>
+            <button class="modal-close" id="renameModalClose">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="renameFileForm">
+              <div class="form-group">
+                <label for="newFileName">New File Name:</label>
+                <input
+                  type="text"
+                  id="newFileName"
+                  required
+                  placeholder="e.g. chocolate-cake.md"
+                />
+              </div>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelRename"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">Rename</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="/static/utils.js"></script>
@@ -285,5 +433,5 @@
     <script src="/static/sidebar-manager.js"></script>
     <script src="/static/codemirror-editor.js"></script>
     <script src="/static/unified-app.js"></script>
-</body>
+  </body>
 </html>
