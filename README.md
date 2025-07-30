@@ -21,12 +21,14 @@ THAT IS PROPERLY CONFIGURED.**
 ### Using Docker Compose (Recommended)
 
 1. Clone the repository:
+
 ```bash
 git clone <your-repo-url>
 cd recipes
 ```
 
 2. Start with Docker Compose:
+
 ```bash
 docker-compose up -d
 ```
@@ -36,22 +38,27 @@ docker-compose up -d
 ### Manual Installation
 
 #### Prerequisites
+
 - Python 3.12+
 - uv package manager
 
 #### Installation
+
 1. Clone the repository:
+
 ```bash
 git clone <your-repo-url>
 cd recipes
 ```
 
 2. Install dependencies:
+
 ```bash
 uv sync
 ```
 
 3. Start the server:
+
 ```bash
 uv run python main.py
 ```
@@ -59,23 +66,25 @@ uv run python main.py
 4. Open your browser to `http://localhost:8000`
 
 ### Environment Variables
+
 Configure the application using environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable      | Default        | Description                     |
+| ------------- | -------------- | ------------------------------- |
 | `RECIPES_DIR` | `/app/recipes` | Directory to store recipe files |
-| `HOST` | `0.0.0.0` | Server host binding |
-| `PORT` | `8000` | Server port |
+| `HOST`        | `0.0.0.0`      | Server host binding             |
+| `PORT`        | `8000`         | Server port                     |
 
 Example with custom configuration:
+
 ```bash
 docker run -p 3000:3000 -e PORT=3000 -v ./my-recipes:/app/recipes recipe-manager
 ```
 
-
 ## 🔧 API Endpoints
 
 ### Files
+
 - `GET /api/files` - List files and directories
 - `GET /api/files/{path}` - Get file content
 - `PUT /api/files/{path}` - Update file content
@@ -84,14 +93,17 @@ docker run -p 3000:3000 -e PORT=3000 -v ./my-recipes:/app/recipes recipe-manager
 - `POST /api/files/{path}/move` - Rename/move file
 
 ### Recipes
+
 - `PUT /api/recipes/{path}` - Save recipe
 - `POST /api/recipes/{path}` - Create recipe with template
 
 ### Search
+
 - `GET /api/search?q={query}` - Search recipe content
 - `GET /api/search/files?q={query}` - Search filenames
 
 ### Directories
+
 - `POST /api/directories/{path}` - Create directory
 - `DELETE /api/directories/{path}` - Delete directory
 
@@ -112,18 +124,21 @@ pytest tests/ -v
 ### Architecture Highlights
 
 **Backend (FastAPI):**
+
 - Async file operations for performance
 - Path validation and security
 - Comprehensive error handling
 - RESTful API design
 
 **Frontend (Vanilla JS):**
+
 - No framework dependencies
 - Component-based architecture
 - Shared utility functions
 - Mobile-first responsive design
 
 **Editor System:**
+
 - Textarea + syntax overlay approach
 - Prism.js for lightweight syntax highlighting
 - Real-time highlighting without performance impact
@@ -132,13 +147,14 @@ pytest tests/ -v
 ### Key Design Decisions
 
 1. **No Validation**: Complete creative freedom in recipe formatting
-2. **Single Panel**: Simplified UI eliminating preview complexity  
-4. **Touch-First**: Designed for mobile with gesture support
-5. **Auto-Save**: Seamless experience with background persistence
+2. **Single Panel**: Simplified UI eliminating preview complexity
+3. **Touch-First**: Designed for mobile with gesture support
+4. **Auto-Save**: Seamless experience with background persistence
 
 ## 🔧 Configuration
 
 ### File Storage
+
 By default, recipes are stored in the `recipes/` directory. Configure with:
 
 ```bash
@@ -146,10 +162,10 @@ export RECIPES_DIR=/path/to/your/recipes
 ```
 
 ### Server Settings
+
 Configure the server host and port:
 
 ```bash
 export HOST=0.0.0.0
 export PORT=8000
 ```
-

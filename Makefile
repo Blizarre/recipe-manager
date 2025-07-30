@@ -1,5 +1,5 @@
 fmt:
-	prettier -w static/
+	prettier -w static/ README.md
 	uv tool run black .
 
 check:
