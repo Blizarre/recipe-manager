@@ -1,7 +1,7 @@
 # Recipe Manager v2.0
 
 A modern, lightweight recipe management application built with FastAPI and vanilla JavaScript. It is really just a simple Markdown
-editor at the moment, but I will gradually add features as I feel the need for them.
+editor at the moment with a recipe template, but I will gradually add features as I feel the need for them.
 
 I forgot: **THIS IS A VIBE-CODED app made with Claude. I DID NOT REVIEW ALL THE CODE BUT EVERY TIME I LOOK AT SOMETHING I FIND A CRITICAL OWASP TOP 10
 VULNERABILITY IN IT. DO NOT PUT THIS ON THE OPEN INTERNET. IT SHOULD RUN STRICTLY ON A CONTAINER, BE SINGLE USER (YOU) AND BE PROTECTED BEHIND AN AUTH PROXY
