@@ -75,6 +75,9 @@ class CodeMirrorEditor {
                 },
                 '.cm-scroller': {
                     fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+                },
+                '.cm-lineNumbers, .cm-gutter': {
+                    display: 'none !important',
                 }
             })
         ];
