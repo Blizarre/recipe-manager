@@ -648,10 +648,25 @@ body {
 /* Button icon and text styling */
 .btn-icon {
     margin-right: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon svg {
+    flex-shrink: 0;
 }
 
 .btn-text {
     white-space: nowrap;
+}
+
+/* SVG icon styling */
+.file-tree-item .icon svg,
+.folder-icon svg,
+.drag-ghost svg {
+    vertical-align: middle;
+    margin-right: 4px;
 }
 
 @media (max-width: 768px) {
@@ -899,6 +914,11 @@ body {
     margin-left: 8px;
 }
 
+.new-folder-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
 .new-folder-btn:hover {
     background: var(--text-secondary);
     transform: scale(1.05);
@@ -918,6 +938,11 @@ body {
     justify-content: center;
     transition: all 0.2s ease;
     margin-left: 8px;
+}
+
+.edit-mode-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 .edit-mode-btn:hover {
