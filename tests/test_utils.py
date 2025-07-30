@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_utils_js_exists():
     """Test that the utils.js file exists and has expected content"""
     from pathlib import Path

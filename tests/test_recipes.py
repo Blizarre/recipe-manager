@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import shutil
 import os
+from main import app
 
 
 @pytest.fixture(autouse=True)
@@ -23,8 +24,6 @@ def clean_test_dir():
     if Path(test_dir).exists():
         shutil.rmtree(test_dir)
 
-
-from main import app
 
 client = TestClient(app)
 

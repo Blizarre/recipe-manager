@@ -52,7 +52,7 @@ async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
         content = await fs_manager.read_file(path)
 
         # Write to new location
-        result = await fs_manager.write_file(move_data.destination, content)
+        await fs_manager.write_file(move_data.destination, content)
 
         # Delete old file
         await fs_manager.delete_file(path)
@@ -311,7 +311,7 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
                     }
                 )
 
-        except Exception as e:
+        except Exception:
             # Skip files that can't be read
             continue
 
