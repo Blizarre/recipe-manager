@@ -593,6 +593,11 @@ body {
   color: var(--text-muted);
 }
 
+.file-status.auto-saved {
+  color: var(--success-color);
+  font-weight: 500;
+}
+
 .editor-actions {
   display: flex;
   align-items: center;

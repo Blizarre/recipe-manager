@@ -8,6 +8,8 @@ class CodeMirrorEditor {
     this.currentFile = null;
     this.isDirty = false;
     this.lastSavedContent = "";
+    this.autoSaveTimeoutId = null;
+    this.autoSaveDelay = 1000; // 1 second
 
     this.init();
   }
@@ -57,6 +59,7 @@ class CodeMirrorEditor {
             this.isDirty = true;
             this.updateUI();
             this.onContentChange?.();
+            this.scheduleAutoSave();
           }
         }),
         EditorView.theme({
@@ -187,6 +190,7 @@ class CodeMirrorEditor {
   }
 
   clearEditor() {
+    this.cancelAutoSave();
     this.currentFile = null;
     this.setContent("Start typing your recipe here...");
     this.lastSavedContent = "";
@@ -222,6 +226,58 @@ class CodeMirrorEditor {
       this.showError(
         "Failed to save recipe: " + Utils.extractErrorMessage(error),
       );
+    }
+  }
+
+  scheduleAutoSave() {
+    // Clear any existing timeout
+    if (this.autoSaveTimeoutId) {
+      clearTimeout(this.autoSaveTimeoutId);
+    }
+
+    // Schedule auto-save after the delay
+    this.autoSaveTimeoutId = setTimeout(() => {
+      this.autoSave();
+    }, this.autoSaveDelay);
+  }
+
+  async autoSave() {
+    // Only auto-save if file is dirty and we have a current file
+    if (!this.currentFile || !this.isDirty) return;
+
+    try {
+      const content = this.getContent();
+      await window.api.saveFile(this.currentFile, content);
+
+      this.lastSavedContent = content;
+      this.isDirty = false;
+      this.updateUI();
+
+      // Show subtle auto-save indicator
+      const fileStatus = document.getElementById("fileStatus");
+      if (fileStatus) {
+        fileStatus.textContent = "Auto-saved";
+        fileStatus.classList.add("auto-saved");
+
+        // Clear the indicator after a short time
+        setTimeout(() => {
+          fileStatus.textContent = "";
+          fileStatus.classList.remove("auto-saved");
+        }, 2000);
+      }
+
+      // Notify file tree of changes
+      window.app?.fileTree?.notifyFileChanged(this.currentFile);
+    } catch (error) {
+      console.error("Auto-save failed:", error);
+      this.showError("Auto-save failed: " + Utils.extractErrorMessage(error));
+    }
+  }
+
+  cancelAutoSave() {
+    if (this.autoSaveTimeoutId) {
+      clearTimeout(this.autoSaveTimeoutId);
+      this.autoSaveTimeoutId = null;
     }
   }
 
@@ -298,6 +354,7 @@ class CodeMirrorEditor {
 
   // Cleanup method
   destroy() {
+    this.cancelAutoSave();
     if (this.view) {
       this.view.destroy();
     }
