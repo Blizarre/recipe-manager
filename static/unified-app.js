@@ -289,11 +289,8 @@ class UnifiedRecipeApp {
 
   async onFileSelect(path) {
     if (path) {
-      // Navigate to editor mode with selected file
-      window.history.pushState({}, "", `/edit/${path}`);
-      this.currentFile = path;
-      this.updateInterface();
-      this.initializeEditorMode();
+      // Navigate to the file's URL - this will load the page for that file
+      window.location.href = `/edit/${path}`;
     }
   }
 
