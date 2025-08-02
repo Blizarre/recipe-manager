@@ -62,6 +62,12 @@ class UnifiedRecipeApp {
       .getElementById("saveBtn")
       ?.addEventListener("click", () => this.editor?.save());
     document
+      .getElementById("undoBtn")
+      ?.addEventListener("click", () => this.editor?.undo());
+    document
+      .getElementById("redoBtn")
+      ?.addEventListener("click", () => this.editor?.redo());
+    document
       .getElementById("renameBtn")
       ?.addEventListener("click", () => this.showRenameModal());
     document
@@ -85,6 +91,8 @@ class UnifiedRecipeApp {
 
   setupResponsiveButtons() {
     const moveButtons = () => {
+      const undoBtn = document.getElementById("undoBtn");
+      const redoBtn = document.getElementById("redoBtn");
       const saveBtn = document.getElementById("saveBtn");
       const renameBtn = document.getElementById("renameBtn");
       const deleteBtn = document.getElementById("deleteBtn");
@@ -92,6 +100,8 @@ class UnifiedRecipeApp {
       const actionButtons = document.querySelector(".action-buttons");
 
       if (
+        !undoBtn ||
+        !redoBtn ||
         !saveBtn ||
         !renameBtn ||
         !deleteBtn ||
@@ -102,6 +112,18 @@ class UnifiedRecipeApp {
 
       if (window.innerWidth <= 768) {
         // Mobile: keep buttons in header
+        if (!headerActions.contains(undoBtn)) {
+          headerActions.insertBefore(
+            undoBtn,
+            document.getElementById("mobileNewBtn"),
+          );
+        }
+        if (!headerActions.contains(redoBtn)) {
+          headerActions.insertBefore(
+            redoBtn,
+            document.getElementById("mobileNewBtn"),
+          );
+        }
         if (!headerActions.contains(saveBtn)) {
           headerActions.insertBefore(
             saveBtn,
@@ -122,6 +144,12 @@ class UnifiedRecipeApp {
         }
       } else {
         // Desktop: move buttons to editor header
+        if (!actionButtons.contains(undoBtn)) {
+          actionButtons.appendChild(undoBtn);
+        }
+        if (!actionButtons.contains(redoBtn)) {
+          actionButtons.appendChild(redoBtn);
+        }
         if (!actionButtons.contains(saveBtn)) {
           actionButtons.appendChild(saveBtn);
         }
@@ -155,6 +183,8 @@ class UnifiedRecipeApp {
     const welcomeScreen = document.getElementById("welcomeScreen");
     const editorInterface = document.getElementById("editorInterface");
     const sidebar = document.getElementById("sidebar");
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
     const renameBtn = document.getElementById("renameBtn");
     const deleteBtn = document.getElementById("deleteBtn");
 
@@ -169,6 +199,12 @@ class UnifiedRecipeApp {
       editorInterface.style.display = "block";
 
       // Show action buttons when file is open
+      if (undoBtn) {
+        undoBtn.style.display = "block";
+      }
+      if (redoBtn) {
+        redoBtn.style.display = "block";
+      }
       if (renameBtn) {
         renameBtn.style.display = "block";
       }
@@ -184,6 +220,12 @@ class UnifiedRecipeApp {
       editorInterface.style.display = "none";
 
       // Hide action buttons when no file is open
+      if (undoBtn) {
+        undoBtn.style.display = "none";
+      }
+      if (redoBtn) {
+        redoBtn.style.display = "none";
+      }
       if (renameBtn) {
         renameBtn.style.display = "none";
       }

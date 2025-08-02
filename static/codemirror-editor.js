@@ -122,11 +122,20 @@ class CodeMirrorEditor {
   setupKeyboardShortcuts() {
     if (!this.view) return;
 
-    // Add save shortcut
+    // Add save shortcut and undo/redo shortcuts
     this.view.dom.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         this.save();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        this.undo();
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "y" || (e.key === "z" && e.shiftKey))
+      ) {
+        e.preventDefault();
+        this.redo();
       }
     });
   }
@@ -249,8 +258,18 @@ class CodeMirrorEditor {
       const content = this.getContent();
       await window.api.saveFile(this.currentFile, content);
 
+      // Update lastSavedContent - this tracks what's on the server
+      // Keep isDirty true if the current content still differs from the baseline
+      // This preserves undo history while keeping auto-save functionality
       this.lastSavedContent = content;
-      this.isDirty = false;
+
+      // Only mark as not dirty if the content matches what we just saved
+      // This prevents the save button from being disabled while preserving undo history
+      const currentContent = this.getContent();
+      if (currentContent === content) {
+        this.isDirty = false;
+      }
+
       this.updateUI();
 
       // Show subtle auto-save indicator
@@ -284,6 +303,8 @@ class CodeMirrorEditor {
   updateUI() {
     // Update save button state (single button that moves between mobile/desktop)
     const saveBtn = document.getElementById("saveBtn");
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
 
     const isEnabled = this.currentFile && this.isDirty;
 
@@ -294,6 +315,15 @@ class CodeMirrorEditor {
       } else {
         saveBtn.classList.remove("dirty");
       }
+    }
+
+    // Update undo/redo button states
+    if (undoBtn && redoBtn && this.view) {
+      const canUndo = this.canUndo();
+      const canRedo = this.canRedo();
+
+      undoBtn.disabled = !canUndo;
+      redoBtn.disabled = !canRedo;
     }
 
     this.updateCharCount();
@@ -340,6 +370,28 @@ class CodeMirrorEditor {
 
   focus() {
     this.view.focus();
+  }
+
+  undo() {
+    if (!this.view) return false;
+    return window.CodeMirror.undo(this.view);
+  }
+
+  redo() {
+    if (!this.view) return false;
+    return window.CodeMirror.redo(this.view);
+  }
+
+  canUndo() {
+    if (!this.view || !this.view.state) return false;
+    // Use the undoDepth function from CodeMirror commands
+    return window.CodeMirror.undoDepth(this.view.state) > 0;
+  }
+
+  canRedo() {
+    if (!this.view || !this.view.state) return false;
+    // Use the redoDepth function from CodeMirror commands
+    return window.CodeMirror.redoDepth(this.view.state) > 0;
   }
 
   insertText(text) {

@@ -26,6 +26,13 @@
         syntaxHighlighting,
       } from "https://esm.sh/@codemirror/language";
       import { tags } from "https://esm.sh/@lezer/highlight";
+      import {
+        history,
+        undo,
+        redo,
+        undoDepth,
+        redoDepth,
+      } from "https://esm.sh/@codemirror/commands";
 
       // Create custom highlight style for markdown
       const markdownHighlighting = HighlightStyle.define([
@@ -56,6 +63,11 @@
         markdown,
         syntaxHighlighting,
         markdownHighlighting,
+        history,
+        undo,
+        redo,
+        undoDepth,
+        redoDepth,
       };
 
       // Signal that CodeMirror is ready
@@ -74,6 +86,42 @@
         </button>
         <h1 id="fileName">Recipe Manager</h1>
         <div class="header-actions">
+          <button class="btn btn-secondary" id="undoBtn" disabled title="Undo">
+            <span class="btn-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 7v6h6" />
+                <path d="m21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
+              </svg>
+            </span>
+            <span class="btn-text">Undo</span>
+          </button>
+          <button class="btn btn-secondary" id="redoBtn" disabled title="Redo">
+            <span class="btn-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m21 7-6-6v6h-6a9 9 0 00-9 9 9 9 0 009 9h6" />
+                <path d="M15 18h6v-6" />
+              </svg>
+            </span>
+            <span class="btn-text">Redo</span>
+          </button>
           <button class="btn btn-primary" id="saveBtn" disabled title="Save">
             <span class="btn-icon">
               <svg
