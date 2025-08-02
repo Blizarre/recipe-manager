@@ -1309,10 +1309,6 @@ body.keyboard-open .modal {
     height: calc(100vh - var(--header-height));
   }
 
-  .desktop-new-btn {
-    display: none;
-  }
-
   /* Show mobile file tree, hide desktop welcome */
   .desktop-welcome {
     display: none;
