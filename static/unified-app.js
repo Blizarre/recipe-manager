@@ -59,9 +59,6 @@ class UnifiedRecipeApp {
 
     // Action buttons (only active in editor mode)
     document
-      .getElementById("saveBtn")
-      ?.addEventListener("click", () => this.editor?.save());
-    document
       .getElementById("undoBtn")
       ?.addEventListener("click", () => this.editor?.undo());
     document
@@ -76,13 +73,6 @@ class UnifiedRecipeApp {
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        if (this.editor) {
-          this.editor.save();
-        }
-      }
-
       if (e.key === "Escape") {
         this.hideRenameModal();
       }
@@ -93,7 +83,6 @@ class UnifiedRecipeApp {
     const moveButtons = () => {
       const undoBtn = document.getElementById("undoBtn");
       const redoBtn = document.getElementById("redoBtn");
-      const saveBtn = document.getElementById("saveBtn");
       const renameBtn = document.getElementById("renameBtn");
       const deleteBtn = document.getElementById("deleteBtn");
       const headerActions = document.querySelector(".header-actions");
@@ -102,7 +91,6 @@ class UnifiedRecipeApp {
       if (
         !undoBtn ||
         !redoBtn ||
-        !saveBtn ||
         !renameBtn ||
         !deleteBtn ||
         !headerActions ||
@@ -121,12 +109,6 @@ class UnifiedRecipeApp {
         if (!headerActions.contains(redoBtn)) {
           headerActions.insertBefore(
             redoBtn,
-            document.getElementById("mobileNewBtn"),
-          );
-        }
-        if (!headerActions.contains(saveBtn)) {
-          headerActions.insertBefore(
-            saveBtn,
             document.getElementById("mobileNewBtn"),
           );
         }
@@ -149,9 +131,6 @@ class UnifiedRecipeApp {
         }
         if (!actionButtons.contains(redoBtn)) {
           actionButtons.appendChild(redoBtn);
-        }
-        if (!actionButtons.contains(saveBtn)) {
-          actionButtons.appendChild(saveBtn);
         }
         if (!actionButtons.contains(renameBtn)) {
           actionButtons.appendChild(renameBtn);

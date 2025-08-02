@@ -301,23 +301,10 @@ class CodeMirrorEditor {
   }
 
   updateUI() {
-    // Update save button state (single button that moves between mobile/desktop)
-    const saveBtn = document.getElementById("saveBtn");
+    // Update undo/redo button states
     const undoBtn = document.getElementById("undoBtn");
     const redoBtn = document.getElementById("redoBtn");
 
-    const isEnabled = this.currentFile && this.isDirty;
-
-    if (saveBtn) {
-      saveBtn.disabled = !isEnabled;
-      if (isEnabled) {
-        saveBtn.classList.add("dirty");
-      } else {
-        saveBtn.classList.remove("dirty");
-      }
-    }
-
-    // Update undo/redo button states
     if (undoBtn && redoBtn && this.view) {
       const canUndo = this.canUndo();
       const canRedo = this.canRedo();
