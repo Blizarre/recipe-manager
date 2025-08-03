@@ -47,7 +47,7 @@ async def serve_frontend():
 
 
 # Translation endpoint for frontend routes
-@app.get("/edit/{path:path}/translate", response_class=HTMLResponse)
+@app.get("/translate/{path:path}", response_class=HTMLResponse)
 async def translate_recipe_frontend(path: str):
     return await translate_recipe(path)
 

@@ -62,6 +62,9 @@ class UnifiedRecipeApp {
     document
       .getElementById("renameBtn")
       ?.addEventListener("click", () => this.showRenameModal());
+    document
+      .getElementById("translateBtn")
+      ?.addEventListener("click", () => this.redirectToTranslate());
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
@@ -76,6 +79,7 @@ class UnifiedRecipeApp {
       const undoBtn = document.getElementById("undoBtn");
       const redoBtn = document.getElementById("redoBtn");
       const renameBtn = document.getElementById("renameBtn");
+      const translateBtn = document.getElementById("translateBtn");
       const headerActions = document.querySelector(".header-actions");
       const actionButtons = document.querySelector(".action-buttons");
 
@@ -83,6 +87,7 @@ class UnifiedRecipeApp {
         !undoBtn ||
         !redoBtn ||
         !renameBtn ||
+        !translateBtn ||
         !headerActions ||
         !actionButtons
       )
@@ -99,6 +104,9 @@ class UnifiedRecipeApp {
         if (!headerActions.contains(renameBtn)) {
           headerActions.appendChild(renameBtn);
         }
+        if (!headerActions.contains(translateBtn)) {
+          headerActions.appendChild(translateBtn);
+        }
       } else {
         // Desktop: move buttons to editor header
         if (!actionButtons.contains(undoBtn)) {
@@ -109,6 +117,9 @@ class UnifiedRecipeApp {
         }
         if (!actionButtons.contains(renameBtn)) {
           actionButtons.appendChild(renameBtn);
+        }
+        if (!actionButtons.contains(translateBtn)) {
+          actionButtons.appendChild(translateBtn);
         }
       }
     };
@@ -137,6 +148,7 @@ class UnifiedRecipeApp {
     const undoBtn = document.getElementById("undoBtn");
     const redoBtn = document.getElementById("redoBtn");
     const renameBtn = document.getElementById("renameBtn");
+    const translateBtn = document.getElementById("translateBtn");
 
     // Hide initial loading
     if (initialLoading) {
@@ -158,6 +170,9 @@ class UnifiedRecipeApp {
       if (renameBtn) {
         renameBtn.style.display = "block";
       }
+      if (translateBtn) {
+        translateBtn.style.display = "block";
+      }
 
       // Update page info
       this.updatePageInfo();
@@ -175,6 +190,9 @@ class UnifiedRecipeApp {
       }
       if (renameBtn) {
         renameBtn.style.display = "none";
+      }
+      if (translateBtn) {
+        translateBtn.style.display = "none";
       }
 
       // Ensure sidebar is visible in welcome mode
@@ -451,6 +469,13 @@ class UnifiedRecipeApp {
         "Failed to rename file: " + Utils.extractErrorMessage(error),
       );
     }
+  }
+
+  redirectToTranslate() {
+    if (!this.currentFile) return;
+
+    // Redirect from /edit/filename.md to /translate/filename.md
+    window.location.href = `/translate/${this.currentFile}`;
   }
 }
 
