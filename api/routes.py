@@ -10,6 +10,8 @@ from .translation import (
     translate_markdown_to_french,
     markdown_to_html,
     TranslationError,
+    get_cached_translation,
+    cache_translation,
 )
 
 logger = logging.getLogger(__name__)
@@ -452,6 +454,15 @@ async def translate_recipe(path: str) -> HTMLResponse:
         if not path.endswith(".md"):
             path += ".md"
 
+        # Get file modification time for caching
+        file_path = fs_manager._validate_path(path)
+        file_mtime = file_path.stat().st_mtime
+
+        # Check cache first
+        cached = get_cached_translation(path, file_mtime)
+        if cached:
+            return HTMLResponse(content=cached.html_content, status_code=200)
+
         # Read the recipe file using existing filesystem manager
         markdown_content = await fs_manager.read_file(path)
 
@@ -466,6 +477,9 @@ async def translate_recipe(path: str) -> HTMLResponse:
 
         # Convert to HTML
         html_content = markdown_to_html(translated_content, title)
+
+        # Cache the result
+        cache_translation(path, translated_content, html_content, file_mtime)
 
         return HTMLResponse(content=html_content, status_code=200)
 

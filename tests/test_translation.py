@@ -4,6 +4,9 @@ from api.translation import (
     translate_markdown_to_french,
     markdown_to_html,
     TranslationError,
+    get_cached_translation,
+    cache_translation,
+    translation_cache,
 )
 
 
@@ -149,3 +152,76 @@ def test_markdown_to_html_default_title():
 
     # Should use default title
     assert "<title>Recipe</title>" in result
+
+
+def test_cache_translation():
+    """Test caching translation functionality"""
+    # Clear cache
+    translation_cache.clear()
+
+    file_path = "test-recipe.md"
+    translated_content = "# Recette de Test"
+    html_content = "<html><body><h1>Recette de Test</h1></body></html>"
+    file_mtime = 1234567890.0
+
+    # Cache the translation
+    cache_translation(file_path, translated_content, html_content, file_mtime)
+
+    # Verify it's in cache
+    assert file_path in translation_cache
+    cached = translation_cache[file_path]
+    assert cached.translated_content == translated_content
+    assert cached.html_content == html_content
+    assert cached.file_mtime == file_mtime
+
+
+def test_get_cached_translation_hit():
+    """Test cache hit when file hasn't been modified"""
+    # Clear cache
+    translation_cache.clear()
+
+    file_path = "test-recipe.md"
+    translated_content = "# Recette de Test"
+    html_content = "<html><body><h1>Recette de Test</h1></body></html>"
+    file_mtime = 1234567890.0
+
+    # Cache the translation
+    cache_translation(file_path, translated_content, html_content, file_mtime)
+
+    # Get from cache with same mtime (cache hit)
+    cached = get_cached_translation(file_path, file_mtime)
+    assert cached is not None
+    assert cached.translated_content == translated_content
+    assert cached.html_content == html_content
+
+
+def test_get_cached_translation_miss_newer_file():
+    """Test cache miss when file has been modified"""
+    # Clear cache
+    translation_cache.clear()
+
+    file_path = "test-recipe.md"
+    translated_content = "# Recette de Test"
+    html_content = "<html><body><h1>Recette de Test</h1></body></html>"
+    file_mtime = 1234567890.0
+
+    # Cache the translation
+    cache_translation(file_path, translated_content, html_content, file_mtime)
+
+    # Get from cache with newer mtime (cache miss)
+    newer_mtime = file_mtime + 100.0
+    cached = get_cached_translation(file_path, newer_mtime)
+    assert cached is None
+
+
+def test_get_cached_translation_miss_no_cache():
+    """Test cache miss when file not in cache"""
+    # Clear cache
+    translation_cache.clear()
+
+    file_path = "non-existent.md"
+    file_mtime = 1234567890.0
+
+    # Get from cache (cache miss)
+    cached = get_cached_translation(file_path, file_mtime)
+    assert cached is None

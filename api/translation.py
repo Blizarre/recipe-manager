@@ -1,8 +1,19 @@
 from openai import AsyncOpenAI, APIError, RateLimitError, APITimeoutError
 import logging
 import markdown
+from typing import Dict, Optional
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CachedTranslation:
+    """Cached translation with file modification time"""
+
+    translated_content: str
+    html_content: str
+    file_mtime: float
 
 
 class TranslationError(Exception):
@@ -13,6 +24,9 @@ class TranslationError(Exception):
 
 # OpenAI client - initialized in FastAPI lifespan event
 client: AsyncOpenAI = None
+
+# Translation cache - maps file path to cached translation
+translation_cache: Dict[str, CachedTranslation] = {}
 
 # Placeholder translation prompt - to be customized later
 TRANSLATION_PROMPT = """
@@ -30,6 +44,29 @@ def initialize_openai_client():
     """Initialize the OpenAI client - called during FastAPI startup"""
     global client
     client = AsyncOpenAI()
+
+
+def get_cached_translation(
+    file_path: str, file_mtime: float
+) -> Optional[CachedTranslation]:
+    """Get cached translation if file hasn't been modified"""
+    cached = translation_cache.get(file_path)
+    if cached and cached.file_mtime >= file_mtime:
+        logger.info(f"Cache hit for {file_path}")
+        return cached
+    return None
+
+
+def cache_translation(
+    file_path: str, translated_content: str, html_content: str, file_mtime: float
+):
+    """Cache a translation with file modification time"""
+    translation_cache[file_path] = CachedTranslation(
+        translated_content=translated_content,
+        html_content=html_content,
+        file_mtime=file_mtime,
+    )
+    logger.info(f"Cached translation for {file_path}")
 
 
 async def translate_markdown_to_french(content: str) -> str:
