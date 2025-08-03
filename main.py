@@ -1,13 +1,25 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from contextlib import asynccontextmanager
 from pathlib import Path
 from api.routes import router as api_router
+from api.translation import initialize_openai_client
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    initialize_openai_client()
+    yield
+    # Shutdown (nothing to cleanup currently)
+
 
 app = FastAPI(
     title="Recipe Manager API",
     description="A FastAPI backend for managing recipe files",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Create recipes directory if it doesn't exist
@@ -31,6 +43,15 @@ async def root():
 @app.get("/", response_class=FileResponse)
 async def serve_frontend():
     return "static/index.html"
+
+
+# Translation endpoint for frontend routes
+@app.get("/edit/{path:path}/translate", response_class=HTMLResponse)
+async def translate_recipe_frontend(path: str):
+    """Translate endpoint accessible from frontend edit URLs"""
+    from api.routes import translate_recipe
+
+    return await translate_recipe(path)
 
 
 # Serve individual recipe editor pages (now unified with main page)

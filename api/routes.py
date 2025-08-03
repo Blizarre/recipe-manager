@@ -1,9 +1,18 @@
 from fastapi import APIRouter, HTTPException, Form, File, UploadFile
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import re
 import time
+import logging
 from .filesystem import FileSystemManager
+from .translation import (
+    translate_markdown_to_french,
+    markdown_to_html,
+    TranslationError,
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["files"])
 fs_manager = FileSystemManager()
@@ -433,3 +442,42 @@ def _generate_content_preview(
         preview = preview + "..."
 
     return preview
+
+
+@router.get("/recipes/{path:path}/translate", response_class=HTMLResponse)
+async def translate_recipe(path: str) -> HTMLResponse:
+    """Translate a recipe to French and return as HTML"""
+    try:
+        # Ensure path ends with .md
+        if not path.endswith(".md"):
+            path += ".md"
+
+        # Read the recipe file using existing filesystem manager
+        markdown_content = await fs_manager.read_file(path)
+
+        # Extract title from content for HTML title
+        title = (
+            _extract_title_from_content(markdown_content)
+            or path.replace(".md", "").replace("_", " ").replace("-", " ").title()
+        )
+
+        # Translate content to French
+        translated_content = await translate_markdown_to_french(markdown_content)
+
+        # Convert to HTML
+        html_content = markdown_to_html(translated_content, title)
+
+        return HTMLResponse(content=html_content, status_code=200)
+
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Recipe file '{path}' not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TranslationError as e:
+        logger.error(f"Translation error for path '{path}': {str(e)}")
+        raise HTTPException(
+            status_code=503, detail="Translation service temporarily unavailable"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error translating '{path}': {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
