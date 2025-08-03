@@ -76,11 +76,114 @@
         ],
         "status": "done",
         "subtasks": []
+      },
+      {
+        "id": 33,
+        "title": "Add OpenAI and Markdown Dependencies",
+        "description": "Add required OpenAI and markdown processing dependencies to pyproject.toml and configure environment variable handling",
+        "details": "Add 'openai>=1.0.0' and 'markdown>=3.5.0' to the dependencies section in pyproject.toml. Create environment variable configuration for OPENAI_API_KEY in the application settings/config module. Validate that the API key exists at startup and provide clear error messages if missing. Update any existing dependency management or installation scripts.",
+        "testStrategy": "Verify dependencies are correctly installed with 'uv pip list'. Test environment variable loading with valid and invalid API keys. Unit test configuration validation logic.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "Create Translation Service Module",
+        "description": "Implement core translation service that interfaces with OpenAI API to translate markdown content to French",
+        "details": "Create a new translation service module (api/translation.py or services/translation.py) with async functions for OpenAI API integration. Implement translate_markdown_to_french() function that accepts markdown content and returns translated text. Use OpenAI's chat completions API with a placeholder prompt for French translation. Include proper error handling for API failures, rate limiting, and network issues. Make the translation prompt configurable for future customization.",
+        "testStrategy": "Unit tests with mocked OpenAI API responses for success and failure cases. Integration tests with actual API calls in development environment. Test rate limiting and timeout scenarios.",
+        "priority": "high",
+        "dependencies": [
+          33
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "Implement Markdown to HTML Conversion",
+        "description": "Create HTML conversion functionality that transforms translated markdown into properly formatted HTML with styling",
+        "details": "Implement markdown_to_html() function using the markdown library. Create embedded CSS styling for recipe formatting including semantic HTML structure, typography for headings, list styling for ingredients and instructions, and responsive layout. Ensure proper HTML document structure with head, title, and body elements. Include meta tags for character encoding and viewport settings.",
+        "testStrategy": "Unit tests with sample markdown content to verify HTML output structure and styling. Test with various markdown elements (headers, lists, bold text, links). Validate HTML output with HTML validators.",
+        "priority": "medium",
+        "dependencies": [
+          33
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 36,
+        "title": "Create Translation API Endpoint",
+        "description": "Implement the GET /api/recipes/{path:path}/translate endpoint with proper routing and request handling",
+        "details": "Add new route GET /api/recipes/{path:path}/translate to the API router. Implement async endpoint handler that extracts the path parameter, validates the recipe file path using existing FileSystemManager, reads the markdown file, calls the translation service, converts to HTML, and returns with Content-Type: text/html headers. Follow existing API patterns and coding standards in the codebase.",
+        "testStrategy": "Integration tests for valid recipe paths returning HTML content. Test path parameter extraction and validation. Verify Content-Type headers are set correctly. Test with various recipe file formats.",
+        "priority": "high",
+        "dependencies": [
+          34,
+          35
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 37,
+        "title": "Implement Comprehensive Error Handling",
+        "description": "Add robust error handling for file not found, OpenAI API failures, and other edge cases with appropriate HTTP status codes",
+        "details": "Implement error handling for: 404 responses when recipe files don't exist, 500 responses for OpenAI API failures with generic error messages, input validation for path traversal prevention using existing filesystem security, proper logging of detailed errors for debugging without exposing sensitive information, and graceful handling of API rate limits and timeouts. Use existing error handling patterns from the codebase.",
+        "testStrategy": "Test error scenarios: non-existent recipe files, invalid paths, simulated OpenAI API failures, rate limiting scenarios. Verify appropriate HTTP status codes and error message formatting. Check that sensitive information is not exposed in error responses.",
+        "priority": "high",
+        "dependencies": [
+          36
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 38,
+        "title": "Add Input Validation and Security",
+        "description": "Implement security measures for path validation, API key protection, and input sanitization",
+        "details": "Implement path sanitization using existing filesystem validation to prevent directory traversal attacks. Ensure OPENAI_API_KEY is never exposed in responses, logs, or error messages. Add input validation for the path parameter to ensure it matches expected recipe file patterns. Implement request rate limiting if not already present. Follow existing security patterns in the codebase for input validation and sanitization.",
+        "testStrategy": "Security testing with malicious path inputs (../, absolute paths, special characters). Verify API key is not exposed in any responses or logs. Test input validation with various edge cases and invalid characters.",
+        "priority": "medium",
+        "dependencies": [
+          37
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 39,
+        "title": "Write Comprehensive Test Suite",
+        "description": "Create unit and integration tests for the translation endpoint functionality",
+        "details": "Create unit tests for translation service with mocked OpenAI responses, HTML conversion functionality with various markdown inputs, error handling scenarios and edge cases. Create integration tests for the complete endpoint flow with actual recipe files, OpenAI API integration in development environment, concurrent request handling. Follow existing test patterns and use the same testing framework (pytest) as indicated in CLAUDE.md.",
+        "testStrategy": "Achieve >90% code coverage for new functionality. Test all success and failure scenarios. Run tests with 'uv run pytest' as specified in project instructions. Include performance tests for concurrent requests.",
+        "priority": "medium",
+        "dependencies": [
+          38
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 40,
+        "title": "Documentation and Final Integration",
+        "description": "Document the new endpoint, update API documentation, and ensure proper integration with existing codebase",
+        "details": "Add endpoint documentation with usage examples, request/response formats, and error codes. Update any existing API documentation or OpenAPI specs. Verify integration with existing routing and middleware. Run 'make format' and 'make check' as required by project guidelines before considering the implementation complete. Test the endpoint manually with real recipe files to ensure end-to-end functionality.",
+        "testStrategy": "Manual testing of the complete endpoint with various recipe files. Verify documentation accuracy with actual API behavior. Run full test suite and formatting checks. Test in development environment with real OpenAI API integration.",
+        "priority": "low",
+        "dependencies": [
+          39
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-07-27T13:35:50.934Z",
-      "updated": "2025-07-28T15:29:48.028Z",
+      "updated": "2025-08-03T07:22:02.781Z",
       "description": "Tasks for master context"
     }
   }
