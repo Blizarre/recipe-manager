@@ -27,7 +27,7 @@ def mock_translation():
     """Mock translation functions"""
     with (
         patch(
-            "api.routes.translate_markdown_to_french", new_callable=AsyncMock
+            "api.routes.translate_markdown", new_callable=AsyncMock
         ) as mock_translate,
         patch("api.routes.markdown_to_html") as mock_html,
     ):
@@ -110,7 +110,7 @@ def test_translate_recipe_with_md_extension(mock_fs_manager, mock_translation):
     translation_cache.clear()
 
     # Setup mocks
-    mock_fs_manager.read_file.return_value = "# Recipe"
+    mock_fs_manager.read_file.return_value = "# Recette"
     mock_translate.return_value = "# Recette"
     mock_html.return_value = "<html><body><h1>Recette</h1></body></html>"
 
@@ -142,7 +142,7 @@ def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
     translation_cache.clear()
 
     # Setup mocks
-    mock_fs_manager.read_file.return_value = "# Recipe"
+    mock_fs_manager.read_file.return_value = "# Recette"
     mock_translate.side_effect = TranslationError("OpenAI API error")
 
     response = client.get("/api/recipes/test-recipe/translate")
@@ -209,7 +209,7 @@ def test_translate_recipe_unexpected_error(mock_fs_manager, mock_translation):
     translation_cache.clear()
 
     # Setup mocks
-    mock_fs_manager.read_file.return_value = "# Recipe"
+    mock_fs_manager.read_file.return_value = "# Recette"
     mock_translate.side_effect = RuntimeError("Unexpected error")
 
     response = client.get("/api/recipes/test-recipe/translate")

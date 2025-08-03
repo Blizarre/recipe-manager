@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 from api.translation import (
-    translate_markdown_to_french,
+    translate_markdown,
     markdown_to_html,
     TranslationError,
     get_cached_translation,
@@ -11,7 +11,7 @@ from api.translation import (
 
 
 @pytest.mark.asyncio
-async def test_translate_markdown_to_french_success():
+async def test_translate_markdown_success():
     """Test successful translation"""
     test_content = "# Test Recipe\n\n## Ingredients\n\n- 1 cup flour\n\n## Instructions\n\n1. Mix ingredients"
     expected_french = "# Recette de Test\n\n## Ingrédients\n\n- 1 tasse de farine\n\n## Instructions\n\n1. Mélanger les ingrédients"
@@ -23,22 +23,22 @@ async def test_translate_markdown_to_french_success():
 
     with patch("api.translation.client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-        result = await translate_markdown_to_french(test_content)
+        result = await translate_markdown(test_content)
         assert result == expected_french
 
 
 @pytest.mark.asyncio
-async def test_translate_markdown_to_french_empty_content():
+async def test_translate_markdown_empty_content():
     """Test error handling for empty content"""
     with pytest.raises(ValueError, match="Content cannot be empty"):
-        await translate_markdown_to_french("")
+        await translate_markdown("")
 
     with pytest.raises(ValueError, match="Content cannot be empty"):
-        await translate_markdown_to_french("   ")
+        await translate_markdown("   ")
 
 
 @pytest.mark.asyncio
-async def test_translate_markdown_to_french_api_error():
+async def test_translate_markdown_api_error():
     """Test error handling for OpenAI API failure"""
     test_content = "# Test Recipe"
 
@@ -50,11 +50,11 @@ async def test_translate_markdown_to_french_api_error():
             TranslationError,
             match="Translation service encountered an unexpected error",
         ):
-            await translate_markdown_to_french(test_content)
+            await translate_markdown(test_content)
 
 
 @pytest.mark.asyncio
-async def test_translate_markdown_to_french_empty_response():
+async def test_translate_markdown_empty_response():
     """Test error handling for empty API response"""
     test_content = "# Test Recipe"
 
@@ -68,7 +68,7 @@ async def test_translate_markdown_to_french_empty_response():
         with pytest.raises(
             TranslationError, match="Translation service returned empty response"
         ):
-            await translate_markdown_to_french(test_content)
+            await translate_markdown(test_content)
 
 
 @pytest.mark.asyncio
@@ -80,7 +80,7 @@ async def test_translation_service_integration():
     test_content = "# Test Recipe\n\n## Ingredients\n\n- 1 cup flour\n\n## Instructions\n\n1. Mix ingredients"
 
     try:
-        result = await translate_markdown_to_french(test_content)
+        result = await translate_markdown(test_content)
         # Basic validation that translation occurred
         assert len(result) > 0
         assert "recette" in result.lower() or "ingrédients" in result.lower()
@@ -151,7 +151,7 @@ def test_markdown_to_html_default_title():
     result = markdown_to_html(markdown_content)
 
     # Should use default title
-    assert "<title>Recipe</title>" in result
+    assert "<title>Recette</title>" in result
 
 
 def test_cache_translation():

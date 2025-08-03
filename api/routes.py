@@ -7,7 +7,7 @@ import time
 import logging
 from .filesystem import FileSystemManager
 from .translation import (
-    translate_markdown_to_french,
+    translate_markdown,
     markdown_to_html,
     TranslationError,
     get_cached_translation,
@@ -473,7 +473,7 @@ async def translate_recipe(path: str) -> HTMLResponse:
         )
 
         # Translate content to French
-        translated_content = await translate_markdown_to_french(markdown_content)
+        translated_content = await translate_markdown(markdown_content)
 
         # Convert to HTML
         html_content = markdown_to_html(translated_content, title)

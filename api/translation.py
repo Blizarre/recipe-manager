@@ -31,9 +31,10 @@ translation_cache: Dict[str, CachedTranslation] = {}
 # Placeholder translation prompt - to be customized later
 TRANSLATION_PROMPT = """
 Translate the following markdown recipe content to French. 
-Preserve the markdown formatting and structure.
-Keep ingredient quantities and measurements accurate.
-Return only the translated markdown content.
+
+- Preserve the general markdown formatting and structure.
+- Keep ingredient quantities and measurements accurate.
+- Return only the translated markdown content, do not add any header or footer, just the raw markdown output
 
 Content to translate:
 {content}
@@ -69,9 +70,9 @@ def cache_translation(
     logger.info(f"Cached translation for {file_path}")
 
 
-async def translate_markdown_to_french(content: str) -> str:
+async def translate_markdown(content: str) -> str:
     """
-    Translate markdown recipe content to French using OpenAI API.
+    Translate markdown recipe content using OpenAI API.
 
     Args:
         content: The markdown content to translate
@@ -102,6 +103,12 @@ async def translate_markdown_to_french(content: str) -> str:
 
         translated_content = response.choices[0].message.content
 
+        # Because sometimes it doesn't matter how much you tell the LLM not to do something, it
+        # will still try to do it
+        if translated_content and translated_content.startswith("```markdown"):
+            translated_content = translated_content.removeprefix("```markdown")
+            translated_content = translated_content.removesuffix("```")
+
         if not translated_content:
             logger.error("OpenAI API returned empty response")
             raise TranslationError("Translation service returned empty response")
@@ -130,7 +137,7 @@ async def translate_markdown_to_french(content: str) -> str:
         ) from e
 
 
-def markdown_to_html(markdown_content: str, title: str = "Recipe") -> str:
+def markdown_to_html(markdown_content: str, title: str = "Recette") -> str:
     """
     Convert markdown content to a complete HTML document with styling.
 
@@ -240,6 +247,10 @@ def markdown_to_html(markdown_content: str, title: str = "Recipe") -> str:
 </head>
 <body>
     {html_body}
+
+    <div>
+        <a href="/">🏠</a>
+    </div>
 </body>
 </html>"""
 
