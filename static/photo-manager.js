@@ -8,8 +8,9 @@ class PhotoManager {
   }
 
   setupEventListeners() {
-    // Toggle button
+    // Toggle buttons (desktop and mobile)
     const togglePhotoBtn = document.getElementById('togglePhotoBtn');
+    const togglePhotoMobileBtn = document.getElementById('togglePhotoMobileBtn');
     
     // Photo upload buttons
     const addPhotoBtn = document.getElementById('addPhotoBtn');
@@ -19,6 +20,10 @@ class PhotoManager {
 
     if (togglePhotoBtn) {
       togglePhotoBtn.addEventListener('click', () => this.togglePhotoView());
+    }
+    
+    if (togglePhotoMobileBtn) {
+      togglePhotoMobileBtn.addEventListener('click', () => this.togglePhotoView());
     }
 
     if (addPhotoBtn) {
@@ -61,6 +66,7 @@ class PhotoManager {
     const editorPanel = document.getElementById('editorPanel');
     const photoPanel = document.getElementById('photoPanel');
     const toggleBtn = document.getElementById('togglePhotoBtn');
+    const toggleMobileBtn = document.getElementById('togglePhotoMobileBtn');
     
     if (editorPanel) editorPanel.style.display = 'block';
     if (photoPanel) photoPanel.style.display = 'none';
@@ -70,6 +76,11 @@ class PhotoManager {
       toggleBtn.classList.add('btn-secondary');
     }
     
+    if (toggleMobileBtn) {
+      toggleMobileBtn.classList.remove('btn-primary');
+      toggleMobileBtn.classList.add('btn-secondary');
+    }
+    
     this.isPhotoViewActive = false;
   }
 
@@ -77,6 +88,7 @@ class PhotoManager {
     const editorPanel = document.getElementById('editorPanel');
     const photoPanel = document.getElementById('photoPanel');
     const toggleBtn = document.getElementById('togglePhotoBtn');
+    const toggleMobileBtn = document.getElementById('togglePhotoMobileBtn');
     
     if (editorPanel) editorPanel.style.display = 'none';
     if (photoPanel) photoPanel.style.display = 'block';
@@ -84,6 +96,11 @@ class PhotoManager {
     if (toggleBtn) {
       toggleBtn.classList.remove('btn-secondary');
       toggleBtn.classList.add('btn-primary');
+    }
+    
+    if (toggleMobileBtn) {
+      toggleMobileBtn.classList.remove('btn-secondary');
+      toggleMobileBtn.classList.add('btn-primary');
     }
     
     this.isPhotoViewActive = true;

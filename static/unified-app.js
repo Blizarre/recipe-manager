@@ -61,9 +61,6 @@ class UnifiedRecipeApp {
       .getElementById("undoBtn")
       ?.addEventListener("click", () => this.editor?.undo());
     document
-      .getElementById("redoBtn")
-      ?.addEventListener("click", () => this.editor?.redo());
-    document
       .getElementById("renameBtn")
       ?.addEventListener("click", () => this.showRenameModal());
     document
@@ -81,15 +78,15 @@ class UnifiedRecipeApp {
   setupResponsiveButtons() {
     const moveButtons = () => {
       const undoBtn = document.getElementById("undoBtn");
-      const redoBtn = document.getElementById("redoBtn");
       const renameBtn = document.getElementById("renameBtn");
       const translateBtn = document.getElementById("translateBtn");
+      const togglePhotoBtn = document.getElementById("togglePhotoBtn");
+      const togglePhotoMobileBtn = document.getElementById("togglePhotoMobileBtn");
       const headerActions = document.querySelector(".header-actions");
       const actionButtons = document.querySelector(".action-buttons");
 
       if (
         !undoBtn ||
-        !redoBtn ||
         !renameBtn ||
         !translateBtn ||
         !headerActions ||
@@ -98,32 +95,34 @@ class UnifiedRecipeApp {
         return;
 
       if (window.innerWidth <= 768) {
-        // Mobile: keep buttons in header - append them to the end
-        if (!headerActions.contains(undoBtn)) {
-          headerActions.appendChild(undoBtn);
+        // Mobile: keep buttons in header - they're already there
+        // Hide desktop photo button on mobile
+        if (togglePhotoBtn) {
+          togglePhotoBtn.style.display = 'none';
         }
-        if (!headerActions.contains(redoBtn)) {
-          headerActions.appendChild(redoBtn);
-        }
-        if (!headerActions.contains(renameBtn)) {
-          headerActions.appendChild(renameBtn);
-        }
-        if (!headerActions.contains(translateBtn)) {
-          headerActions.appendChild(translateBtn);
+        // Show mobile photo button
+        if (togglePhotoMobileBtn) {
+          togglePhotoMobileBtn.style.display = 'block';
         }
       } else {
-        // Desktop: move buttons to editor header
+        // Desktop: move buttons to editor header and show desktop photo button
         if (!actionButtons.contains(undoBtn)) {
           actionButtons.appendChild(undoBtn);
-        }
-        if (!actionButtons.contains(redoBtn)) {
-          actionButtons.appendChild(redoBtn);
         }
         if (!actionButtons.contains(renameBtn)) {
           actionButtons.appendChild(renameBtn);
         }
         if (!actionButtons.contains(translateBtn)) {
           actionButtons.appendChild(translateBtn);
+        }
+        
+        // Show desktop photo button
+        if (togglePhotoBtn) {
+          togglePhotoBtn.style.display = 'block';
+        }
+        // Hide mobile photo button on desktop
+        if (togglePhotoMobileBtn) {
+          togglePhotoMobileBtn.style.display = 'none';
         }
       }
     };
@@ -150,9 +149,10 @@ class UnifiedRecipeApp {
     const editorInterface = document.getElementById("editorInterface");
     const sidebar = document.getElementById("sidebar");
     const undoBtn = document.getElementById("undoBtn");
-    const redoBtn = document.getElementById("redoBtn");
     const renameBtn = document.getElementById("renameBtn");
     const translateBtn = document.getElementById("translateBtn");
+    const togglePhotoBtn = document.getElementById("togglePhotoBtn");
+    const togglePhotoMobileBtn = document.getElementById("togglePhotoMobileBtn");
 
     // Hide initial loading
     if (initialLoading) {
@@ -168,14 +168,17 @@ class UnifiedRecipeApp {
       if (undoBtn) {
         undoBtn.style.display = "block";
       }
-      if (redoBtn) {
-        redoBtn.style.display = "block";
-      }
       if (renameBtn) {
         renameBtn.style.display = "block";
       }
       if (translateBtn) {
         translateBtn.style.display = "block";
+      }
+      if (togglePhotoBtn) {
+        togglePhotoBtn.style.display = "block";
+      }
+      if (togglePhotoMobileBtn) {
+        togglePhotoMobileBtn.style.display = "block";
       }
 
       // Update page info
@@ -189,14 +192,17 @@ class UnifiedRecipeApp {
       if (undoBtn) {
         undoBtn.style.display = "none";
       }
-      if (redoBtn) {
-        redoBtn.style.display = "none";
-      }
       if (renameBtn) {
         renameBtn.style.display = "none";
       }
       if (translateBtn) {
         translateBtn.style.display = "none";
+      }
+      if (togglePhotoBtn) {
+        togglePhotoBtn.style.display = "none";
+      }
+      if (togglePhotoMobileBtn) {
+        togglePhotoMobileBtn.style.display = "none";
       }
 
       // Ensure sidebar is visible in welcome mode
