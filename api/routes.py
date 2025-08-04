@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import re
@@ -61,11 +61,15 @@ async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
     try:
         # Read the file content
         content = await fs_manager.read_file(path)
+        
+        # If it's a recipe file, try to move associated photo first
+        if path.endswith('.md') and move_data.destination.endswith('.md'):
+            await fs_manager.move_photo(path, move_data.destination)
 
         # Write to new location
         await fs_manager.write_file(move_data.destination, content)
 
-        # Delete old file
+        # Delete old file (this will also handle photo cleanup if move failed)
         await fs_manager.delete_file(path)
 
         return {"message": f"File moved from {path} to {move_data.destination}"}
@@ -446,6 +450,117 @@ def _generate_content_preview(
     return preview
 
 
+# Photo endpoints
+
+@router.get("/photos/{path:path}")
+async def get_photo(path: str) -> Response:
+    """Get photo for a recipe - returns 404 if no photo exists"""
+    try:
+        # Ensure path ends with .md for consistency
+        if not path.endswith(".md"):
+            path += ".md"
+        
+        # Check if photo exists
+        if not await fs_manager.photo_exists(path):
+            raise HTTPException(status_code=404, detail="Photo not found")
+        
+        # Read photo content
+        photo_content = await fs_manager.read_photo(path)
+        
+        # Return photo with appropriate headers
+        return Response(
+            content=photo_content,
+            media_type="image/jpeg",
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "Content-Disposition": f"inline; filename={path.replace('.md', '.jpeg')}"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to retrieve photo for {path}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve photo")
+
+
+@router.post("/photos/{path:path}")
+async def upload_photo(path: str, file: UploadFile = File(...)) -> Dict[str, str]:
+    """Upload a photo for a recipe - only JPEG files allowed"""
+    try:
+        # Ensure path ends with .md for consistency
+        if not path.endswith(".md"):
+            path += ".md"
+        
+        # Validate file type
+        if not file.filename or not file.filename.lower().endswith(('.jpg', '.jpeg')):
+            raise HTTPException(
+                status_code=400, 
+                detail="Only JPEG files are allowed"
+            )
+        
+        # Validate MIME type
+        if file.content_type and not file.content_type.startswith('image/jpeg'):
+            raise HTTPException(
+                status_code=400,
+                detail="File must be a JPEG image"
+            )
+        
+        # Check file size (10MB limit)
+        if file.size and file.size > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=400,
+                detail="File size must be less than 10MB"
+            )
+        
+        # Read file content
+        photo_content = await file.read()
+        
+        # Validate that we actually have content
+        if not photo_content:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded file is empty"
+            )
+        
+        # Save photo
+        result = await fs_manager.write_photo(path, photo_content)
+        
+        return {
+            "message": "Photo uploaded successfully",
+            "recipe_path": path,
+            "photo_path": result["path"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload photo for {path}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to upload photo")
+
+
+@router.delete("/photos/{path:path}")
+async def delete_photo(path: str) -> Dict[str, str]:
+    """Delete photo for a recipe"""
+    try:
+        # Ensure path ends with .md for consistency
+        if not path.endswith(".md"):
+            path += ".md"
+        
+        # Delete photo
+        result = await fs_manager.delete_photo(path)
+        
+        return {
+            "message": "Photo deleted successfully",
+            "recipe_path": path
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete photo for {path}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete photo")
+
+
 @router.get("/recipes/{path:path}/translate", response_class=HTMLResponse)
 async def translate_recipe(path: str) -> HTMLResponse:
     """Translate a recipe to French and return as HTML"""
@@ -458,10 +573,21 @@ async def translate_recipe(path: str) -> HTMLResponse:
         file_path = fs_manager._validate_path(path)
         file_mtime = file_path.stat().st_mtime
 
-        # Check cache first
+        # Check cache first (but we still need to check for photo changes)
         cached = get_cached_translation(path, file_mtime)
         if cached:
-            return HTMLResponse(content=cached.html_content, status_code=200)
+            # Even with cached translation, we need to check if photo status changed
+            photo_url = None
+            if await fs_manager.photo_exists(path):
+                photo_url = f"/api/photos/{path}"
+            
+            # If the cached content doesn't match current photo status, regenerate
+            has_photo_in_cache = 'class="recipe-photo"' in cached.html_content
+            has_photo_now = photo_url is not None
+            
+            if has_photo_in_cache == has_photo_now:
+                return HTMLResponse(content=cached.html_content, status_code=200)
+            # If photo status changed, continue to regenerate
 
         # Read the recipe file using existing filesystem manager
         markdown_content = await fs_manager.read_file(path)
@@ -475,8 +601,13 @@ async def translate_recipe(path: str) -> HTMLResponse:
         # Translate content to French
         translated_content = await translate_markdown(markdown_content)
 
+        # Check if photo exists for this recipe
+        photo_url = None
+        if await fs_manager.photo_exists(path):
+            photo_url = f"/api/photos/{path}"
+
         # Convert to HTML
-        html_content = markdown_to_html(translated_content, title)
+        html_content = markdown_to_html(translated_content, title, photo_url)
 
         # Cache the result
         cache_translation(path, translated_content, html_content, file_mtime)

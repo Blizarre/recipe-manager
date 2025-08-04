@@ -6,6 +6,7 @@ class UnifiedRecipeApp {
     this.isLoading = false;
     this.sidebar = null;
     this.mobileFileTree = null;
+    this.photoManager = null;
 
     this.init();
   }
@@ -49,6 +50,9 @@ class UnifiedRecipeApp {
         this.handleFileRenamed(oldPath, newPath),
       onFileDeleted: (deletedPath) => this.handleFileDeleted(deletedPath),
     });
+
+    // Initialize photo manager
+    this.photoManager = new PhotoManager();
   }
 
   setupEventListeners() {
@@ -295,6 +299,11 @@ class UnifiedRecipeApp {
     if (editorStatus) {
       editorStatus.style.display = "block";
     }
+
+    // Load photo for the current recipe
+    if (this.photoManager && this.currentFile) {
+      this.photoManager.setCurrentRecipe(this.currentFile);
+    }
   }
 
   // Event handlers
@@ -323,6 +332,11 @@ class UnifiedRecipeApp {
       window.history.replaceState({}, "", `/edit/${newPath}`);
       this.currentFile = newPath;
       this.updatePageInfo();
+      
+      // Update photo manager with new recipe path
+      if (this.photoManager) {
+        this.photoManager.setCurrentRecipe(newPath);
+      }
     }
   }
 
@@ -332,6 +346,11 @@ class UnifiedRecipeApp {
       window.history.pushState({}, "", "/");
       this.currentFile = null;
       this.updateInterface();
+      
+      // Clear photo manager
+      if (this.photoManager) {
+        this.photoManager.setCurrentRecipe(null);
+      }
     }
   }
 

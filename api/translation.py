@@ -137,13 +137,14 @@ async def translate_markdown(content: str) -> str:
         ) from e
 
 
-def markdown_to_html(markdown_content: str, title: str = "Recette") -> str:
+def markdown_to_html(markdown_content: str, title: str = "Recette", photo_url: Optional[str] = None) -> str:
     """
     Convert markdown content to a complete HTML document with styling.
 
     Args:
         markdown_content: The markdown content to convert
         title: The title for the HTML document
+        photo_url: Optional URL to a photo to display at the top
 
     Returns:
         Complete HTML document string with embedded CSS
@@ -219,6 +220,24 @@ def markdown_to_html(markdown_content: str, title: str = "Recette") -> str:
             color: #7f8c8d;
         }
         
+        .recipe-photo {
+            text-align: center;
+            margin: 0 0 30px 0;
+        }
+        
+        .recipe-photo img {
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .recipe-photo img:hover {
+            transform: scale(1.02);
+        }
+        
         @media (max-width: 600px) {
             body {
                 padding: 15px;
@@ -232,9 +251,23 @@ def markdown_to_html(markdown_content: str, title: str = "Recette") -> str:
             h2 {
                 font-size: 1.3em;
             }
+            
+            .recipe-photo {
+                margin: 0 0 20px 0;
+            }
+            
+            .recipe-photo img {
+                max-height: 250px;
+                border-radius: 8px;
+            }
         }
     </style>
     """
+
+    # Add photo section if photo URL is provided
+    photo_html = ""
+    if photo_url:
+        photo_html = f'<div class="recipe-photo"><img src="{photo_url}" alt="Photo de la recette" /></div>'
 
     # Complete HTML document
     html_document = f"""<!DOCTYPE html>
@@ -246,6 +279,7 @@ def markdown_to_html(markdown_content: str, title: str = "Recette") -> str:
     {css_styles}
 </head>
 <body>
+    {photo_html}
     {html_body}
 
     <div>

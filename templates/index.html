@@ -297,17 +297,59 @@
               <div class="action-buttons">
                 <!-- Buttons moved to mobile header, styled via CSS -->
               </div>
+              <div class="view-toggle">
+                <button class="btn btn-secondary" id="togglePhotoBtn" title="Toggle photo view">
+                  <span class="btn-icon">📷</span>
+                  <span class="btn-text">Photo</span>
+                </button>
+              </div>
             </div>
           </div>
 
           <div class="editor-container">
             <div class="editor-wrapper" id="editorWrapper">
               <div class="loading" id="editorLoading">Loading...</div>
+              
+              <!-- Editor Panel -->
               <div class="editor-panel" id="editorPanel" style="display: none">
                 <div class="codemirror-container" id="editorContainer">
                   <div id="editor"></div>
                 </div>
               </div>
+              
+              <!-- Photo Panel -->
+              <div class="photo-panel" id="photoPanel" style="display: none">
+                <div class="photo-view">
+                  <div class="photo-placeholder" id="photoPlaceholder">
+                    <div class="placeholder-content">
+                      <div class="placeholder-icon">📷</div>
+                      <h3>No Photo Yet</h3>
+                      <p>Add a photo to make your recipe more appealing</p>
+                      <button class="btn btn-primary" id="addPhotoBtn">
+                        <span class="btn-icon">📷</span>
+                        <span class="btn-text">Add Photo</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="photo-display" id="photoDisplay" style="display: none">
+                    <div class="photo-image-container">
+                      <img id="photoImage" alt="Recipe photo" />
+                    </div>
+                    <div class="photo-actions">
+                      <button class="btn btn-secondary" id="changePhotoBtn">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">Change Photo</span>
+                      </button>
+                      <button class="btn btn-danger" id="deletePhotoBtn">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">Delete Photo</span>
+                      </button>
+                    </div>
+                  </div>
+                  <input type="file" id="photoFileInput" accept=".jpg,.jpeg" style="display: none" />
+                </div>
+              </div>
+              
               <div class="editor-status" style="display: none">
                 <span id="charCount">0 characters</span>
               </div>
@@ -441,6 +483,7 @@
     <script src="{{ url_for('static', path='touch-gestures.js') }}"></script>
     <script src="{{ url_for('static', path='sidebar-manager.js') }}"></script>
     <script src="{{ url_for('static', path='codemirror-editor.js') }}"></script>
+    <script src="{{ url_for('static', path='photo-manager.js') }}"></script>
     <script src="{{ url_for('static', path='unified-app.js') }}"></script>
   </body>
 </html>

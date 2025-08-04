@@ -1,0 +1,131 @@
+# Recipe Photo Feature - Product Requirements Document
+
+## Overview
+Add photo support to the recipe manager application, allowing users to associate a single illustrative photo with each recipe. Photos will be displayed differently in the editor view versus the translation view to optimize the user experience for each context.
+
+## Feature Objectives
+- Enable users to add one photo per recipe for visual enhancement
+- Optimize photo display for different use cases (editing vs. viewing)
+- Maintain clean file organization by hiding photos from the file tree
+- Provide seamless photo management integrated with existing rename/move operations
+
+## Core Requirements
+
+### Photo Upload & Storage
+- **File Format**: Only JPEG files (.jpeg extension) are allowed
+- **Storage Location**: Photos stored alongside recipe files in the same directory
+- **Naming Convention**: Photos named identically to recipe files but with .jpeg extension
+  - Example: `chicken-curry.md` → `chicken-curry.jpeg`
+- **File Tree Visibility**: Photos should NOT appear in the file tree interface
+- **Single Photo Limit**: Only one photo per recipe is supported
+
+### Photo Detection & Availability
+- **Endpoint**: New API endpoint `/api/photos/{recipe_path}` to check photo availability
+- **Response Behavior**: 
+  - Return photo data if available
+  - Return 404 status if no photo exists for the recipe
+- **Client Logic**: Recipe pages determine photo availability by calling the endpoint and handling 404 responses
+
+### User Interface - Editor View
+- **Photo Position**: Display photo at the bottom of the editor interface
+- **No Photo State**: Show "Add Photo" button when no photo exists
+- **Photo Present State**: Display the existing photo image
+- **Photo Upload**: Click on photo (or "Add Photo" button) to trigger file upload dialog
+- **Upload Restrictions**: Only allow .jpeg files in file picker
+- **Visual Integration**: Photo section should not interfere with editing workflow
+
+### User Interface - Translation View
+- **Photo Position**: Display photo at the top of the translated content, prominently featured
+- **Layout Priority**: Photo should be "front and center" - the first visual element users see
+- **Responsive Design**: Photo should scale appropriately for different screen sizes
+- **Missing Photo**: No photo section displayed if no photo exists (graceful degradation)
+
+### File Operations Integration
+- **Rename Operations**: When a recipe file is renamed, automatically rename associated photo
+  - `old-recipe.md` → `new-recipe.md` should trigger `old-recipe.jpeg` → `new-recipe.jpeg`
+- **Move Operations**: When a recipe is moved to different directory, move associated photo
+- **Delete Operations**: When a recipe is deleted, automatically delete associated photo
+- **Error Handling**: File operations should continue even if photo operations fail
+
+## Technical Specifications
+
+### API Endpoints
+
+#### Photo Availability Check
+```
+GET /api/photos/{recipe_path}
+Response: 200 with photo data OR 404 if not found
+```
+
+#### Photo Upload
+```
+POST /api/photos/{recipe_path}
+Content-Type: multipart/form-data
+Body: JPEG file
+Validation: Only .jpeg files accepted
+```
+
+#### Photo Delete
+```
+DELETE /api/photos/{recipe_path}
+Response: 200 on success, 404 if photo doesn't exist
+```
+
+### File System Integration
+- Extend existing FileSystemManager to handle photo operations
+- Add photo-aware logic to rename, move, and delete operations
+- Implement photo filtering in directory listing to hide from file tree
+
+### Frontend Integration
+- Extend editor interface with photo management section
+- Add photo display component for translation view
+- Implement file upload handling with JPEG validation
+- Update existing file operation handlers to manage associated photos
+
+## User Experience Flow
+
+### Adding a Photo
+1. User opens recipe in editor
+2. Sees "Add Photo" button at bottom of editor
+3. Clicks button, file picker opens with .jpeg filter
+4. User selects JPEG file, uploads automatically
+5. Photo appears in editor, "Add Photo" button replaced with photo
+6. Photo automatically appears in translation view at top
+
+### Replacing a Photo
+1. User clicks on existing photo in editor
+2. File picker opens with .jpeg filter
+3. User selects new JPEG file
+4. Old photo replaced with new photo
+5. Change reflected immediately in translation view
+
+### File Operations with Photos
+1. User renames recipe file through existing interface
+2. Associated photo automatically renamed
+3. User moves recipe to different folder
+4. Associated photo moved to same location
+5. All operations transparent to user
+
+## Technical Constraints
+- Only JPEG format supported (no PNG, GIF, WebP, etc.)
+- One photo per recipe maximum
+- Photos must be stored in same directory as recipe
+- Photo operations must not break existing functionality
+- Graceful handling of missing photos throughout the application
+
+## Success Criteria
+- Users can successfully upload JPEG photos to recipes
+- Photos display correctly in both editor (bottom) and translation (top) views
+- File operations (rename, move, delete) handle photos automatically
+- Photos remain hidden from file tree interface
+- Photo availability detection works reliably via API endpoint
+- Upload validation prevents non-JPEG files
+- System handles missing photos gracefully without errors
+
+## Future Considerations (Out of Scope)
+- Multiple photos per recipe
+- Photo editing/cropping functionality
+- Other image formats support
+- Photo compression/optimization
+- Photo metadata handling
+- Batch photo operations

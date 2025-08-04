@@ -179,11 +179,199 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 41,
+        "title": "Implement Photo Storage and File System Integration",
+        "description": "Set up the core file system infrastructure for photo storage, including photo filtering in directory listings and automatic photo operations during file management",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "✅ COMPLETED: Extended the existing FileSystemManager class with comprehensive photo operations including photo_exists(), write_photo(), read_photo(), delete_photo(), and move_photo() methods. Implemented photo filtering logic in list_directory() to hide .jpeg files from the file tree interface. Added automatic photo management in delete_file() and move_file() operations to maintain consistency between recipe and photo files. Used Python's pathlib for robust file path handling with proper extension validation. Implemented atomic file operations with comprehensive error handling and logging for all photo operations. Created full test suite with 8 passing tests covering all functionality.",
+        "testStrategy": "✅ COMPLETED: Comprehensive test suite implemented in test_photo_filesystem.py with 8 passing tests covering FileSystemManager photo methods, integration tests for file operations (rename/move/delete) with associated photos, photo filtering in directory listings, and graceful handling of missing photos and failed photo operations.",
+        "subtasks": []
+      },
+      {
+        "id": 42,
+        "title": "Create Photo API Endpoints",
+        "description": "Implement REST API endpoints for photo availability checking, upload, and deletion with proper JPEG validation and error handling",
+        "status": "done",
+        "dependencies": [
+          41
+        ],
+        "priority": "high",
+        "details": "Create FastAPI endpoints: GET /api/photos/{recipe_path} for availability check (return 200 with photo data or 404), POST /api/photos/{recipe_path} for upload with multipart/form-data support, DELETE /api/photos/{recipe_path} for removal. Use FastAPI's UploadFile for file handling and implement JPEG validation using PIL/Pillow to verify file format. Add proper HTTP status codes (200, 404, 400 for validation errors, 500 for server errors). Implement file size limits and sanitize file paths to prevent directory traversal attacks. Use async/await for non-blocking file operations.",
+        "testStrategy": "API integration tests for all endpoints, test JPEG validation with various file types, test file upload with large files, test error handling for invalid paths, verify 404 responses for missing photos, test concurrent upload/delete operations",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement GET /api/photos/{recipe_path} endpoint",
+            "description": "Create endpoint for photo availability checking that returns 200 with photo data or 404 if not found",
+            "status": "done",
+            "dependencies": [],
+            "details": "Implemented with proper cache headers (Cache-Control, Content-Disposition) and path sanitization for .md extension consistency",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement POST /api/photos/{recipe_path} endpoint",
+            "description": "Create endpoint for photo upload with comprehensive validation",
+            "status": "done",
+            "dependencies": [],
+            "details": "Implemented with JPEG file extension validation (.jpg, .jpeg), MIME type validation (image/jpeg), file size limit (10MB), and empty file validation",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement DELETE /api/photos/{recipe_path} endpoint",
+            "description": "Create endpoint for photo removal",
+            "status": "done",
+            "dependencies": [],
+            "details": "Implemented with proper error handling and path sanitization",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create comprehensive test suite",
+            "description": "Implement API integration tests covering all functionality",
+            "status": "done",
+            "dependencies": [],
+            "details": "Created 12 passing tests covering photo upload/download flow, file validation (extension, MIME type, size, empty files), error handling for missing photos, path handling with/without .md extensions, photo replacement functionality, and cache header verification",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 43,
+        "title": "Develop Photo Management Components for Editor View",
+        "description": "Create React components for photo display and upload functionality in the recipe editor, positioned at the bottom of the interface",
+        "details": "Create PhotoManager React component with two states: AddPhotoButton (when no photo) and PhotoDisplay (when photo exists). Use HTML5 file input with accept='.jpeg' attribute for upload restriction. Implement drag-and-drop functionality using React's onDrop handlers. Use fetch API or axios for photo upload with FormData and proper error handling. Add loading states during upload and visual feedback for success/failure. Position component at bottom of editor using CSS flexbox. Implement click handlers for photo replacement and use React hooks (useState, useEffect) for state management.",
+        "testStrategy": "Component unit tests with React Testing Library, test file upload simulation, test drag-and-drop functionality, verify JPEG-only file filtering, test loading and error states, visual regression tests for component positioning",
+        "priority": "medium",
+        "dependencies": [
+          42
+        ],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 44,
+        "title": "Implement Photo Display in Translation View",
+        "description": "Add photo display component to the translation view, prominently positioned at the top of the translated content with responsive design",
+        "details": "Create TranslationPhotoDisplay component that checks photo availability on component mount using the photo API endpoint. Position photo at the top of translation content using CSS Grid or Flexbox. Implement responsive image sizing using CSS object-fit: cover and max-width: 100%. Add loading skeleton while checking photo availability and graceful degradation when no photo exists (component doesn't render). Use lazy loading with intersection observer for performance. Implement proper alt text for accessibility and add error handling for failed photo loads.",
+        "testStrategy": "Component testing for responsive behavior across screen sizes, test photo availability detection, verify graceful handling of missing photos, test lazy loading functionality, accessibility testing for alt text and keyboard navigation",
+        "priority": "medium",
+        "dependencies": [
+          42
+        ],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 45,
+        "title": "Integrate Photo Operations with Existing File Management",
+        "description": "Task completed - all photo integration work has been implemented in Task 41, including automatic photo handling for rename, move, and delete operations with proper error handling and backward compatibility",
+        "status": "done",
+        "dependencies": [
+          41
+        ],
+        "priority": "high",
+        "details": "This task is now complete as all described functionality was implemented in Task 41:\n\n✅ COMPLETED WORK:\n- Modified delete_file() in FileSystemManager to automatically delete associated photos when recipes are deleted\n- Updated move_file() in routes.py to handle photo moving during recipe rename/move operations\n- Implemented proper error handling with try/catch blocks to prevent photo operation failures from breaking recipe operations\n- Created comprehensive tests covering all file operations with photos including edge cases\n- All operations maintain backward compatibility with recipes that don't have photos\n\nThe integration work described in the original task has been fully implemented and tested. No additional work is required for this task.",
+        "testStrategy": "All testing completed as part of Task 41 implementation - integration tests for all file operations with photos, operation rollback on failures verified, backward compatibility with recipes without photos confirmed, edge cases with missing photo files tested, performance validated for bulk operations",
+        "subtasks": []
+      },
+      {
+        "id": 46,
+        "title": "Add Photo Validation and Security Measures",
+        "description": "Implement additional security layers for photo uploads beyond the current validation (extension, MIME type, size) including deep content validation, virus scanning, dimension checks, and rate limiting",
+        "status": "pending",
+        "dependencies": [
+          42
+        ],
+        "priority": "high",
+        "details": "Current implementation already includes file extension validation (.jpg, .jpeg), MIME type verification (image/jpeg), file size limits (10MB max, configurable), filename sanitization, secure async file handling, and empty file validation. Additional security measures to implement: deep file content validation using PIL.Image.open() to verify actual image data integrity, virus scanning integration with ClamAV if available, image dimension validation to reject overly large images (configurable max dimensions), and rate limiting for upload endpoints to prevent abuse. These additions will provide defense-in-depth security for the photo upload functionality.",
+        "testStrategy": "Security testing focusing on new validation layers: test malicious files that pass MIME/extension checks but fail PIL validation, test virus-infected files if ClamAV available, verify dimension limits with oversized images, test rate limiting with rapid successive uploads, integration testing to ensure new validations work with existing security measures",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add PIL-based deep content validation",
+            "description": "Implement PIL.Image.open() validation to verify actual image content beyond MIME type",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Add PIL dependency and implement deep image validation that attempts to open and verify the image structure using PIL.Image.open(). This catches files that have correct MIME types but are not valid images.",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement image dimension validation",
+            "description": "Add configurable maximum image dimension limits",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create environment variables for MAX_IMAGE_WIDTH and MAX_IMAGE_HEIGHT. Use PIL to check image dimensions and reject images that exceed these limits to prevent memory exhaustion attacks.",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add ClamAV virus scanning integration",
+            "description": "Integrate virus scanning for uploaded files if ClamAV is available",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Add optional ClamAV integration that scans uploaded files for viruses. Make it configurable so the system works without ClamAV but uses it when available. Handle ClamAV unavailability gracefully.",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement upload rate limiting",
+            "description": "Add rate limiting to photo upload endpoints to prevent abuse",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Implement rate limiting middleware or decorator for photo upload endpoints. Use in-memory or Redis-based rate limiting to prevent rapid successive uploads from the same IP or user.",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Update security tests for new validation layers",
+            "description": "Add comprehensive security tests for the new validation features",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create tests for PIL validation bypasses, dimension limit testing, virus scanning (mocked), and rate limiting functionality. Ensure all new security measures are thoroughly tested.",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 47,
+        "title": "Optimize Photo Performance and Caching",
+        "description": "Implement photo caching, compression, and optimization features to ensure fast loading and efficient storage while maintaining image quality",
+        "details": "Implement server-side image optimization using PIL/Pillow for automatic compression while maintaining quality (90% JPEG quality). Add HTTP caching headers (ETag, Last-Modified, Cache-Control) for photo endpoints. Implement client-side caching using browser cache and service worker for offline access. Add image resizing for different contexts (thumbnail for editor, full-size for translation view). Use lazy loading with intersection observer API. Implement progressive JPEG support for faster perceived loading. Add image preloading for critical photos.",
+        "testStrategy": "Performance testing for image loading speeds, test caching behavior across browsers, verify image quality after compression, test lazy loading functionality, measure storage space savings from optimization, test offline functionality",
+        "priority": "medium",
+        "dependencies": [
+          42,
+          44
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "Create Photo Management User Interface and Error Handling",
+        "description": "Develop comprehensive user interface elements for photo management with intuitive error handling, progress indicators, and user feedback mechanisms",
+        "details": "Create toast notifications for upload success/failure using a library like react-hot-toast. Implement progress bars for file uploads using XMLHttpRequest progress events. Add photo preview modal with zoom functionality using react-modal or similar. Create confirmation dialogs for photo deletion using native browser confirm or custom modal. Implement undo functionality for accidental photo deletions (temporary file retention). Add keyboard shortcuts for photo operations (Ctrl+U for upload). Implement accessibility features including screen reader support and focus management. Add help tooltips explaining photo requirements and limitations.",
+        "testStrategy": "User experience testing for all photo operations, accessibility testing with screen readers, keyboard navigation testing, test error message clarity and helpfulness, usability testing with different user types, cross-browser compatibility testing for all UI components",
+        "priority": "medium",
+        "dependencies": [
+          43,
+          44,
+          46
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-07-27T13:35:50.934Z",
-      "updated": "2025-08-03T07:22:02.781Z",
+      "updated": "2025-08-04T11:04:51.724Z",
       "description": "Tasks for master context"
     }
   }
