@@ -243,7 +243,7 @@ def test_translate_recipe_frontend_route(mock_fs_manager, mock_translation):
     mock_html.return_value = "<html><body><h1>Recette de Test</h1></body></html>"
 
     # Make request to frontend route
-    response = client.get("/edit/test-recipe/translate")
+    response = client.get("/translate/test-recipe")
 
     # Verify response
     assert response.status_code == 200

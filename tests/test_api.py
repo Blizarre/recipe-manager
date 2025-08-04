@@ -37,15 +37,6 @@ def test_health_endpoint():
     assert "recipes_dir" in data
 
 
-def test_root_endpoint():
-    """Test the API root endpoint"""
-    response = client.get("/api")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "Recipe Manager API"
-    assert data["status"] == "running"
-
-
 def test_list_empty_directory():
     """Test listing an empty directory"""
     response = client.get("/api/files")

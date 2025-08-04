@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>Recipe Manager</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -434,13 +434,13 @@
       </div>
     </div>
 
-    <script src="/static/utils.js"></script>
-    <script src="/static/api.js"></script>
-    <script src="/static/file-tree.js"></script>
-    <script src="/static/search.js"></script>
-    <script src="/static/touch-gestures.js"></script>
-    <script src="/static/sidebar-manager.js"></script>
-    <script src="/static/codemirror-editor.js"></script>
-    <script src="/static/unified-app.js"></script>
+    <script src="{{ url_for('static', path='utils.js') }}"></script>
+    <script src="{{ url_for('static', path='api.js') }}"></script>
+    <script src="{{ url_for('static', path='file-tree.js') }}"></script>
+    <script src="{{ url_for('static', path='search.js') }}"></script>
+    <script src="{{ url_for('static', path='touch-gestures.js') }}"></script>
+    <script src="{{ url_for('static', path='sidebar-manager.js') }}"></script>
+    <script src="{{ url_for('static', path='codemirror-editor.js') }}"></script>
+    <script src="{{ url_for('static', path='unified-app.js') }}"></script>
   </body>
 </html>
