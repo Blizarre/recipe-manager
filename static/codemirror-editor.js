@@ -365,6 +365,11 @@ class CodeMirrorEditor {
     // Make editor read-only to prevent further changes
     this.setReadOnly();
 
+    // Show alert for immediate attention
+    alert(
+      "⚠️ Version Conflict!\n\nThis recipe was modified in another browser tab or session. The editor is now read-only.\n\nPlease refresh the page to see the latest changes.",
+    );
+
     const fileStatus = document.getElementById("fileStatus");
     if (fileStatus) {
       fileStatus.textContent = "⚠️ File modified elsewhere - refresh required";
