@@ -25,7 +25,20 @@ class RecipeAPI {
           .json()
           .catch(() => ({ detail: "Unknown error" }));
 
-        // Handle different error response formats
+        // For version conflicts, preserve the full error structure
+        if (
+          response.status === 409 &&
+          errorData.detail &&
+          typeof errorData.detail === "object" &&
+          errorData.detail.type === "version_conflict"
+        ) {
+          const error = new Error(errorData.detail.message);
+          error.isVersionConflict = true;
+          error.conflictData = errorData.detail;
+          throw error;
+        }
+
+        // Handle other error response formats
         let errorMessage = "Unknown error";
         if (errorData.detail) {
           if (typeof errorData.detail === "string") {
@@ -68,9 +81,10 @@ class RecipeAPI {
     return this.request("GET", `/files/${encodeURIComponent(path)}`);
   }
 
-  async saveFile(path, content) {
+  async saveFile(path, content, version = null) {
     return this.request("PUT", `/files/${encodeURIComponent(path)}`, {
       content,
+      version,
     });
   }
 
@@ -105,9 +119,10 @@ class RecipeAPI {
 
   // Recipe-specific operations
 
-  async saveRecipe(path, content) {
+  async saveRecipe(path, content, version = null) {
     return this.request("PUT", `/recipes/${encodeURIComponent(path)}`, {
       content,
+      version,
     });
   }
 

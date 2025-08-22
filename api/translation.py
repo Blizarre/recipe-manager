@@ -137,7 +137,9 @@ async def translate_markdown(content: str) -> str:
         ) from e
 
 
-def markdown_to_html(markdown_content: str, title: str = "Recette", photo_url: Optional[str] = None) -> str:
+def markdown_to_html(
+    markdown_content: str, title: str = "Recette", photo_url: Optional[str] = None
+) -> str:
     """
     Convert markdown content to a complete HTML document with styling.
 

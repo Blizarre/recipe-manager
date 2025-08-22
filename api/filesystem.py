@@ -43,9 +43,9 @@ class FileSystemManager:
             items = []
             for item in dir_path.iterdir():
                 # Filter out .jpeg photo files from directory listings
-                if item.is_file() and item.suffix.lower() == '.jpeg':
+                if item.is_file() and item.suffix.lower() == ".jpeg":
                     continue
-                    
+
                 relative_path = item.relative_to(self.base_dir)
                 items.append(
                     {
@@ -78,10 +78,47 @@ class FileSystemManager:
                 status_code=500, detail=f"Failed to read file: {str(e)}"
             )
 
-    async def write_file(self, path: str, content: str) -> Dict[str, str]:
-        """Write content to file"""
+    async def read_file_with_version(self, path: str) -> Dict[str, Any]:
+        """Read file content with version timestamp"""
         try:
             file_path = self._validate_path(path)
+            if not file_path.exists() or not file_path.is_file():
+                raise HTTPException(status_code=404, detail="File not found")
+
+            # Get file modification time as version
+            version = int(file_path.stat().st_mtime * 1000)  # milliseconds
+
+            async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                content = await f.read()
+
+            return {"path": path, "content": content, "version": version}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to read file: {str(e)}"
+            )
+
+    async def write_file(
+        self, path: str, content: str, expected_version: int = None
+    ) -> Dict[str, Any]:
+        """Write content to file with optional version conflict detection"""
+        try:
+            file_path = self._validate_path(path)
+
+            # Check for version conflicts if expected_version is provided
+            if expected_version is not None and file_path.exists():
+                current_version = int(file_path.stat().st_mtime * 1000)
+                if current_version != expected_version:
+                    raise HTTPException(
+                        status_code=409,
+                        detail={
+                            "type": "version_conflict",
+                            "message": "File was modified by another session. Please refresh and retry.",
+                            "current_version": current_version,
+                            "expected_version": expected_version,
+                        },
+                    )
 
             # Create parent directories if needed
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -89,10 +126,16 @@ class FileSystemManager:
             async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
                 await f.write(content)
 
+            # Get new version after write
+            new_version = int(file_path.stat().st_mtime * 1000)
+
             return {
                 "message": "File saved successfully",
                 "path": str(file_path.relative_to(self.base_dir)),
+                "version": new_version,
             }
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to write file: {str(e)}"
@@ -107,7 +150,7 @@ class FileSystemManager:
 
             if file_path.is_file():
                 # If it's a recipe file (.md), try to delete associated photo
-                if path.endswith('.md'):
+                if path.endswith(".md"):
                     try:
                         await self.delete_photo(path)
                     except HTTPException:
@@ -115,8 +158,10 @@ class FileSystemManager:
                         pass
                     except Exception as e:
                         # Log but don't fail the file deletion
-                        self.logger.warning(f"Failed to delete photo for {path}: {str(e)}")
-                
+                        self.logger.warning(
+                            f"Failed to delete photo for {path}: {str(e)}"
+                        )
+
                 file_path.unlink()
                 return {"message": "File deleted successfully"}
             else:
@@ -143,43 +188,47 @@ class FileSystemManager:
             )
 
     # Photo-specific methods
-    
+
     def _get_photo_path_for_recipe(self, recipe_path: str) -> Path:
         """Get the corresponding photo path for a recipe file"""
         recipe_file_path = self._validate_path(recipe_path)
-        
+
         # Change extension from .md to .jpeg
-        photo_name = os.path.splitext(recipe_file_path.name)[0] + '.jpeg'
+        photo_name = os.path.splitext(recipe_file_path.name)[0] + ".jpeg"
         photo_path = recipe_file_path.parent / photo_name
-        
+
         return photo_path
-    
+
     async def photo_exists(self, recipe_path: str) -> bool:
         """Check if a photo exists for the given recipe"""
         try:
             photo_path = self._get_photo_path_for_recipe(recipe_path)
             return photo_path.exists() and photo_path.is_file()
         except Exception as e:
-            self.logger.warning(f"Error checking photo existence for {recipe_path}: {str(e)}")
+            self.logger.warning(
+                f"Error checking photo existence for {recipe_path}: {str(e)}"
+            )
             return False
-    
+
     async def get_photo_path(self, recipe_path: str) -> str:
         """Get the relative photo path for a recipe"""
         photo_path = self._get_photo_path_for_recipe(recipe_path)
         return str(photo_path.relative_to(self.base_dir))
-        
-    async def write_photo(self, recipe_path: str, photo_content: bytes) -> Dict[str, str]:
+
+    async def write_photo(
+        self, recipe_path: str, photo_content: bytes
+    ) -> Dict[str, str]:
         """Write photo content to corresponding photo file"""
         try:
             photo_path = self._get_photo_path_for_recipe(recipe_path)
-            
+
             # Create parent directories if needed
             photo_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             # Write binary content for JPEG
             async with aiofiles.open(photo_path, "wb") as f:
                 await f.write(photo_content)
-            
+
             self.logger.info(f"Photo saved for recipe {recipe_path}")
             return {
                 "message": "Photo saved successfully",
@@ -190,14 +239,14 @@ class FileSystemManager:
             raise HTTPException(
                 status_code=500, detail=f"Failed to save photo: {str(e)}"
             )
-    
+
     async def read_photo(self, recipe_path: str) -> bytes:
         """Read photo content as bytes"""
         try:
             photo_path = self._get_photo_path_for_recipe(recipe_path)
             if not photo_path.exists() or not photo_path.is_file():
                 raise HTTPException(status_code=404, detail="Photo not found")
-            
+
             async with aiofiles.open(photo_path, "rb") as f:
                 return await f.read()
         except HTTPException:
@@ -207,7 +256,7 @@ class FileSystemManager:
             raise HTTPException(
                 status_code=500, detail=f"Failed to read photo: {str(e)}"
             )
-    
+
     async def delete_photo(self, recipe_path: str) -> Dict[str, str]:
         """Delete photo associated with a recipe"""
         try:
@@ -225,7 +274,7 @@ class FileSystemManager:
             raise HTTPException(
                 status_code=500, detail=f"Failed to delete photo: {str(e)}"
             )
-    
+
     async def move_photo(self, old_recipe_path: str, new_recipe_path: str) -> bool:
         """Move photo when recipe is moved/renamed. Returns True if successful or no photo exists"""
         try:
@@ -233,18 +282,20 @@ class FileSystemManager:
             if not old_photo_path.exists():
                 # No photo to move, return success
                 return True
-            
+
             new_photo_path = self._get_photo_path_for_recipe(new_recipe_path)
-            
+
             # Create parent directories if needed
             new_photo_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             # Move the photo file
             old_photo_path.rename(new_photo_path)
-            
+
             self.logger.info(f"Photo moved from {old_recipe_path} to {new_recipe_path}")
             return True
         except Exception as e:
-            self.logger.error(f"Failed to move photo from {old_recipe_path} to {new_recipe_path}: {str(e)}")
+            self.logger.error(
+                f"Failed to move photo from {old_recipe_path} to {new_recipe_path}: {str(e)}"
+            )
             # Don't raise exception - photo operations should not break file operations
             return False

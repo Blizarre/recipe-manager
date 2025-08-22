@@ -8,8 +8,10 @@ class CodeMirrorEditor {
     this.currentFile = null;
     this.isDirty = false;
     this.lastSavedContent = "";
+    this.currentVersion = null; // Track file version
     this.autoSaveTimeoutId = null;
     this.autoSaveDelay = 1000; // 1 second
+    this.editableCompartment = null; // For managing read-only state
 
     this.init();
   }
@@ -43,8 +45,11 @@ class CodeMirrorEditor {
 
     try {
       // Create CodeMirror 6 editor with basic configuration
-      const { EditorView, basicSetup, EditorState, markdown } =
+      const { EditorView, basicSetup, EditorState, markdown, Compartment } =
         window.CodeMirror;
+
+      // Create compartment for editable state
+      this.editableCompartment = new Compartment();
 
       // Create extensions array
       const extensions = [
@@ -54,6 +59,7 @@ class CodeMirrorEditor {
           window.CodeMirror.markdownHighlighting,
         ),
         EditorView.lineWrapping,
+        this.editableCompartment.of(EditorView.editable.of(true)),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             this.isDirty = true;
@@ -124,10 +130,7 @@ class CodeMirrorEditor {
 
     // Add save shortcut and undo/redo shortcuts
     this.view.dom.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        this.save();
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         this.undo();
       } else if (
@@ -152,36 +155,6 @@ class CodeMirrorEditor {
     });
   }
 
-  async loadFile(path) {
-    if (!path) {
-      this.clearEditor();
-      return;
-    }
-
-    try {
-      this.showLoading();
-      const response = await window.api.getFile(path);
-
-      this.currentFile = path;
-      this.setContent(response.content || "");
-      this.lastSavedContent = response.content || "";
-      this.isDirty = false;
-      this.updateUI();
-
-      // Show editor wrapper
-      const editorWrapper = document.getElementById("editorWrapper");
-      const welcomeScreen = document.getElementById("welcomeScreen");
-
-      if (editorWrapper) editorWrapper.style.display = "flex";
-      if (welcomeScreen) welcomeScreen.style.display = "none";
-    } catch (error) {
-      console.error("Failed to load file:", error);
-      this.showError(
-        "Failed to load file: " + Utils.extractErrorMessage(error),
-      );
-    }
-  }
-
   setContent(content) {
     const transaction = this.view.state.update({
       changes: {
@@ -201,6 +174,7 @@ class CodeMirrorEditor {
   clearEditor() {
     this.cancelAutoSave();
     this.currentFile = null;
+    this.currentVersion = null;
     this.setContent("Start typing your recipe here...");
     this.lastSavedContent = "";
     this.isDirty = false;
@@ -212,30 +186,6 @@ class CodeMirrorEditor {
 
     if (editorWrapper) editorWrapper.style.display = "none";
     if (welcomeScreen) welcomeScreen.style.display = "flex";
-  }
-
-  async save() {
-    if (!this.currentFile || !this.isDirty) return;
-
-    try {
-      const content = this.getContent();
-      await window.api.saveFile(this.currentFile, content);
-
-      this.lastSavedContent = content;
-      this.isDirty = false;
-      this.updateUI();
-
-      // Show success message
-      this.showSuccess("Recipe saved successfully");
-
-      // Notify file tree of changes
-      window.app?.fileTree?.notifyFileChanged(this.currentFile);
-    } catch (error) {
-      console.error("Failed to save file:", error);
-      this.showError(
-        "Failed to save recipe: " + Utils.extractErrorMessage(error),
-      );
-    }
   }
 
   scheduleAutoSave() {
@@ -256,15 +206,17 @@ class CodeMirrorEditor {
 
     try {
       const content = this.getContent();
-      await window.api.saveFile(this.currentFile, content);
+      const result = await window.api.saveFile(
+        this.currentFile,
+        content,
+        this.currentVersion,
+      );
 
-      // Update lastSavedContent - this tracks what's on the server
-      // Keep isDirty true if the current content still differs from the baseline
-      // This preserves undo history while keeping auto-save functionality
+      // Update version and content tracking
       this.lastSavedContent = content;
+      this.currentVersion = result.version;
 
       // Only mark as not dirty if the content matches what we just saved
-      // This prevents the save button from being disabled while preserving undo history
       const currentContent = this.getContent();
       if (currentContent === content) {
         this.isDirty = false;
@@ -289,6 +241,14 @@ class CodeMirrorEditor {
       window.app?.fileTree?.notifyFileChanged(this.currentFile);
     } catch (error) {
       console.error("Auto-save failed:", error);
+
+      // Handle version conflicts in auto-save
+      if (error.isVersionConflict && error.conflictData) {
+        this.cancelAutoSave();
+        this.showConflictWarning();
+        return;
+      }
+
       this.showError("Auto-save failed: " + Utils.extractErrorMessage(error));
     }
   }
@@ -389,6 +349,54 @@ class CodeMirrorEditor {
       },
     });
     this.view.dispatch(transaction);
+  }
+
+  setReadOnly() {
+    if (!this.view || !this.editableCompartment) return;
+
+    this.view.dispatch({
+      effects: this.editableCompartment.reconfigure(
+        window.CodeMirror.EditorView.editable.of(false),
+      ),
+    });
+  }
+
+  showConflictWarning() {
+    // Make editor read-only to prevent further changes
+    this.setReadOnly();
+
+    const fileStatus = document.getElementById("fileStatus");
+    if (fileStatus) {
+      fileStatus.textContent = "⚠️ File modified elsewhere - refresh required";
+      fileStatus.classList.add("conflict-warning");
+    }
+    this.showError(
+      "File was modified in another browser. Editor is now read-only. Please refresh the page to see the latest changes.",
+    );
+  }
+
+  async refreshFile() {
+    if (!this.currentFile) return;
+
+    try {
+      const response = await window.api.getFile(this.currentFile);
+      this.setContent(response.content || "");
+      this.lastSavedContent = response.content || "";
+      this.currentVersion = response.version;
+      this.isDirty = false;
+      this.updateUI();
+
+      // Clear any conflict warnings
+      const fileStatus = document.getElementById("fileStatus");
+      if (fileStatus) {
+        fileStatus.textContent = "";
+        fileStatus.classList.remove("conflict-warning");
+      }
+
+      this.showSuccess("Recipe refreshed with latest changes");
+    } catch (error) {
+      this.showError("Failed to refresh: " + Utils.extractErrorMessage(error));
+    }
   }
 
   // Cleanup method

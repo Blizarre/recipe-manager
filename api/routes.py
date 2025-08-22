@@ -20,8 +20,13 @@ router = APIRouter(prefix="/api", tags=["files"])
 fs_manager = FileSystemManager()
 
 
-class FileContent(BaseModel):
+class FileCreateContent(BaseModel):
     content: str
+
+
+class FileUpdateContent(BaseModel):
+    content: str
+    version: int  # Required for updates to prevent conflicts
 
 
 class FileMoveRequest(BaseModel):
@@ -32,8 +37,13 @@ class DirectoryCreate(BaseModel):
     path: str
 
 
-class RecipeContent(BaseModel):
+class RecipeCreateContent(BaseModel):
     content: str
+
+
+class RecipeUpdateContent(BaseModel):
+    content: str
+    version: int  # Required for updates to prevent conflicts
 
 
 @router.get("/files")
@@ -43,16 +53,17 @@ async def list_files(path: str = "") -> List[Dict[str, Any]]:
 
 
 @router.get("/files/{path:path}")
-async def get_file_content(path: str) -> Dict[str, str]:
-    """Get the content of a specific file"""
-    content = await fs_manager.read_file(path)
-    return {"path": path, "content": content}
+async def get_file_content(path: str) -> Dict[str, Any]:
+    """Get the content of a specific file with version info"""
+    return await fs_manager.read_file_with_version(path)
 
 
 @router.put("/files/{path:path}")
-async def update_file_content(path: str, file_data: FileContent) -> Dict[str, str]:
-    """Update the content of a specific file"""
-    return await fs_manager.write_file(path, file_data.content)
+async def update_file_content(
+    path: str, file_data: FileUpdateContent
+) -> Dict[str, Any]:
+    """Update the content of a specific file with version conflict detection"""
+    return await fs_manager.write_file(path, file_data.content, file_data.version)
 
 
 @router.post("/files/{path:path}/move")
@@ -61,9 +72,9 @@ async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
     try:
         # Read the file content
         content = await fs_manager.read_file(path)
-        
+
         # If it's a recipe file, try to move associated photo first
-        if path.endswith('.md') and move_data.destination.endswith('.md'):
+        if path.endswith(".md") and move_data.destination.endswith(".md"):
             await fs_manager.move_photo(path, move_data.destination)
 
         # Write to new location
@@ -78,7 +89,7 @@ async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
 
 
 @router.post("/files/{path:path}")
-async def create_file(path: str, file_data: FileContent) -> Dict[str, str]:
+async def create_file(path: str, file_data: FileCreateContent) -> Dict[str, Any]:
     """Create a new file with content"""
     return await fs_manager.write_file(path, file_data.content)
 
@@ -168,16 +179,16 @@ async def upload_file(
 
 
 @router.put("/recipes/{path:path}")
-async def save_recipe(path: str, recipe_data: RecipeContent) -> Dict[str, str]:
-    """Save a recipe file"""
+async def save_recipe(path: str, recipe_data: RecipeUpdateContent) -> Dict[str, Any]:
+    """Save a recipe file with version conflict detection"""
     if not path.endswith(".md"):
         path += ".md"
 
-    return await fs_manager.write_file(path, recipe_data.content)
+    return await fs_manager.write_file(path, recipe_data.content, recipe_data.version)
 
 
 @router.post("/recipes/{path:path}")
-async def create_recipe(path: str) -> Dict[str, str]:
+async def create_recipe(path: str) -> Dict[str, Any]:
     """Create a new recipe file with basic template"""
     if not path.endswith(".md"):
         path += ".md"
@@ -452,6 +463,7 @@ def _generate_content_preview(
 
 # Photo endpoints
 
+
 @router.get("/photos/{path:path}")
 async def get_photo(path: str) -> Response:
     """Get photo for a recipe - returns 404 if no photo exists"""
@@ -459,22 +471,22 @@ async def get_photo(path: str) -> Response:
         # Ensure path ends with .md for consistency
         if not path.endswith(".md"):
             path += ".md"
-        
+
         # Check if photo exists
         if not await fs_manager.photo_exists(path):
             raise HTTPException(status_code=404, detail="Photo not found")
-        
+
         # Read photo content
         photo_content = await fs_manager.read_photo(path)
-        
+
         # Return photo with appropriate headers
         return Response(
             content=photo_content,
             media_type="image/jpeg",
             headers={
                 "Cache-Control": "public, max-age=3600",
-                "Content-Disposition": f"inline; filename={path.replace('.md', '.jpeg')}"
-            }
+                "Content-Disposition": f"inline; filename={path.replace('.md', '.jpeg')}",
+            },
         )
     except HTTPException:
         raise
@@ -490,47 +502,37 @@ async def upload_photo(path: str, file: UploadFile = File(...)) -> Dict[str, str
         # Ensure path ends with .md for consistency
         if not path.endswith(".md"):
             path += ".md"
-        
+
         # Validate file type
-        if not file.filename or not file.filename.lower().endswith(('.jpg', '.jpeg')):
-            raise HTTPException(
-                status_code=400, 
-                detail="Only JPEG files are allowed"
-            )
-        
+        if not file.filename or not file.filename.lower().endswith((".jpg", ".jpeg")):
+            raise HTTPException(status_code=400, detail="Only JPEG files are allowed")
+
         # Validate MIME type
-        if file.content_type and not file.content_type.startswith('image/jpeg'):
-            raise HTTPException(
-                status_code=400,
-                detail="File must be a JPEG image"
-            )
-        
+        if file.content_type and not file.content_type.startswith("image/jpeg"):
+            raise HTTPException(status_code=400, detail="File must be a JPEG image")
+
         # Check file size (10MB limit)
         if file.size and file.size > 10 * 1024 * 1024:
             raise HTTPException(
-                status_code=400,
-                detail="File size must be less than 10MB"
+                status_code=400, detail="File size must be less than 10MB"
             )
-        
+
         # Read file content
         photo_content = await file.read()
-        
+
         # Validate that we actually have content
         if not photo_content:
-            raise HTTPException(
-                status_code=400,
-                detail="Uploaded file is empty"
-            )
-        
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
         # Save photo
         result = await fs_manager.write_photo(path, photo_content)
-        
+
         return {
             "message": "Photo uploaded successfully",
             "recipe_path": path,
-            "photo_path": result["path"]
+            "photo_path": result["path"],
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -545,15 +547,12 @@ async def delete_photo(path: str) -> Dict[str, str]:
         # Ensure path ends with .md for consistency
         if not path.endswith(".md"):
             path += ".md"
-        
+
         # Delete photo
         result = await fs_manager.delete_photo(path)
-        
-        return {
-            "message": "Photo deleted successfully",
-            "recipe_path": path
-        }
-        
+
+        return {"message": "Photo deleted successfully", "recipe_path": path}
+
     except HTTPException:
         raise
     except Exception as e:
@@ -580,11 +579,11 @@ async def translate_recipe(path: str) -> HTMLResponse:
             photo_url = None
             if await fs_manager.photo_exists(path):
                 photo_url = f"/api/photos/{path}"
-            
+
             # If the cached content doesn't match current photo status, regenerate
             has_photo_in_cache = 'class="recipe-photo"' in cached.html_content
             has_photo_now = photo_url is not None
-            
+
             if has_photo_in_cache == has_photo_now:
                 return HTMLResponse(content=cached.html_content, status_code=200)
             # If photo status changed, continue to regenerate

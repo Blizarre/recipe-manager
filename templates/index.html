@@ -18,7 +18,7 @@
     <!-- CodeMirror 6 modules -->
     <script type="module">
       import { EditorView } from "https://esm.sh/@codemirror/view";
-      import { EditorState } from "https://esm.sh/@codemirror/state";
+      import { EditorState, Compartment } from "https://esm.sh/@codemirror/state";
       import { basicSetup } from "https://esm.sh/codemirror";
       import { markdown } from "https://esm.sh/@codemirror/lang-markdown";
       import {
@@ -59,6 +59,7 @@
       window.CodeMirror = {
         EditorView,
         EditorState,
+        Compartment,
         basicSetup,
         markdown,
         syntaxHighlighting,

@@ -81,7 +81,9 @@ class UnifiedRecipeApp {
       const renameBtn = document.getElementById("renameBtn");
       const translateBtn = document.getElementById("translateBtn");
       const togglePhotoBtn = document.getElementById("togglePhotoBtn");
-      const togglePhotoMobileBtn = document.getElementById("togglePhotoMobileBtn");
+      const togglePhotoMobileBtn = document.getElementById(
+        "togglePhotoMobileBtn",
+      );
       const headerActions = document.querySelector(".header-actions");
       const actionButtons = document.querySelector(".action-buttons");
 
@@ -98,11 +100,11 @@ class UnifiedRecipeApp {
         // Mobile: keep buttons in header - they're already there
         // Hide desktop photo button on mobile
         if (togglePhotoBtn) {
-          togglePhotoBtn.style.display = 'none';
+          togglePhotoBtn.style.display = "none";
         }
         // Show mobile photo button
         if (togglePhotoMobileBtn) {
-          togglePhotoMobileBtn.style.display = 'block';
+          togglePhotoMobileBtn.style.display = "block";
         }
       } else {
         // Desktop: move buttons to editor header and show desktop photo button
@@ -115,14 +117,14 @@ class UnifiedRecipeApp {
         if (!actionButtons.contains(translateBtn)) {
           actionButtons.appendChild(translateBtn);
         }
-        
+
         // Show desktop photo button
         if (togglePhotoBtn) {
-          togglePhotoBtn.style.display = 'block';
+          togglePhotoBtn.style.display = "block";
         }
         // Hide mobile photo button on desktop
         if (togglePhotoMobileBtn) {
-          togglePhotoMobileBtn.style.display = 'none';
+          togglePhotoMobileBtn.style.display = "none";
         }
       }
     };
@@ -152,7 +154,9 @@ class UnifiedRecipeApp {
     const renameBtn = document.getElementById("renameBtn");
     const translateBtn = document.getElementById("translateBtn");
     const togglePhotoBtn = document.getElementById("togglePhotoBtn");
-    const togglePhotoMobileBtn = document.getElementById("togglePhotoMobileBtn");
+    const togglePhotoMobileBtn = document.getElementById(
+      "togglePhotoMobileBtn",
+    );
 
     // Hide initial loading
     if (initialLoading) {
@@ -270,8 +274,9 @@ class UnifiedRecipeApp {
 
       // Load content into editor
       this.editor.currentFile = this.currentFile;
-      this.editor.setContent(response.content || "");
+      this.editor.currentVersion = response.version; // Set version before content
       this.editor.lastSavedContent = response.content || "";
+      this.editor.setContent(response.content || "");
       this.editor.isDirty = false;
       this.editor.updateUI();
 
@@ -338,7 +343,7 @@ class UnifiedRecipeApp {
       window.history.replaceState({}, "", `/edit/${newPath}`);
       this.currentFile = newPath;
       this.updatePageInfo();
-      
+
       // Update photo manager with new recipe path
       if (this.photoManager) {
         this.photoManager.setCurrentRecipe(newPath);
@@ -352,7 +357,7 @@ class UnifiedRecipeApp {
       window.history.pushState({}, "", "/");
       this.currentFile = null;
       this.updateInterface();
-      
+
       // Clear photo manager
       if (this.photoManager) {
         this.photoManager.setCurrentRecipe(null);

@@ -9,37 +9,43 @@ class PhotoManager {
 
   setupEventListeners() {
     // Toggle buttons (desktop and mobile)
-    const togglePhotoBtn = document.getElementById('togglePhotoBtn');
-    const togglePhotoMobileBtn = document.getElementById('togglePhotoMobileBtn');
-    
+    const togglePhotoBtn = document.getElementById("togglePhotoBtn");
+    const togglePhotoMobileBtn = document.getElementById(
+      "togglePhotoMobileBtn",
+    );
+
     // Photo upload buttons
-    const addPhotoBtn = document.getElementById('addPhotoBtn');
-    const photoFileInput = document.getElementById('photoFileInput');
-    const changePhotoBtn = document.getElementById('changePhotoBtn');
-    const deletePhotoBtn = document.getElementById('deletePhotoBtn');
+    const addPhotoBtn = document.getElementById("addPhotoBtn");
+    const photoFileInput = document.getElementById("photoFileInput");
+    const changePhotoBtn = document.getElementById("changePhotoBtn");
+    const deletePhotoBtn = document.getElementById("deletePhotoBtn");
 
     if (togglePhotoBtn) {
-      togglePhotoBtn.addEventListener('click', () => this.togglePhotoView());
+      togglePhotoBtn.addEventListener("click", () => this.togglePhotoView());
     }
-    
+
     if (togglePhotoMobileBtn) {
-      togglePhotoMobileBtn.addEventListener('click', () => this.togglePhotoView());
+      togglePhotoMobileBtn.addEventListener("click", () =>
+        this.togglePhotoView(),
+      );
     }
 
     if (addPhotoBtn) {
-      addPhotoBtn.addEventListener('click', () => this.triggerFileInput());
+      addPhotoBtn.addEventListener("click", () => this.triggerFileInput());
     }
 
     if (changePhotoBtn) {
-      changePhotoBtn.addEventListener('click', () => this.triggerFileInput());
+      changePhotoBtn.addEventListener("click", () => this.triggerFileInput());
     }
 
     if (deletePhotoBtn) {
-      deletePhotoBtn.addEventListener('click', () => this.deletePhoto());
+      deletePhotoBtn.addEventListener("click", () => this.deletePhoto());
     }
 
     if (photoFileInput) {
-      photoFileInput.addEventListener('change', (e) => this.handleFileSelection(e));
+      photoFileInput.addEventListener("change", (e) =>
+        this.handleFileSelection(e),
+      );
     }
   }
 
@@ -54,7 +60,7 @@ class PhotoManager {
 
   togglePhotoView() {
     this.isPhotoViewActive = !this.isPhotoViewActive;
-    
+
     if (this.isPhotoViewActive) {
       this.showPhotoView();
     } else {
@@ -63,46 +69,46 @@ class PhotoManager {
   }
 
   showEditorView() {
-    const editorPanel = document.getElementById('editorPanel');
-    const photoPanel = document.getElementById('photoPanel');
-    const toggleBtn = document.getElementById('togglePhotoBtn');
-    const toggleMobileBtn = document.getElementById('togglePhotoMobileBtn');
-    
-    if (editorPanel) editorPanel.style.display = 'block';
-    if (photoPanel) photoPanel.style.display = 'none';
-    
+    const editorPanel = document.getElementById("editorPanel");
+    const photoPanel = document.getElementById("photoPanel");
+    const toggleBtn = document.getElementById("togglePhotoBtn");
+    const toggleMobileBtn = document.getElementById("togglePhotoMobileBtn");
+
+    if (editorPanel) editorPanel.style.display = "block";
+    if (photoPanel) photoPanel.style.display = "none";
+
     if (toggleBtn) {
-      toggleBtn.classList.remove('btn-primary');
-      toggleBtn.classList.add('btn-secondary');
+      toggleBtn.classList.remove("btn-primary");
+      toggleBtn.classList.add("btn-secondary");
     }
-    
+
     if (toggleMobileBtn) {
-      toggleMobileBtn.classList.remove('btn-primary');
-      toggleMobileBtn.classList.add('btn-secondary');
+      toggleMobileBtn.classList.remove("btn-primary");
+      toggleMobileBtn.classList.add("btn-secondary");
     }
-    
+
     this.isPhotoViewActive = false;
   }
 
   showPhotoView() {
-    const editorPanel = document.getElementById('editorPanel');
-    const photoPanel = document.getElementById('photoPanel');
-    const toggleBtn = document.getElementById('togglePhotoBtn');
-    const toggleMobileBtn = document.getElementById('togglePhotoMobileBtn');
-    
-    if (editorPanel) editorPanel.style.display = 'none';
-    if (photoPanel) photoPanel.style.display = 'block';
-    
+    const editorPanel = document.getElementById("editorPanel");
+    const photoPanel = document.getElementById("photoPanel");
+    const toggleBtn = document.getElementById("togglePhotoBtn");
+    const toggleMobileBtn = document.getElementById("togglePhotoMobileBtn");
+
+    if (editorPanel) editorPanel.style.display = "none";
+    if (photoPanel) photoPanel.style.display = "block";
+
     if (toggleBtn) {
-      toggleBtn.classList.remove('btn-secondary');
-      toggleBtn.classList.add('btn-primary');
+      toggleBtn.classList.remove("btn-secondary");
+      toggleBtn.classList.add("btn-primary");
     }
-    
+
     if (toggleMobileBtn) {
-      toggleMobileBtn.classList.remove('btn-secondary');
-      toggleMobileBtn.classList.add('btn-primary');
+      toggleMobileBtn.classList.remove("btn-secondary");
+      toggleMobileBtn.classList.add("btn-primary");
     }
-    
+
     this.isPhotoViewActive = true;
   }
 
@@ -113,7 +119,7 @@ class PhotoManager {
 
     try {
       const response = await fetch(`/api/photos/${recipePath}`);
-      
+
       if (response.ok) {
         // Photo exists
         const photoBlob = await response.blob();
@@ -126,14 +132,14 @@ class PhotoManager {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error loading photo:', error);
+      console.error("Error loading photo:", error);
       this.showPhotoPlaceholder();
-      this.showError('Failed to load photo');
+      this.showError("Failed to load photo");
     }
   }
 
   triggerFileInput() {
-    const photoFileInput = document.getElementById('photoFileInput');
+    const photoFileInput = document.getElementById("photoFileInput");
     if (photoFileInput) {
       photoFileInput.click();
     }
@@ -146,15 +152,17 @@ class PhotoManager {
     }
 
     // Validate file type
-    if (!file.type.startsWith('image/jpeg') || 
-        !file.name.toLowerCase().match(/\.(jpg|jpeg)$/)) {
-      this.showError('Please select a JPEG image file');
+    if (
+      !file.type.startsWith("image/jpeg") ||
+      !file.name.toLowerCase().match(/\.(jpg|jpeg)$/)
+    ) {
+      this.showError("Please select a JPEG image file");
       return;
     }
 
     // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      this.showError('File size must be less than 10MB');
+      this.showError("File size must be less than 10MB");
       return;
     }
 
@@ -163,35 +171,35 @@ class PhotoManager {
 
   async uploadPhoto(file) {
     if (!this.currentRecipe) {
-      this.showError('No recipe selected');
+      this.showError("No recipe selected");
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const response = await fetch(`/api/photos/${this.currentRecipe}`, {
-        method: 'POST',
-        body: formData
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Upload failed');
+        throw new Error(errorData.detail || "Upload failed");
       }
 
       // Success - reload the photo
       await this.loadPhotoForRecipe(this.currentRecipe);
-      this.showSuccess('Photo uploaded successfully');
+      this.showSuccess("Photo uploaded successfully");
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      this.showError('Failed to upload photo: ' + error.message);
+      console.error("Error uploading photo:", error);
+      this.showError("Failed to upload photo: " + error.message);
     } finally {
       // Clear the file input
-      const photoFileInput = document.getElementById('photoFileInput');
+      const photoFileInput = document.getElementById("photoFileInput");
       if (photoFileInput) {
-        photoFileInput.value = '';
+        photoFileInput.value = "";
       }
     }
   }
@@ -201,52 +209,52 @@ class PhotoManager {
       return;
     }
 
-    if (!confirm('Are you sure you want to delete this photo?')) {
+    if (!confirm("Are you sure you want to delete this photo?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/photos/${this.currentRecipe}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Delete failed');
+        throw new Error(errorData.detail || "Delete failed");
       }
 
       this.showPhotoPlaceholder();
-      this.showSuccess('Photo deleted successfully');
+      this.showSuccess("Photo deleted successfully");
     } catch (error) {
-      console.error('Error deleting photo:', error);
-      this.showError('Failed to delete photo: ' + error.message);
+      console.error("Error deleting photo:", error);
+      this.showError("Failed to delete photo: " + error.message);
     }
   }
 
   showPhotoPlaceholder() {
-    const photoPlaceholder = document.getElementById('photoPlaceholder');
-    const photoDisplay = document.getElementById('photoDisplay');
-    
+    const photoPlaceholder = document.getElementById("photoPlaceholder");
+    const photoDisplay = document.getElementById("photoDisplay");
+
     if (photoPlaceholder) {
-      photoPlaceholder.style.display = 'block';
+      photoPlaceholder.style.display = "block";
     }
     if (photoDisplay) {
-      photoDisplay.style.display = 'none';
+      photoDisplay.style.display = "none";
     }
 
     this.clearError();
   }
 
   showPhotoExists(photoUrl) {
-    const photoPlaceholder = document.getElementById('photoPlaceholder');
-    const photoDisplay = document.getElementById('photoDisplay');
-    const photoImage = document.getElementById('photoImage');
-    
+    const photoPlaceholder = document.getElementById("photoPlaceholder");
+    const photoDisplay = document.getElementById("photoDisplay");
+    const photoImage = document.getElementById("photoImage");
+
     if (photoPlaceholder) {
-      photoPlaceholder.style.display = 'none';
+      photoPlaceholder.style.display = "none";
     }
     if (photoDisplay) {
-      photoDisplay.style.display = 'block';
+      photoDisplay.style.display = "block";
     }
     if (photoImage) {
       photoImage.src = photoUrl;
@@ -256,15 +264,15 @@ class PhotoManager {
   }
 
   showError(message) {
-    const photoView = document.querySelector('.photo-view');
+    const photoView = document.querySelector(".photo-view");
     if (!photoView) return;
 
     // Remove existing error
     this.clearError();
 
     // Add error message
-    const error = document.createElement('div');
-    error.className = 'photo-error';
+    const error = document.createElement("div");
+    error.className = "photo-error";
     error.textContent = message;
     photoView.appendChild(error);
 
@@ -273,10 +281,10 @@ class PhotoManager {
   }
 
   clearError() {
-    const photoView = document.querySelector('.photo-view');
+    const photoView = document.querySelector(".photo-view");
     if (!photoView) return;
 
-    const error = photoView.querySelector('.photo-error');
+    const error = photoView.querySelector(".photo-error");
     if (error) {
       error.remove();
     }
@@ -284,10 +292,10 @@ class PhotoManager {
 
   showSuccess(message) {
     // Use existing status system if available
-    if (window.app && typeof window.app.showStatus === 'function') {
+    if (window.app && typeof window.app.showStatus === "function") {
       window.app.showStatus(message);
     } else {
-      console.log('Success:', message);
+      console.log("Success:", message);
     }
   }
 }
