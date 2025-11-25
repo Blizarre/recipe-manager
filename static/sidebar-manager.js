@@ -534,19 +534,6 @@ class SidebarManager {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
-    toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === "error" ? "var(--error-color)" : "var(--success-color)"};
-            color: white;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            z-index: 1001;
-            animation: slideIn 0.3s ease;
-            max-width: 300px;
-        `;
 
     document.body.appendChild(toast);
 

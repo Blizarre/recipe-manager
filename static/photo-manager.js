@@ -68,6 +68,12 @@ class PhotoManager {
     }
   }
 
+  toggleButtonStyle(button, isPrimary) {
+    if (!button) return;
+    button.classList.toggle("btn-primary", isPrimary);
+    button.classList.toggle("btn-secondary", !isPrimary);
+  }
+
   showEditorView() {
     const editorPanel = document.getElementById("editorPanel");
     const photoPanel = document.getElementById("photoPanel");
@@ -77,15 +83,8 @@ class PhotoManager {
     if (editorPanel) editorPanel.style.display = "block";
     if (photoPanel) photoPanel.style.display = "none";
 
-    if (toggleBtn) {
-      toggleBtn.classList.remove("btn-primary");
-      toggleBtn.classList.add("btn-secondary");
-    }
-
-    if (toggleMobileBtn) {
-      toggleMobileBtn.classList.remove("btn-primary");
-      toggleMobileBtn.classList.add("btn-secondary");
-    }
+    this.toggleButtonStyle(toggleBtn, false);
+    this.toggleButtonStyle(toggleMobileBtn, false);
 
     this.isPhotoViewActive = false;
   }
@@ -99,15 +98,8 @@ class PhotoManager {
     if (editorPanel) editorPanel.style.display = "none";
     if (photoPanel) photoPanel.style.display = "block";
 
-    if (toggleBtn) {
-      toggleBtn.classList.remove("btn-secondary");
-      toggleBtn.classList.add("btn-primary");
-    }
-
-    if (toggleMobileBtn) {
-      toggleMobileBtn.classList.remove("btn-secondary");
-      toggleMobileBtn.classList.add("btn-primary");
-    }
+    this.toggleButtonStyle(toggleBtn, true);
+    this.toggleButtonStyle(toggleMobileBtn, true);
 
     this.isPhotoViewActive = true;
   }
