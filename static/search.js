@@ -162,11 +162,11 @@ class SearchComponent {
 
     a.innerHTML = `
             <div class="search-result-title">
-                ${this.escapeHtml(result.title || result.name)}
+                ${Utils.escapeHtml(result.title || result.name)}
                 ${typeLabel}
             </div>
             <div class="search-result-preview">${preview}</div>
-            <div class="search-result-path">${this.escapeHtml(result.path)}</div>
+            <div class="search-result-path">${Utils.escapeHtml(result.path)}</div>
             ${matches}
         `;
 
@@ -174,16 +174,16 @@ class SearchComponent {
   }
 
   highlightSearchTerms(text, query) {
-    if (!text || !query) return this.escapeHtml(text);
+    if (!text || !query) return Utils.escapeHtml(text);
 
     const words = query
       .toLowerCase()
       .split(/\s+/)
       .filter((w) => w.length > 1);
-    let highlightedText = this.escapeHtml(text);
+    let highlightedText = Utils.escapeHtml(text);
 
     words.forEach((word) => {
-      const regex = new RegExp(`(${this.escapeRegex(word)})`, "gi");
+      const regex = new RegExp(`(${Utils.escapeRegex(word)})`, "gi");
       highlightedText = highlightedText.replace(
         regex,
         '<span class="search-match-highlight">$1</span>',
@@ -193,20 +193,12 @@ class SearchComponent {
     return highlightedText;
   }
 
-  escapeHtml(text) {
-    return Utils.escapeHtml(text);
-  }
-
-  escapeRegex(string) {
-    return Utils.escapeRegex(string);
-  }
-
   showError(message) {
     const searchResults = document.getElementById("searchResults");
     const searchResultsList = document.getElementById("searchResultsList");
 
     searchResults.style.display = "block";
-    searchResultsList.innerHTML = `<div class="search-empty" style="color: var(--error-color);">${this.escapeHtml(message)}</div>`;
+    searchResultsList.innerHTML = `<div class="search-empty" style="color: var(--error-color);">${Utils.escapeHtml(message)}</div>`;
   }
 
   clearSearch() {

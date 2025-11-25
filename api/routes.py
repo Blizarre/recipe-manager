@@ -37,15 +37,6 @@ class DirectoryCreate(BaseModel):
     path: str
 
 
-class RecipeCreateContent(BaseModel):
-    content: str
-
-
-class RecipeUpdateContent(BaseModel):
-    content: str
-    version: int  # Required for updates to prevent conflicts
-
-
 @router.get("/files")
 async def list_files(path: str = "") -> List[Dict[str, Any]]:
     """List files and directories at the specified path"""
@@ -69,23 +60,20 @@ async def update_file_content(
 @router.post("/files/{path:path}/move")
 async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
     """Move/rename a file to a new location"""
-    try:
-        # Read the file content
-        content = await fs_manager.read_file(path)
+    # Read the file content
+    content = await fs_manager.read_file(path)
 
-        # If it's a recipe file, try to move associated photo first
-        if path.endswith(".md") and move_data.destination.endswith(".md"):
-            await fs_manager.move_photo(path, move_data.destination)
+    # If it's a recipe file, try to move associated photo first
+    if path.endswith(".md") and move_data.destination.endswith(".md"):
+        await fs_manager.move_photo(path, move_data.destination)
 
-        # Write to new location
-        await fs_manager.write_file(move_data.destination, content)
+    # Write to new location
+    await fs_manager.write_file(move_data.destination, content)
 
-        # Delete old file (this will also handle photo cleanup if move failed)
-        await fs_manager.delete_file(path)
+    # Delete old file (this will also handle photo cleanup if move failed)
+    await fs_manager.delete_file(path)
 
-        return {"message": f"File moved from {path} to {move_data.destination}"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to move file: {str(e)}")
+    return {"message": f"File moved from {path} to {move_data.destination}"}
 
 
 @router.post("/files/{path:path}")
@@ -103,30 +91,25 @@ async def delete_file(path: str) -> Dict[str, str]:
 @router.get("/directories")
 async def get_directory_tree(path: str = "") -> Dict[str, Any]:
     """Get directory tree structure"""
-    try:
-        items = await fs_manager.list_directory(path)
+    items = await fs_manager.list_directory(path)
 
-        # Build tree structure
-        tree = {
-            "name": path if path else "recipes",
-            "path": path,
-            "type": "directory",
-            "children": [],
-        }
+    # Build tree structure
+    tree = {
+        "name": path if path else "recipes",
+        "path": path,
+        "type": "directory",
+        "children": [],
+    }
 
-        for item in items:
-            if item["type"] == "directory":
-                # Recursively get subdirectories (limiting depth for performance)
-                subdir_path = f"{path}/{item['name']}" if path else item["name"]
-                sub_items = await fs_manager.list_directory(subdir_path)
-                item["children"] = [x for x in sub_items if x["type"] == "directory"]
-            tree["children"].append(item)
+    for item in items:
+        if item["type"] == "directory":
+            # Recursively get subdirectories (limiting depth for performance)
+            subdir_path = f"{path}/{item['name']}" if path else item["name"]
+            sub_items = await fs_manager.list_directory(subdir_path)
+            item["children"] = [x for x in sub_items if x["type"] == "directory"]
+        tree["children"].append(item)
 
-        return tree
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get directory tree: {str(e)}"
-        )
+    return tree
 
 
 @router.post("/directories/{path:path}")
@@ -138,26 +121,19 @@ async def create_directory(path: str) -> Dict[str, str]:
 @router.delete("/directories/{path:path}")
 async def delete_directory(path: str) -> Dict[str, str]:
     """Delete a directory (must be empty)"""
-    try:
-        dir_path = fs_manager._validate_path(path)
-        if not dir_path.exists():
-            raise HTTPException(status_code=404, detail="Directory not found")
+    dir_path = fs_manager._validate_path(path)
+    if not dir_path.exists():
+        raise HTTPException(status_code=404, detail="Directory not found")
 
-        if not dir_path.is_dir():
-            raise HTTPException(status_code=400, detail="Path is not a directory")
+    if not dir_path.is_dir():
+        raise HTTPException(status_code=400, detail="Path is not a directory")
 
-        # Check if directory is empty
-        if any(dir_path.iterdir()):
-            raise HTTPException(status_code=400, detail="Directory is not empty")
+    # Check if directory is empty
+    if any(dir_path.iterdir()):
+        raise HTTPException(status_code=400, detail="Directory is not empty")
 
-        dir_path.rmdir()
-        return {"message": "Directory deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to delete directory: {str(e)}"
-        )
+    dir_path.rmdir()
+    return {"message": "Directory deleted successfully"}
 
 
 @router.post("/upload")
@@ -179,7 +155,7 @@ async def upload_file(
 
 
 @router.put("/recipes/{path:path}")
-async def save_recipe(path: str, recipe_data: RecipeUpdateContent) -> Dict[str, Any]:
+async def save_recipe(path: str, recipe_data: FileUpdateContent) -> Dict[str, Any]:
     """Save a recipe file with version conflict detection"""
     if not path.endswith(".md"):
         path += ".md"
@@ -235,18 +211,15 @@ async def search_content(q: str, limit: int = 50) -> Dict[str, Any]:
     if not q or len(q.strip()) < 2:
         return {"query": q, "results": [], "total": 0, "duration_ms": 0}
 
-    try:
-        results = await _search_file_contents(q.strip(), limit)
-        duration_ms = int((time.time() - start_time) * 1000)
+    results = await _search_file_contents(q.strip(), limit)
+    duration_ms = int((time.time() - start_time) * 1000)
 
-        return {
-            "query": q,
-            "results": results,
-            "total": len(results),
-            "duration_ms": duration_ms,
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+    return {
+        "query": q,
+        "results": results,
+        "total": len(results),
+        "duration_ms": duration_ms,
+    }
 
 
 @router.get("/search/files")
@@ -257,18 +230,23 @@ async def search_files(q: str, limit: int = 50) -> Dict[str, Any]:
     if not q or len(q.strip()) < 1:
         return {"query": q, "results": [], "total": 0, "duration_ms": 0}
 
-    try:
-        results = await _search_filenames(q.strip(), limit)
-        duration_ms = int((time.time() - start_time) * 1000)
+    results = await _search_filenames(q.strip(), limit)
+    duration_ms = int((time.time() - start_time) * 1000)
 
-        return {
-            "query": q,
-            "results": results,
-            "total": len(results),
-            "duration_ms": duration_ms,
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"File search failed: {str(e)}")
+    return {
+        "query": q,
+        "results": results,
+        "total": len(results),
+        "duration_ms": duration_ms,
+    }
+
+
+def _sort_and_limit_results(
+    results: List[Dict[str, Any]], limit: int
+) -> List[Dict[str, Any]]:
+    """Sort results by score and apply limit"""
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return results[:limit]
 
 
 async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
@@ -276,8 +254,6 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
     results = []
     query_lower = query.lower()
     query_words = re.findall(r"\w+", query_lower)
-
-    # Get all files recursively
     all_files = await _get_all_files_recursive("")
 
     for file_info in all_files:
@@ -288,11 +264,10 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
             content = await fs_manager.read_file(file_info["path"])
             content_lower = content.lower()
 
-            # Calculate relevance score
             score = 0
             matches = []
 
-            # Exact phrase match gets highest score
+            # Exact phrase match
             if query_lower in content_lower:
                 score += 10
                 matches.append(
@@ -305,12 +280,13 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
 
             # Individual word matches
             for word in query_words:
-                if len(word) < 2:
-                    continue
-                word_count = content_lower.count(word)
-                if word_count > 0:
-                    score += word_count * 2
-                    matches.append({"type": "word", "text": word, "count": word_count})
+                if len(word) >= 2:
+                    word_count = content_lower.count(word)
+                    if word_count > 0:
+                        score += word_count * 2
+                        matches.append(
+                            {"type": "word", "text": word, "count": word_count}
+                        )
 
             # Title match bonus
             title_match = _extract_title_from_content(content)
@@ -324,9 +300,7 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
                 matches.append({"type": "filename", "text": file_info["name"]})
 
             if score > 0:
-                # Generate content preview with highlighted matches
                 preview = _generate_content_preview(content, query_words, 200)
-
                 results.append(
                     {
                         "path": file_info["path"],
@@ -338,43 +312,31 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
                 )
 
         except Exception:
-            # Skip files that can't be read
             continue
 
-    # Sort by relevance score (descending)
-    results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:limit]
+    return _sort_and_limit_results(results, limit)
 
 
 async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
     """Internal function to search filenames"""
     results = []
     query_lower = query.lower()
-
-    # Get all files recursively
     all_files = await _get_all_files_recursive("")
 
     for file_info in all_files:
         name_lower = file_info["name"].lower()
 
         # Calculate filename relevance score
-        score = 0
-
-        # Exact match gets highest score
         if query_lower == name_lower:
             score = 100
-        # Starts with query
         elif name_lower.startswith(query_lower):
             score = 50
-        # Contains query
         elif query_lower in name_lower:
             score = 25
-        # Fuzzy match (contains most characters)
         else:
-            # Simple fuzzy matching
+            # Fuzzy matching
             matched_chars = sum(1 for c in query_lower if c in name_lower)
-            if matched_chars >= len(query_lower) * 0.7:  # 70% match threshold
-                score = matched_chars * 2
+            score = matched_chars * 2 if matched_chars >= len(query_lower) * 0.7 else 0
 
         if score > 0:
             results.append(
@@ -386,9 +348,7 @@ async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
                 }
             )
 
-    # Sort by relevance score (descending)
-    results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:limit]
+    return _sort_and_limit_results(results, limit)
 
 
 async def _get_all_files_recursive(path: str) -> List[Dict[str, Any]]:
@@ -467,97 +427,75 @@ def _generate_content_preview(
 @router.get("/photos/{path:path}")
 async def get_photo(path: str) -> Response:
     """Get photo for a recipe - returns 404 if no photo exists"""
-    try:
-        # Ensure path ends with .md for consistency
-        if not path.endswith(".md"):
-            path += ".md"
+    # Ensure path ends with .md for consistency
+    if not path.endswith(".md"):
+        path += ".md"
 
-        # Check if photo exists
-        if not await fs_manager.photo_exists(path):
-            raise HTTPException(status_code=404, detail="Photo not found")
+    # Check if photo exists
+    if not await fs_manager.photo_exists(path):
+        raise HTTPException(status_code=404, detail="Photo not found")
 
-        # Read photo content
-        photo_content = await fs_manager.read_photo(path)
+    # Read photo content
+    photo_content = await fs_manager.read_photo(path)
 
-        # Return photo with appropriate headers
-        return Response(
-            content=photo_content,
-            media_type="image/jpeg",
-            headers={
-                "Cache-Control": "public, max-age=3600",
-                "Content-Disposition": f"inline; filename={path.replace('.md', '.jpeg')}",
-            },
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to retrieve photo for {path}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve photo")
+    # Return photo with appropriate headers
+    return Response(
+        content=photo_content,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "Content-Disposition": f"inline; filename={path.replace('.md', '.jpeg')}",
+        },
+    )
 
 
 @router.post("/photos/{path:path}")
 async def upload_photo(path: str, file: UploadFile = File(...)) -> Dict[str, str]:
     """Upload a photo for a recipe - only JPEG files allowed"""
-    try:
-        # Ensure path ends with .md for consistency
-        if not path.endswith(".md"):
-            path += ".md"
+    # Ensure path ends with .md for consistency
+    if not path.endswith(".md"):
+        path += ".md"
 
-        # Validate file type
-        if not file.filename or not file.filename.lower().endswith((".jpg", ".jpeg")):
-            raise HTTPException(status_code=400, detail="Only JPEG files are allowed")
+    # Validate file type
+    if not file.filename or not file.filename.lower().endswith((".jpg", ".jpeg")):
+        raise HTTPException(status_code=400, detail="Only JPEG files are allowed")
 
-        # Validate MIME type
-        if file.content_type and not file.content_type.startswith("image/jpeg"):
-            raise HTTPException(status_code=400, detail="File must be a JPEG image")
+    # Validate MIME type
+    if file.content_type and not file.content_type.startswith("image/jpeg"):
+        raise HTTPException(status_code=400, detail="File must be a JPEG image")
 
-        # Check file size (10MB limit)
-        if file.size and file.size > 10 * 1024 * 1024:
-            raise HTTPException(
-                status_code=400, detail="File size must be less than 10MB"
-            )
+    # Check file size (10MB limit)
+    if file.size and file.size > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size must be less than 10MB")
 
-        # Read file content
-        photo_content = await file.read()
+    # Read file content
+    photo_content = await file.read()
 
-        # Validate that we actually have content
-        if not photo_content:
-            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+    # Validate that we actually have content
+    if not photo_content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-        # Save photo
-        result = await fs_manager.write_photo(path, photo_content)
+    # Save photo
+    result = await fs_manager.write_photo(path, photo_content)
 
-        return {
-            "message": "Photo uploaded successfully",
-            "recipe_path": path,
-            "photo_path": result["path"],
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to upload photo for {path}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to upload photo")
+    return {
+        "message": "Photo uploaded successfully",
+        "recipe_path": path,
+        "photo_path": result["path"],
+    }
 
 
 @router.delete("/photos/{path:path}")
 async def delete_photo(path: str) -> Dict[str, str]:
     """Delete photo for a recipe"""
-    try:
-        # Ensure path ends with .md for consistency
-        if not path.endswith(".md"):
-            path += ".md"
+    # Ensure path ends with .md for consistency
+    if not path.endswith(".md"):
+        path += ".md"
 
-        # Delete photo
-        result = await fs_manager.delete_photo(path)
+    # Delete photo
+    await fs_manager.delete_photo(path)
 
-        return {"message": "Photo deleted successfully", "recipe_path": path}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to delete photo for {path}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to delete photo")
+    return {"message": "Photo deleted successfully", "recipe_path": path}
 
 
 @router.get("/recipes/{path:path}/translate", response_class=HTMLResponse)

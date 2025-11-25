@@ -15,9 +15,13 @@ def mock_fs_manager():
         # Make read_file return an async coroutine
         mock.read_file = AsyncMock()
 
+        # Make photo_exists return an async coroutine
+        mock.photo_exists = AsyncMock(return_value=False)
+
         # Mock _validate_path to return a file-like object with stat
         mock_file = mock._validate_path.return_value
         mock_file.stat.return_value.st_mtime = 1234567890.0
+        mock_file.exists.return_value = True
 
         yield mock
 
@@ -178,9 +182,9 @@ def test_translate_recipe_path_with_title(mock_fs_manager, mock_translation):
 
     assert response.status_code == 200
 
-    # Verify title was extracted and used
+    # Verify title was extracted and used (with no photo)
     mock_html.assert_called_once_with(
-        "# Pâtes Carbonara\n\n## Ingrédients", "Pasta Carbonara"
+        "# Pâtes Carbonara\n\n## Ingrédients", "Pasta Carbonara", None
     )
 
 
@@ -197,8 +201,8 @@ def test_translate_recipe_path_without_title(mock_fs_manager, mock_translation):
 
     assert response.status_code == 200
 
-    # Verify fallback title was used (path converted to title)
-    mock_html.assert_called_once_with("## Ingrédients\n\n- Farine", "Some Recipe")
+    # Verify fallback title was used (path converted to title, with no photo)
+    mock_html.assert_called_once_with("## Ingrédients\n\n- Farine", "Some Recipe", None)
 
 
 def test_translate_recipe_unexpected_error(mock_fs_manager, mock_translation):

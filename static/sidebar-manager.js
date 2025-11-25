@@ -152,47 +152,49 @@ class SidebarManager {
     });
   }
 
-  setupModal() {
-    const modal = document.getElementById("newRecipeModal");
-    const form = document.getElementById("newRecipeForm");
-    const closeBtn = document.getElementById("modalClose");
-    const cancelBtn = document.getElementById("cancelNew");
+  setupGenericModal(config) {
+    const { modalId, formId, closeBtnId, cancelBtnId, onClose, onSubmit } =
+      config;
+    const modal = document.getElementById(modalId);
+    const form = document.getElementById(formId);
+    const closeBtn = document.getElementById(closeBtnId);
+    const cancelBtn = document.getElementById(cancelBtnId);
 
-    closeBtn?.addEventListener("click", () => this.hideModal());
-    cancelBtn?.addEventListener("click", () => this.hideModal());
+    closeBtn?.addEventListener("click", () => onClose());
+    cancelBtn?.addEventListener("click", () => onClose());
 
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      await this.createNewRecipe();
+      await onSubmit();
     });
 
     // Close modal when clicking outside
     modal?.addEventListener("click", (e) => {
       if (e.target === modal) {
-        this.hideModal();
+        onClose();
       }
     });
   }
 
-  setupFolderModal() {
-    const modal = document.getElementById("newFolderModal");
-    const form = document.getElementById("newFolderForm");
-    const closeBtn = document.getElementById("folderModalClose");
-    const cancelBtn = document.getElementById("cancelNewFolder");
-
-    closeBtn?.addEventListener("click", () => this.hideFolderModal());
-    cancelBtn?.addEventListener("click", () => this.hideFolderModal());
-
-    form?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      await this.createNewFolder();
+  setupModal() {
+    this.setupGenericModal({
+      modalId: "newRecipeModal",
+      formId: "newRecipeForm",
+      closeBtnId: "modalClose",
+      cancelBtnId: "cancelNew",
+      onClose: () => this.hideModal(),
+      onSubmit: () => this.createNewRecipe(),
     });
+  }
 
-    // Close modal when clicking outside
-    modal?.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        this.hideFolderModal();
-      }
+  setupFolderModal() {
+    this.setupGenericModal({
+      modalId: "newFolderModal",
+      formId: "newFolderForm",
+      closeBtnId: "folderModalClose",
+      cancelBtnId: "cancelNewFolder",
+      onClose: () => this.hideFolderModal(),
+      onSubmit: () => this.createNewFolder(),
     });
   }
 
@@ -532,19 +534,6 @@ class SidebarManager {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
-    toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === "error" ? "var(--error-color)" : "var(--success-color)"};
-            color: white;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            z-index: 1001;
-            animation: slideIn 0.3s ease;
-            max-width: 300px;
-        `;
 
     document.body.appendChild(toast);
 

@@ -171,23 +171,6 @@ class CodeMirrorEditor {
     return this.view.state.doc.toString();
   }
 
-  clearEditor() {
-    this.cancelAutoSave();
-    this.currentFile = null;
-    this.currentVersion = null;
-    this.setContent("Start typing your recipe here...");
-    this.lastSavedContent = "";
-    this.isDirty = false;
-    this.updateUI();
-
-    // Hide editor wrapper, show welcome screen
-    const editorWrapper = document.getElementById("editorWrapper");
-    const welcomeScreen = document.getElementById("welcomeScreen");
-
-    if (editorWrapper) editorWrapper.style.display = "none";
-    if (welcomeScreen) welcomeScreen.style.display = "flex";
-  }
-
   scheduleAutoSave() {
     // Clear any existing timeout
     if (this.autoSaveTimeoutId) {
@@ -309,10 +292,6 @@ class CodeMirrorEditor {
   // Public methods for external use
   getCurrentFile() {
     return this.currentFile;
-  }
-
-  isDirtyFile() {
-    return this.isDirty;
   }
 
   focus() {

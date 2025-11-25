@@ -8,6 +8,22 @@ class UnifiedRecipeApp {
     this.mobileFileTree = null;
     this.photoManager = null;
 
+    // Cache DOM elements
+    this.elements = {
+      initialLoading: document.getElementById("initialLoading"),
+      welcomeScreen: document.getElementById("welcomeScreen"),
+      editorInterface: document.getElementById("editorInterface"),
+      sidebar: document.getElementById("sidebar"),
+      undoBtn: document.getElementById("undoBtn"),
+      renameBtn: document.getElementById("renameBtn"),
+      translateBtn: document.getElementById("translateBtn"),
+      togglePhotoBtn: document.getElementById("togglePhotoBtn"),
+      togglePhotoMobileBtn: document.getElementById("togglePhotoMobileBtn"),
+      headerActions: document.querySelector(".header-actions"),
+      actionButtons: document.querySelector(".action-buttons"),
+      fileName: document.getElementById("fileName"),
+    };
+
     this.init();
   }
 
@@ -77,15 +93,15 @@ class UnifiedRecipeApp {
 
   setupResponsiveButtons() {
     const moveButtons = () => {
-      const undoBtn = document.getElementById("undoBtn");
-      const renameBtn = document.getElementById("renameBtn");
-      const translateBtn = document.getElementById("translateBtn");
-      const togglePhotoBtn = document.getElementById("togglePhotoBtn");
-      const togglePhotoMobileBtn = document.getElementById(
-        "togglePhotoMobileBtn",
-      );
-      const headerActions = document.querySelector(".header-actions");
-      const actionButtons = document.querySelector(".action-buttons");
+      const {
+        undoBtn,
+        renameBtn,
+        translateBtn,
+        togglePhotoBtn,
+        togglePhotoMobileBtn,
+        headerActions,
+        actionButtons,
+      } = this.elements;
 
       if (
         !undoBtn ||
@@ -146,17 +162,18 @@ class UnifiedRecipeApp {
   }
 
   updateInterface() {
-    const initialLoading = document.getElementById("initialLoading");
-    const welcomeScreen = document.getElementById("welcomeScreen");
-    const editorInterface = document.getElementById("editorInterface");
-    const sidebar = document.getElementById("sidebar");
-    const undoBtn = document.getElementById("undoBtn");
-    const renameBtn = document.getElementById("renameBtn");
-    const translateBtn = document.getElementById("translateBtn");
-    const togglePhotoBtn = document.getElementById("togglePhotoBtn");
-    const togglePhotoMobileBtn = document.getElementById(
-      "togglePhotoMobileBtn",
-    );
+    const {
+      initialLoading,
+      welcomeScreen,
+      editorInterface,
+      sidebar,
+      undoBtn,
+      renameBtn,
+      translateBtn,
+      togglePhotoBtn,
+      togglePhotoMobileBtn,
+      fileName,
+    } = this.elements;
 
     // Hide initial loading
     if (initialLoading) {
@@ -169,21 +186,11 @@ class UnifiedRecipeApp {
       editorInterface.style.display = "block";
 
       // Show action buttons when file is open
-      if (undoBtn) {
-        undoBtn.style.display = "block";
-      }
-      if (renameBtn) {
-        renameBtn.style.display = "block";
-      }
-      if (translateBtn) {
-        translateBtn.style.display = "block";
-      }
-      if (togglePhotoBtn) {
-        togglePhotoBtn.style.display = "block";
-      }
-      if (togglePhotoMobileBtn) {
-        togglePhotoMobileBtn.style.display = "block";
-      }
+      if (undoBtn) undoBtn.style.display = "block";
+      if (renameBtn) renameBtn.style.display = "block";
+      if (translateBtn) translateBtn.style.display = "block";
+      if (togglePhotoBtn) togglePhotoBtn.style.display = "block";
+      if (togglePhotoMobileBtn) togglePhotoMobileBtn.style.display = "block";
 
       // Update page info
       this.updatePageInfo();
@@ -193,28 +200,18 @@ class UnifiedRecipeApp {
       editorInterface.style.display = "none";
 
       // Hide action buttons when no file is open
-      if (undoBtn) {
-        undoBtn.style.display = "none";
-      }
-      if (renameBtn) {
-        renameBtn.style.display = "none";
-      }
-      if (translateBtn) {
-        translateBtn.style.display = "none";
-      }
-      if (togglePhotoBtn) {
-        togglePhotoBtn.style.display = "none";
-      }
-      if (togglePhotoMobileBtn) {
-        togglePhotoMobileBtn.style.display = "none";
-      }
+      if (undoBtn) undoBtn.style.display = "none";
+      if (renameBtn) renameBtn.style.display = "none";
+      if (translateBtn) translateBtn.style.display = "none";
+      if (togglePhotoBtn) togglePhotoBtn.style.display = "none";
+      if (togglePhotoMobileBtn) togglePhotoMobileBtn.style.display = "none";
 
       // Ensure sidebar is visible in welcome mode
       sidebar.classList.add("sidebar-open");
 
       // Update title
       document.title = "Recipe Manager";
-      document.getElementById("fileName").textContent = "Recipe Manager";
+      fileName.textContent = "Recipe Manager";
     }
   }
 
