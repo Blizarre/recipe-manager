@@ -63,10 +63,11 @@ def test_update_file():
     """Test updating a file"""
     # Create a file
     file_content = {"content": "Original content"}
-    client.post("/api/files/update_test.md", json=file_content)
+    create_response = client.post("/api/files/update_test.md", json=file_content)
+    version = create_response.json()["version"]
 
     # Update the file
-    updated_content = {"content": "Updated content"}
+    updated_content = {"content": "Updated content", "version": version}
     response = client.put("/api/files/update_test.md", json=updated_content)
     assert response.status_code == 200
 

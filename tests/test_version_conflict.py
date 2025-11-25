@@ -4,17 +4,17 @@ Test script to verify version conflict detection works properly.
 This creates a test recipe, simulates concurrent modifications, and tests conflict detection.
 """
 
+import pytest
 import asyncio
 import os
 import tempfile
-import json
-from pathlib import Path
 from api.filesystem import FileSystemManager
 from api.routes import router
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
 
+@pytest.mark.asyncio
 async def test_version_conflict():
     """Test version conflict detection end-to-end"""
 
@@ -47,20 +47,21 @@ async def test_version_conflict():
         # Simulate second user trying to modify with old version (should conflict)
         modified_content2 = initial_content + "\n- Different ingredient"
 
+        conflict_detected = False
         try:
             await fs_manager.write_file(
                 test_path, modified_content2, file_data["version"]
             )
             print("ERROR: Version conflict not detected!")
-            return False
         except Exception as e:
             if "version_conflict" in str(e):
                 print("SUCCESS: Version conflict detected correctly!")
                 print(f"Conflict details: {e}")
-                return True
+                conflict_detected = True
             else:
                 print(f"ERROR: Unexpected error: {e}")
-                return False
+
+        assert conflict_detected, "Version conflict should have been detected"
 
 
 def test_api_endpoints():
@@ -103,14 +104,12 @@ def test_api_endpoints():
             },
         )
 
-        if response.status_code == 409:
-            error_detail = response.json()["detail"]
-            print("API: Version conflict detected correctly!")
-            print(f"API: Conflict details: {error_detail}")
-            return True
-        else:
-            print(f"API ERROR: Expected 409, got {response.status_code}")
-            return False
+        assert (
+            response.status_code == 409
+        ), f"Expected 409 conflict, got {response.status_code}"
+        error_detail = response.json()["detail"]
+        print("API: Version conflict detected correctly!")
+        print(f"API: Conflict details: {error_detail}")
 
 
 if __name__ == "__main__":

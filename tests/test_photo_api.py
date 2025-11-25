@@ -3,9 +3,7 @@ from fastapi.testclient import TestClient
 from io import BytesIO
 import tempfile
 import shutil
-from pathlib import Path
 from main import app
-from api.filesystem import FileSystemManager
 
 
 @pytest.fixture
