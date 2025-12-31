@@ -228,8 +228,7 @@ body {
 
 /* Shared scrollbar styles */
 .file-tree-container::-webkit-scrollbar,
-.search-results-list::-webkit-scrollbar,
-.codemirror-container .cm-scroller::-webkit-scrollbar {
+.search-results-list::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
@@ -240,20 +239,14 @@ body {
 }
 
 .file-tree-container::-webkit-scrollbar-thumb,
-.search-results-list::-webkit-scrollbar-thumb,
-.codemirror-container .cm-scroller::-webkit-scrollbar-thumb {
+.search-results-list::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
 }
 
 .file-tree-container::-webkit-scrollbar-thumb:hover,
-.search-results-list::-webkit-scrollbar-thumb:hover,
-.codemirror-container .cm-scroller::-webkit-scrollbar-thumb:hover {
+.search-results-list::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
-}
-
-.codemirror-container .cm-scroller::-webkit-scrollbar-track {
-  background: var(--surface);
 }
 
 /* Drag and Drop Styles */
@@ -776,49 +769,6 @@ body {
   flex-direction: column;
   min-height: 0;
 }
-
-.codemirror-container {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* Allow flex item to shrink */
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--surface);
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
-}
-
-.codemirror-container.focused {
-  border-color: var(--primary-color);
-  box-shadow:
-    0 0 0 3px rgba(99, 102, 241, 0.1),
-    var(--shadow-md);
-}
-
-/* CodeMirror editor styling */
-.codemirror-container .cm-editor {
-  width: 100%;
-  height: calc(100vh - 140px);
-  border: none;
-  outline: none;
-  background: var(--background);
-}
-
-.codemirror-container .cm-content {
-  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-.codemirror-container .cm-focused {
-  outline: none;
-}
-
-/* CodeMirror editor styling is handled via HighlightStyle in codemirror-editor.js */
 
 /* Standalone Editor Page Layout */
 .editor-app-container {
@@ -1616,5 +1566,64 @@ body.keyboard-open .modal {
   to {
     opacity: 0;
     transform: translateY(-20px);
+  }
+}
+
+/* EasyMDE Editor - minimal layout styles only */
+.easymde-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.easymde-container .EasyMDEContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.easymde-container .EasyMDEContainer .CodeMirror {
+  flex: 1;
+  height: auto !important;
+  min-height: calc(100vh - 200px);
+}
+
+.easymde-container .editor-statusbar {
+  display: none;
+}
+
+/* Override EasyMDE's large responsive header sizes */
+.cm-s-easymde .cm-header-1,
+.cm-s-easymde .cm-header-2,
+.cm-s-easymde .cm-header-3,
+.cm-s-easymde .cm-header-4,
+.cm-s-easymde .cm-header-5,
+.cm-s-easymde .cm-header-6 {
+  color: #1e40af !important;
+}
+
+.cm-s-easymde .cm-header-1 {
+  font-size: 1.4rem !important;
+}
+
+.cm-s-easymde .cm-header-2 {
+  font-size: 1.25rem !important;
+}
+
+.cm-s-easymde .cm-header-3 {
+  font-size: 1.15rem !important;
+}
+
+.cm-s-easymde .cm-header-4,
+.cm-s-easymde .cm-header-5,
+.cm-s-easymde .cm-header-6 {
+  font-size: 1.05rem !important;
+}
+
+@media (max-width: 768px) {
+  .easymde-container .EasyMDEContainer .CodeMirror {
+    min-height: calc(100vh - 250px);
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }

@@ -15,65 +15,13 @@
       rel="stylesheet"
     />
 
-    <!-- CodeMirror 6 modules -->
-    <script type="module">
-      import { EditorView } from "https://esm.sh/@codemirror/view";
-      import { EditorState, Compartment } from "https://esm.sh/@codemirror/state";
-      import { basicSetup } from "https://esm.sh/codemirror";
-      import { markdown } from "https://esm.sh/@codemirror/lang-markdown";
-      import {
-        HighlightStyle,
-        syntaxHighlighting,
-      } from "https://esm.sh/@codemirror/language";
-      import { tags } from "https://esm.sh/@lezer/highlight";
-      import {
-        history,
-        undo,
-        redo,
-        undoDepth,
-        redoDepth,
-      } from "https://esm.sh/@codemirror/commands";
-
-      // Create custom highlight style for markdown
-      const markdownHighlighting = HighlightStyle.define([
-        {
-          tag: tags.heading1,
-          color: "#1e40af",
-          fontWeight: "bold",
-          fontSize: "1.2em",
-        },
-        {
-          tag: tags.heading2,
-          color: "#1e40af",
-          fontWeight: "bold",
-          fontSize: "1.1em",
-        },
-        { tag: tags.heading3, color: "#1e40af", fontWeight: "bold" },
-        { tag: tags.heading4, color: "#1e40af", fontWeight: "bold" },
-        { tag: tags.heading5, color: "#1e40af", fontWeight: "bold" },
-        { tag: tags.heading6, color: "#1e40af", fontWeight: "bold" },
-        { tag: tags.heading, color: "#1e40af", fontWeight: "bold" },
-      ]);
-
-      // Make CodeMirror available globally
-      window.CodeMirror = {
-        EditorView,
-        EditorState,
-        Compartment,
-        basicSetup,
-        markdown,
-        syntaxHighlighting,
-        markdownHighlighting,
-        history,
-        undo,
-        redo,
-        undoDepth,
-        redoDepth,
-      };
-
-      // Signal that CodeMirror is ready
-      window.CodeMirrorReady = true;
-      window.dispatchEvent(new Event("codemirror-ready"));
+    <!-- EasyMDE Markdown Editor -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script>
+      // Signal that EasyMDE is ready for app initialization
+      window.EditorReady = true;
+      window.dispatchEvent(new Event("editor-ready"));
     </script>
   </head>
   <body>
@@ -299,8 +247,8 @@
               
               <!-- Editor Panel -->
               <div class="editor-panel" id="editorPanel" style="display: none">
-                <div class="codemirror-container" id="editorContainer">
-                  <div id="editor"></div>
+                <div class="easymde-container" id="editorContainer">
+                  <textarea id="editor"></textarea>
                 </div>
               </div>
               
@@ -469,7 +417,7 @@
     <script src="{{ url_for('static', path='search.js') }}"></script>
     <script src="{{ url_for('static', path='touch-gestures.js') }}"></script>
     <script src="{{ url_for('static', path='sidebar-manager.js') }}"></script>
-    <script src="{{ url_for('static', path='codemirror-editor.js') }}"></script>
+    <script src="{{ url_for('static', path='easymde-editor.js') }}"></script>
     <script src="{{ url_for('static', path='photo-manager.js') }}"></script>
     <script src="{{ url_for('static', path='unified-app.js') }}"></script>
   </body>

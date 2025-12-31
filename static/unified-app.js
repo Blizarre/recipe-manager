@@ -234,12 +234,12 @@ class UnifiedRecipeApp {
   }
 
   async initializeEditorMode() {
-    // Initialize editor when CodeMirror is ready
-    if (window.CodeMirrorReady) {
+    // Initialize editor when EasyMDE is ready
+    if (window.EditorReady) {
       await this.setupEditor();
       this.loadRecipeContent();
     } else {
-      window.addEventListener("codemirror-ready", async () => {
+      window.addEventListener("editor-ready", async () => {
         await this.setupEditor();
         this.loadRecipeContent();
       });
@@ -249,7 +249,7 @@ class UnifiedRecipeApp {
   async setupEditor() {
     try {
       const editorContainer = document.getElementById("editorContainer");
-      this.editor = new CodeMirrorEditor(editorContainer, () =>
+      this.editor = new MarkdownEditor(editorContainer, () =>
         this.onContentChange(),
       );
     } catch (error) {
@@ -308,6 +308,11 @@ class UnifiedRecipeApp {
       editorStatus.style.display = "block";
     }
 
+    // Refresh editor after it becomes visible
+    if (this.editor) {
+      this.editor.refresh();
+    }
+
     // Load photo for the current recipe
     if (this.photoManager && this.currentFile) {
       this.photoManager.setCurrentRecipe(this.currentFile);
@@ -331,7 +336,7 @@ class UnifiedRecipeApp {
 
   onContentChange() {
     // Called when editor content changes
-    // The CodeMirrorEditor class handles auto-save and UI updates
+    // The MarkdownEditor class handles auto-save and UI updates
   }
 
   // Handle file operations that affect current URL
