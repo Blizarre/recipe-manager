@@ -33,7 +33,9 @@ class MarkdownEditor {
     try {
       this.editor = new EasyMDE({
         element: editorElement,
-        spellChecker: false,
+        spellChecker: false, // Disable JS-based spell checker
+        nativeSpellcheck: true, // Enable native browser spellcheck
+        inputStyle: "contenteditable", // Better mobile keyboard support
         autofocus: false,
         placeholder: "Start typing your recipe here...",
         status: false,
@@ -45,6 +47,14 @@ class MarkdownEditor {
         lineWrapping: true,
         minHeight: "calc(100vh - 200px)",
       });
+
+      // Enable mobile keyboard features (autocorrect, autocapitalize)
+      const cmElement = this.editor.codemirror.getInputField();
+      if (cmElement) {
+        cmElement.setAttribute("autocorrect", "on");
+        cmElement.setAttribute("autocapitalize", "sentences");
+        cmElement.setAttribute("spellcheck", "true");
+      }
 
       // Poll for changes (avoids accessing internal codemirror for change events)
       this.lastContent = this.editor.value();
