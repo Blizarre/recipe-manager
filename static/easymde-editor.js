@@ -45,7 +45,7 @@ class MarkdownEditor {
           codeSyntaxHighlighting: true,
         },
         lineWrapping: true,
-        minHeight: "calc(100vh - 200px)",
+        autoRefresh: { delay: 300 }, // Auto-refresh when editor becomes visible
       });
 
       // Enable mobile keyboard features (autocorrect, autocapitalize)
@@ -56,18 +56,13 @@ class MarkdownEditor {
         cmElement.setAttribute("spellcheck", "true");
       }
 
-      // Poll for changes (avoids accessing internal codemirror for change events)
-      this.lastContent = this.editor.value();
-      this.pollInterval = setInterval(() => {
-        const currentContent = this.editor.value();
-        if (currentContent !== this.lastContent) {
-          this.lastContent = currentContent;
-          this.isDirty = true;
-          this.onContentChange?.();
-          this.scheduleAutoSave();
-          this.updateUI();
-        }
-      }, 300);
+      // Listen to CodeMirror change events
+      this.editor.codemirror.on("change", () => {
+        this.isDirty = true;
+        this.onContentChange?.();
+        this.scheduleAutoSave();
+        this.updateUI();
+      });
 
       this.setupBeforeUnloadWarning();
     } catch (error) {
@@ -89,7 +84,6 @@ class MarkdownEditor {
   setContent(content) {
     if (!this.editor) return;
     this.editor.value(content);
-    this.lastContent = content;
     this.updateCharCount();
   }
 
@@ -209,13 +203,6 @@ class MarkdownEditor {
     return this.currentFile;
   }
 
-  refresh() {
-    // Trigger EasyMDE to recalculate layout
-    if (this.editor && this.editor.codemirror) {
-      this.editor.codemirror.refresh();
-    }
-  }
-
   showConflictWarning() {
     // Disable the textarea directly
     const textarea = document.getElementById("editor");
@@ -267,9 +254,6 @@ class MarkdownEditor {
 
   destroy() {
     this.cancelAutoSave();
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-    }
     if (this.editor) {
       this.editor.toTextArea();
       this.editor = null;

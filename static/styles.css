@@ -80,7 +80,6 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   font-size: 14px;
-  overflow: auto; /* Ensure scrollbars can appear */
 }
 
 /* Shared border styles */
@@ -103,8 +102,8 @@ body {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: 1fr;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* Mobile Header */
@@ -199,9 +198,6 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
 
@@ -222,8 +218,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 8px 0;
-  min-height: 0; /* Allow flex item to shrink */
-  height: 100%;
+  min-height: 0;
 }
 
 /* Shared scrollbar styles */
@@ -596,8 +591,6 @@ body {
 .main-content {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
 }
 
 .editor-header {
@@ -640,12 +633,12 @@ body {
   gap: 8px;
 }
 
+.editor-interface {
+  flex: 1;
+}
+
 .editor-container {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0; /* Allow flex item to shrink */
 }
 
 .welcome-screen {
@@ -759,15 +752,10 @@ body {
 
 .editor-wrapper {
   flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .editor-panel {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 /* Standalone Editor Page Layout */
@@ -1349,20 +1337,24 @@ body.keyboard-open .modal {
   }
 
   .app-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: var(--header-height) 1fr;
+    display: block;
+    padding-top: var(--header-height);
   }
 
   .mobile-header {
     display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
   }
 
   .sidebar {
     position: fixed;
     top: var(--header-height);
     left: 0;
+    bottom: 0;
     width: var(--sidebar-width);
-    height: calc(100vh - var(--header-height));
     z-index: 95;
     transform: translateX(-100%);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1373,12 +1365,6 @@ body.keyboard-open .modal {
   .sidebar.active {
     transform: translateX(0);
     box-shadow: var(--shadow-lg);
-  }
-
-  .main-content {
-    grid-column: 1;
-    grid-row: 2;
-    height: calc(100vh - var(--header-height));
   }
 
   /* Show mobile file tree, hide desktop welcome */
@@ -1569,26 +1555,7 @@ body.keyboard-open .modal {
   }
 }
 
-/* EasyMDE Editor - minimal layout styles only */
-.easymde-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.easymde-container .EasyMDEContainer {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.easymde-container .EasyMDEContainer .CodeMirror {
-  flex: 1;
-  height: auto !important;
-  min-height: calc(100vh - 200px);
-}
-
+/* EasyMDE Editor */
 .easymde-container .editor-statusbar {
   display: none;
 }
@@ -1623,7 +1590,6 @@ body.keyboard-open .modal {
 
 @media (max-width: 768px) {
   .easymde-container .EasyMDEContainer .CodeMirror {
-    min-height: calc(100vh - 250px);
     font-size: 16px; /* Prevents zoom on iOS */
   }
 }

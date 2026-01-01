@@ -308,11 +308,6 @@ class UnifiedRecipeApp {
       editorStatus.style.display = "block";
     }
 
-    // Refresh editor after it becomes visible
-    if (this.editor) {
-      this.editor.refresh();
-    }
-
     // Load photo for the current recipe
     if (this.photoManager && this.currentFile) {
       this.photoManager.setCurrentRecipe(this.currentFile);
