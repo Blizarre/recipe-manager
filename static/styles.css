@@ -199,6 +199,8 @@ body {
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
+  max-height: 100vh;
+  max-height: 100dvh;
 }
 
 .sidebar-header {

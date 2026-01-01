@@ -46,6 +46,7 @@ class MarkdownEditor {
         },
         lineWrapping: true,
         autoRefresh: { delay: 300 }, // Auto-refresh when editor becomes visible
+        maxHeight: this.calculateMaxHeight(),
       });
 
       // Enable mobile keyboard features (autocorrect, autocapitalize)
@@ -63,6 +64,10 @@ class MarkdownEditor {
         this.scheduleAutoSave();
         this.updateUI();
       });
+
+      // Update editor height on window resize
+      this.resizeHandler = () => this.updateEditorHeight();
+      window.addEventListener("resize", this.resizeHandler);
 
       this.setupBeforeUnloadWarning();
     } catch (error) {
@@ -203,6 +208,22 @@ class MarkdownEditor {
     return this.currentFile;
   }
 
+  calculateMaxHeight() {
+    const isMobile = window.innerWidth <= 768;
+    const headerHeight = isMobile ? 60 : 80;
+    const footerHeight = 40;
+    return `${window.innerHeight - headerHeight - footerHeight}px`;
+  }
+
+  updateEditorHeight() {
+    if (this.editor && this.editor.codemirror) {
+      const wrapper = this.editor.codemirror.getWrapperElement();
+      if (wrapper) {
+        wrapper.style.maxHeight = this.calculateMaxHeight();
+      }
+    }
+  }
+
   showConflictWarning() {
     // Disable the textarea directly
     const textarea = document.getElementById("editor");
@@ -254,6 +275,9 @@ class MarkdownEditor {
 
   destroy() {
     this.cancelAutoSave();
+    if (this.resizeHandler) {
+      window.removeEventListener("resize", this.resizeHandler);
+    }
     if (this.editor) {
       this.editor.toTextArea();
       this.editor = null;
