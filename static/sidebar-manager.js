@@ -282,32 +282,6 @@ class SidebarManager {
   }
 
   setupVirtualKeyboardHandling() {
-    // Handle virtual keyboard show/hide
-    let initialViewportHeight = window.visualViewport
-      ? window.visualViewport.height
-      : window.innerHeight;
-
-    const handleViewportChange = () => {
-      if (window.visualViewport) {
-        const currentHeight = window.visualViewport.height;
-        const heightDiff = initialViewportHeight - currentHeight;
-
-        // If keyboard is likely open (height reduced by more than 150px)
-        if (heightDiff > 150) {
-          document.body.classList.add("keyboard-open");
-        } else {
-          document.body.classList.remove("keyboard-open");
-        }
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", handleViewportChange);
-    } else {
-      // Fallback for older browsers
-      window.addEventListener("resize", handleViewportChange);
-    }
-
     // Scroll input into view when focused
     const inputs = document.querySelectorAll("input, textarea");
     inputs.forEach((input) => {

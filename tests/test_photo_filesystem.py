@@ -63,21 +63,6 @@ async def test_photo_write_and_read(temp_filesystem):
 
 
 @pytest.mark.asyncio
-async def test_photo_path_generation(temp_filesystem):
-    """Test that photo paths are generated correctly"""
-    fs = temp_filesystem
-
-    # Test basic path
-    photo_path = await fs.get_photo_path("recipe1.md")
-    assert photo_path == "recipe1.jpeg"
-
-    # Test subdirectory path
-    await fs.create_directory("subdir")
-    photo_path = await fs.get_photo_path("subdir/recipe2.md")
-    assert photo_path == "subdir/recipe2.jpeg"
-
-
-@pytest.mark.asyncio
 async def test_photo_move_functionality(temp_filesystem):
     """Test moving photos with recipes"""
     fs = temp_filesystem

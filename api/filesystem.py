@@ -2,9 +2,7 @@ import aiofiles
 from pathlib import Path
 from fastapi import HTTPException
 from typing import List, Dict, Any
-import re
 import logging
-import os.path
 
 
 class FileSystemManager:
@@ -22,7 +20,7 @@ class FileSystemManager:
     def _validate_path(self, path: str) -> Path:
         """Validate and sanitize file paths to prevent directory traversal"""
         # Remove any path traversal attempts
-        clean_path = re.sub(r"\.\./", "", path)
+        clean_path = path.replace("../", "")
         clean_path = clean_path.strip("/")
 
         # Resolve the full path and ensure it's within base_dir
@@ -194,7 +192,7 @@ class FileSystemManager:
         recipe_file_path = self._validate_path(recipe_path)
 
         # Change extension from .md to .jpeg
-        photo_name = os.path.splitext(recipe_file_path.name)[0] + ".jpeg"
+        photo_name = recipe_file_path.stem + ".jpeg"
         photo_path = recipe_file_path.parent / photo_name
 
         return photo_path
@@ -209,11 +207,6 @@ class FileSystemManager:
                 f"Error checking photo existence for {recipe_path}: {str(e)}"
             )
             return False
-
-    async def get_photo_path(self, recipe_path: str) -> str:
-        """Get the relative photo path for a recipe"""
-        photo_path = self._get_photo_path_for_recipe(recipe_path)
-        return str(photo_path.relative_to(self.base_dir))
 
     async def write_photo(
         self, recipe_path: str, photo_content: bytes

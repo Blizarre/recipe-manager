@@ -5,7 +5,6 @@ This creates a test recipe, simulates concurrent modifications, and tests confli
 """
 
 import pytest
-import asyncio
 import os
 import tempfile
 from api.filesystem import FileSystemManager
@@ -110,17 +109,3 @@ def test_api_endpoints():
         error_detail = response.json()["detail"]
         print("API: Version conflict detected correctly!")
         print(f"API: Conflict details: {error_detail}")
-
-
-if __name__ == "__main__":
-    print("Testing version conflict detection system...")
-    print("\n1. Testing filesystem layer:")
-    success1 = asyncio.run(test_version_conflict())
-
-    print("\n2. Testing API layer:")
-    success2 = test_api_endpoints()
-
-    if success1 and success2:
-        print("\n✅ All tests passed! Version conflict detection is working correctly.")
-    else:
-        print("\n❌ Some tests failed. Please check the implementation.")

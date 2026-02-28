@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form, File, UploadFile
+from fastapi import APIRouter, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -84,30 +84,6 @@ async def delete_file(path: str) -> Dict[str, str]:
     return await fs_manager.delete_file(path)
 
 
-@router.get("/directories")
-async def get_directory_tree(path: str = "") -> Dict[str, Any]:
-    """Get directory tree structure"""
-    items = await fs_manager.list_directory(path)
-
-    # Build tree structure
-    tree = {
-        "name": path if path else "recipes",
-        "path": path,
-        "type": "directory",
-        "children": [],
-    }
-
-    for item in items:
-        if item["type"] == "directory":
-            # Recursively get subdirectories (limiting depth for performance)
-            subdir_path = f"{path}/{item['name']}" if path else item["name"]
-            sub_items = await fs_manager.list_directory(subdir_path)
-            item["children"] = [x for x in sub_items if x["type"] == "directory"]
-        tree["children"].append(item)
-
-    return tree
-
-
 @router.post("/directories/{path:path}")
 async def create_directory(path: str) -> Dict[str, str]:
     """Create a new directory"""
@@ -130,21 +106,6 @@ async def delete_directory(path: str) -> Dict[str, str]:
 
     dir_path.rmdir()
     return {"message": "Directory deleted successfully"}
-
-
-@router.post("/upload")
-async def upload_file(
-    file: UploadFile = File(...), path: str = Form(...)
-) -> Dict[str, str]:
-    """Upload a file to the specified path"""
-    try:
-        content = await file.read()
-        content_str = content.decode("utf-8")
-        return await fs_manager.write_file(path, content_str)
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="File must be valid UTF-8 text")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
 
 # Recipe-specific endpoints
@@ -184,21 +145,6 @@ async def create_recipe(path: str) -> Dict[str, Any]:
     return await fs_manager.write_file(path, content)
 
 
-class SearchResult(BaseModel):
-    path: str
-    title: str
-    content_preview: str
-    score: float
-    matches: List[Dict[str, Any]]
-
-
-class FileSearchResult(BaseModel):
-    path: str
-    name: str
-    type: str
-    score: float
-
-
 @router.get("/search")
 async def search_content(q: str, limit: int = 50) -> Dict[str, Any]:
     """Search for content within recipe files"""
@@ -235,14 +181,6 @@ async def search_files(q: str, limit: int = 50) -> Dict[str, Any]:
         "total": len(results),
         "duration_ms": duration_ms,
     }
-
-
-def _sort_and_limit_results(
-    results: List[Dict[str, Any]], limit: int
-) -> List[Dict[str, Any]]:
-    """Sort results by score and apply limit"""
-    results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:limit]
 
 
 async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
@@ -310,7 +248,8 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
         except Exception:
             continue
 
-    return _sort_and_limit_results(results, limit)
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return results[:limit]
 
 
 async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
@@ -344,7 +283,8 @@ async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
                 }
             )
 
-    return _sort_and_limit_results(results, limit)
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return results[:limit]
 
 
 async def _get_all_files_recursive(path: str) -> List[Dict[str, Any]]:

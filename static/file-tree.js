@@ -285,15 +285,6 @@ class FileTree {
     return await window.api.listFiles(path);
   }
 
-  clearSelection() {
-    this.container
-      .querySelectorAll(".file-tree-item.active")
-      .forEach((item) => {
-        item.classList.remove("active");
-      });
-    this.selectedPath = null;
-  }
-
   async createFile(path, isDirectory = false) {
     try {
       if (isDirectory) {
@@ -311,43 +302,6 @@ class FileTree {
       throw new Error(
         `Failed to create ${isDirectory ? "folder" : "file"}: ${error.message}`,
       );
-    }
-  }
-
-  async deleteFile(path, isDirectory = false) {
-    try {
-      if (isDirectory) {
-        await window.api.deleteDirectory(path);
-      } else {
-        await window.api.deleteFile(path);
-      }
-
-      // Clear selection if deleted file was selected
-      if (this.selectedPath === path) {
-        this.clearSelection();
-        this.onFileSelect?.(null);
-      }
-
-      await this.refresh();
-    } catch (error) {
-      throw new Error(
-        `Failed to delete ${isDirectory ? "folder" : "file"}: ${error.message}`,
-      );
-    }
-  }
-
-  async renameFile(oldPath, newPath) {
-    try {
-      await window.api.moveFile(oldPath, newPath);
-
-      // Update selection if renamed file was selected
-      if (this.selectedPath === oldPath) {
-        this.selectedPath = newPath;
-      }
-
-      await this.refresh();
-    } catch (error) {
-      throw new Error(`Failed to rename file: ${error.message}`);
     }
   }
 
@@ -537,7 +491,8 @@ class FileTree {
     e.dataTransfer.setDragImage(emptyImg, 0, 0);
 
     // Track mouse movement to update ghost position
-    document.addEventListener("dragover", this.updateDragGhost.bind(this));
+    this._boundUpdateDragGhost = this.updateDragGhost.bind(this);
+    document.addEventListener("dragover", this._boundUpdateDragGhost);
   }
 
   updateDragGhost(e) {
@@ -549,7 +504,7 @@ class FileTree {
 
   removeDragGhost() {
     if (this.dragGhost) {
-      document.removeEventListener("dragover", this.updateDragGhost.bind(this));
+      document.removeEventListener("dragover", this._boundUpdateDragGhost);
       this.dragGhost.remove();
       this.dragGhost = null;
     }
