@@ -297,16 +297,12 @@ class UnifiedRecipeApp {
   showEditorContent() {
     const editorLoading = document.getElementById("editorLoading");
     const editorPanel = document.getElementById("editorPanel");
-    const editorStatus = document.querySelector(".editor-status");
 
     if (editorLoading) {
       editorLoading.style.display = "none";
     }
     if (editorPanel) {
       editorPanel.style.display = "block";
-    }
-    if (editorStatus) {
-      editorStatus.style.display = "block";
     }
 
     // Load photo for the current recipe
@@ -509,7 +505,7 @@ class UnifiedRecipeApp {
 
 // Initialize the unified app
 document.addEventListener("DOMContentLoaded", () => {
-  new UnifiedRecipeApp();
+  window.app = new UnifiedRecipeApp();
 });
 
 // Handle browser back/forward navigation
