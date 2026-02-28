@@ -36,17 +36,18 @@ class FileTree {
   }
 
   showLoading() {
-    this.container.innerHTML = '<div class="loading">Loading recipes...</div>';
+    this.container.innerHTML =
+      '<div class="p-5 text-center text-gray-400 italic">Loading recipes...</div>';
   }
 
   showError(message) {
-    this.container.innerHTML = `<div class="loading" style="color: var(--error-color);">${message}</div>`;
+    this.container.innerHTML = `<div class="p-5 text-center text-red-500 italic">${message}</div>`;
   }
 
   render() {
     if (this.files.length === 0) {
       this.container.innerHTML =
-        '<div class="loading">No recipes found. Create your first recipe!</div>';
+        '<div class="p-5 text-center text-gray-400 italic">No recipes found. Create your first recipe!</div>';
       return;
     }
 
@@ -99,7 +100,7 @@ class FileTree {
 
     dirElement.innerHTML = `
             <input type="checkbox" class="file-tree-checkbox" data-path="${directory.path}">
-            <span class="expand-icon">${isExpanded ? "▼" : "▶"}</span>
+            <span class="expand-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             <span class="icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -150,7 +151,7 @@ class FileTree {
           this.renderTree(childTree, childrenContainer, level + 1);
         })
         .catch((error) => {
-          childrenContainer.innerHTML = `<div class="loading" style="color: var(--error-color); padding-left: ${36 + level * 20}px;">Error loading folder</div>`;
+          childrenContainer.innerHTML = `<div class="loading" style="color: #ef4444; padding-left: ${36 + level * 20}px;">Error loading folder</div>`;
         });
 
       container.appendChild(childrenContainer);
@@ -251,14 +252,16 @@ class FileTree {
 
       // Update icon
       const expandIcon = element.querySelector(".expand-icon");
-      expandIcon.textContent = "▶";
+      expandIcon.innerHTML =
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
     } else {
       this.expandedFolders.add(path);
       element.classList.add("expanded");
 
       // Update icon
       const expandIcon = element.querySelector(".expand-icon");
-      expandIcon.textContent = "▼";
+      expandIcon.innerHTML =
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
       // Add children container
       const childrenContainer = document.createElement("div");
@@ -273,34 +276,13 @@ class FileTree {
         const currentLevel = Math.floor((parseInt(level) - 16) / 20);
         this.renderTree(childTree, childrenContainer, currentLevel + 1);
       } catch (error) {
-        childrenContainer.innerHTML = `<div class="loading" style="color: var(--error-color);">Error loading folder</div>`;
+        childrenContainer.innerHTML = `<div class="loading" style="color: #ef4444;">Error loading folder</div>`;
       }
     }
   }
 
   async loadDirectoryContents(path) {
     return await window.api.listFiles(path);
-  }
-
-  selectFile(path, element) {
-    // Remove previous selection
-    this.container
-      .querySelectorAll(".file-tree-item.active")
-      .forEach((item) => {
-        item.classList.remove("active");
-      });
-
-    // Add selection to clicked item
-    element.classList.add("active");
-    this.selectedPath = path;
-
-    // Notify parent
-    this.onFileSelect?.(path);
-  }
-
-  // Public methods
-  getSelectedPath() {
-    return this.selectedPath;
   }
 
   clearSelection() {
@@ -367,39 +349,6 @@ class FileTree {
     } catch (error) {
       throw new Error(`Failed to rename file: ${error.message}`);
     }
-  }
-
-  // Real-time update methods
-  notifyFileChanged(path) {
-    // Update the visual indicator for the changed file
-    const fileElements = this.container.querySelectorAll(
-      ".file-tree-item.file",
-    );
-    fileElements.forEach((element) => {
-      const nameElement = element.querySelector(".name");
-      if (nameElement && this.getFullPathFromElement(element) === path) {
-        // Add a subtle visual indicator that the file was updated
-        element.classList.add("recently-updated");
-        setTimeout(() => {
-          element.classList.remove("recently-updated");
-        }, 2000);
-      }
-    });
-  }
-
-  getFullPathFromElement(element) {
-    const nameElement = element.querySelector(".name");
-    return nameElement ? nameElement.textContent : "";
-  }
-
-  // Debounced refresh for performance
-  scheduleRefresh() {
-    if (this.refreshTimeout) {
-      clearTimeout(this.refreshTimeout);
-    }
-    this.refreshTimeout = setTimeout(() => {
-      this.refresh();
-    }, 1000);
   }
 
   // Drag and Drop functionality

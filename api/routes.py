@@ -33,10 +33,6 @@ class FileMoveRequest(BaseModel):
     destination: str
 
 
-class DirectoryCreate(BaseModel):
-    path: str
-
-
 @router.get("/files")
 async def list_files(path: str = "") -> List[Dict[str, Any]]:
     """List files and directories at the specified path"""

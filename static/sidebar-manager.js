@@ -29,12 +29,12 @@ class SidebarManager {
       this.handleFileSelect(path),
     );
 
-    // Initialize search component
-    this.search = new SearchComponent((path) => this.handleFileSelect(path));
+    // Initialize search
+    this.setupSearch();
 
-    // Initialize touch gestures (mobile only)
+    // Mobile-specific setup
     if (window.innerWidth <= 768) {
-      this.touchGestures = new TouchGesturesHandler(this);
+      this.setupOverlayTouch();
       this.setupVirtualKeyboardHandling();
     }
   }
@@ -112,6 +112,173 @@ class SidebarManager {
 
     // Store toggle function for external use
     this.toggleMobileMenu = toggleMobileMenu;
+  }
+
+  setupOverlayTouch() {
+    const overlay = document.getElementById("overlay");
+    overlay?.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        this.toggleMobileMenu();
+      },
+      { passive: false },
+    );
+  }
+
+  // Search functionality (merged from SearchComponent)
+  setupSearch() {
+    this.isSearching = false;
+    this.currentQuery = "";
+    this.currentSearchType = "content";
+
+    const searchInput = document.getElementById("searchInput");
+    const searchClear = document.getElementById("searchClear");
+    const searchFilters = document.querySelectorAll('input[name="searchType"]');
+
+    searchInput?.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+      this.currentQuery = query;
+      searchClear.style.display = query ? "block" : "none";
+
+      if (query.length >= 2) {
+        this.performSearch(query, this.currentSearchType);
+      } else if (query.length === 0) {
+        this.clearSearch();
+      }
+    });
+
+    searchClear?.addEventListener("click", () => {
+      searchInput.value = "";
+      this.currentQuery = "";
+      searchClear.style.display = "none";
+      this.clearSearch();
+      searchInput.focus();
+    });
+
+    searchFilters.forEach((filter) => {
+      filter.addEventListener("change", (e) => {
+        this.currentSearchType = e.target.value;
+        if (this.currentQuery && this.currentQuery.length >= 2) {
+          this.performSearch(this.currentQuery, this.currentSearchType);
+        }
+      });
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        searchInput?.focus();
+      }
+      if (e.key === "Escape" && document.activeElement === searchInput) {
+        this.clearSearch();
+        searchInput.blur();
+      }
+    });
+  }
+
+  async performSearch(query, searchType) {
+    if (this.isSearching) return;
+    this.isSearching = true;
+
+    const searchResults = document.getElementById("searchResults");
+    const searchResultsList = document.getElementById("searchResultsList");
+    searchResults.style.display = "block";
+    searchResultsList.innerHTML = '<div class="search-loading">Searching</div>';
+
+    try {
+      let results;
+      if (searchType === "content") {
+        results = await window.api.searchContent(query);
+      } else {
+        results = await window.api.searchFiles(query);
+      }
+      this.displaySearchResults(results, searchType);
+    } catch (error) {
+      console.error("Search failed:", error);
+      searchResults.style.display = "block";
+      searchResultsList.innerHTML = `<div class="search-empty" style="color: #ef4444;">${Utils.escapeHtml("Search failed: " + Utils.extractErrorMessage(error))}</div>`;
+    } finally {
+      this.isSearching = false;
+    }
+  }
+
+  displaySearchResults(results, searchType) {
+    const searchResults = document.getElementById("searchResults");
+    const searchResultsCount = document.getElementById("searchResultsCount");
+    const searchDuration = document.getElementById("searchDuration");
+    const searchResultsList = document.getElementById("searchResultsList");
+
+    searchResults.style.display = "block";
+    const count = results.total || 0;
+    searchResultsCount.textContent = `${count} result${count !== 1 ? "s" : ""}`;
+    searchDuration.textContent = `(${results.duration_ms}ms)`;
+    searchResultsList.innerHTML = "";
+
+    if (count === 0) {
+      searchResultsList.innerHTML =
+        '<div class="search-empty">No results found</div>';
+      return;
+    }
+
+    results.results.forEach((result) => {
+      const a = document.createElement("a");
+      a.className = "search-result-item";
+      a.href = `/edit/${result.path}`;
+
+      let typeLabel = "";
+      let preview = "";
+      let matches = "";
+
+      if (searchType === "content") {
+        typeLabel = '<span class="search-result-type content">Content</span>';
+        preview = this.highlightSearchTerms(
+          result.content_preview,
+          this.currentQuery,
+        );
+        if (result.matches && result.matches.length > 0) {
+          const matchTypes = result.matches.map((m) => m.type).join(", ");
+          matches = `<div class="search-result-matches">Matches: ${matchTypes}</div>`;
+        }
+      } else {
+        typeLabel = '<span class="search-result-type filename">File</span>';
+        preview = result.path;
+      }
+
+      a.innerHTML = `
+        <div class="search-result-title">
+          ${Utils.escapeHtml(result.title || result.name)}
+          ${typeLabel}
+        </div>
+        <div class="search-result-preview">${preview}</div>
+        <div class="search-result-path">${Utils.escapeHtml(result.path)}</div>
+        ${matches}
+      `;
+      searchResultsList.appendChild(a);
+    });
+  }
+
+  highlightSearchTerms(text, query) {
+    if (!text || !query) return Utils.escapeHtml(text);
+    const words = query
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 1);
+    let highlightedText = Utils.escapeHtml(text);
+    words.forEach((word) => {
+      const regex = new RegExp(`(${Utils.escapeRegex(word)})`, "gi");
+      highlightedText = highlightedText.replace(
+        regex,
+        '<span class="search-match-highlight">$1</span>',
+      );
+    });
+    return highlightedText;
+  }
+
+  clearSearch() {
+    const searchResults = document.getElementById("searchResults");
+    searchResults.style.display = "none";
+    this.currentQuery = "";
   }
 
   setupVirtualKeyboardHandling() {
@@ -345,51 +512,6 @@ class SidebarManager {
     }
   }
 
-  async renameItem() {
-    const currentName = this.currentContextPath.split("/").pop();
-    const newName = prompt(`Rename ${this.currentContextType}:`, currentName);
-
-    if (newName && newName !== currentName) {
-      try {
-        const pathParts = this.currentContextPath.split("/");
-        pathParts[pathParts.length - 1] = newName;
-        const newPath = pathParts.join("/");
-
-        await this.fileTree.renameFile(this.currentContextPath, newPath);
-        this.showSuccess(`${this.currentContextType} renamed successfully`);
-
-        // Notify about file rename for URL updates
-        this.onFileRenamed?.(this.currentContextPath, newPath);
-      } catch (error) {
-        this.showError(
-          Utils.extractErrorMessage(error, "Failed to rename item"),
-        );
-      }
-    }
-  }
-
-  async deleteItem() {
-    const itemName = this.currentContextPath.split("/").pop();
-    const confirmed = confirm(`Are you sure you want to delete "${itemName}"?`);
-
-    if (confirmed) {
-      try {
-        await this.fileTree.deleteFile(
-          this.currentContextPath,
-          this.currentContextType === "directory",
-        );
-        this.showSuccess(`${this.currentContextType} deleted successfully`);
-
-        // Notify about file deletion for URL updates
-        this.onFileDeleted?.(this.currentContextPath);
-      } catch (error) {
-        this.showError(
-          Utils.extractErrorMessage(error, "Failed to delete item"),
-        );
-      }
-    }
-  }
-
   setupFolderAutocomplete() {
     const folderInput = document.getElementById("recipeFolder");
     const dropdown = document.getElementById("recipeFolderDropdown");
@@ -533,7 +655,11 @@ class SidebarManager {
     // Simple toast notification
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
-    toast.textContent = message;
+    const icon =
+      type === "error"
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    toast.innerHTML = `${icon}<span>${Utils.escapeHtml(message)}</span>`;
 
     document.body.appendChild(toast);
 

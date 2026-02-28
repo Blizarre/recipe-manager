@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 from main import app
 from api.translation import TranslationError, translation_cache
 
-
 client = TestClient(app)
 
 
