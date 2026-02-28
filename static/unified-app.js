@@ -120,7 +120,7 @@ class UnifiedRecipeApp {
         }
         // Show mobile photo button
         if (togglePhotoMobileBtn) {
-          togglePhotoMobileBtn.style.display = "block";
+          togglePhotoMobileBtn.style.display = "inline-flex";
         }
       } else {
         // Desktop: move buttons to editor header and show desktop photo button
@@ -136,7 +136,7 @@ class UnifiedRecipeApp {
 
         // Show desktop photo button
         if (togglePhotoBtn) {
-          togglePhotoBtn.style.display = "block";
+          togglePhotoBtn.style.display = "inline-flex";
         }
         // Hide mobile photo button on desktop
         if (togglePhotoMobileBtn) {
@@ -186,11 +186,12 @@ class UnifiedRecipeApp {
       editorInterface.style.display = "block";
 
       // Show action buttons when file is open
-      if (undoBtn) undoBtn.style.display = "block";
-      if (renameBtn) renameBtn.style.display = "block";
-      if (translateBtn) translateBtn.style.display = "block";
-      if (togglePhotoBtn) togglePhotoBtn.style.display = "block";
-      if (togglePhotoMobileBtn) togglePhotoMobileBtn.style.display = "block";
+      if (undoBtn) undoBtn.style.display = "inline-flex";
+      if (renameBtn) renameBtn.style.display = "inline-flex";
+      if (translateBtn) translateBtn.style.display = "inline-flex";
+      if (togglePhotoBtn) togglePhotoBtn.style.display = "inline-flex";
+      if (togglePhotoMobileBtn)
+        togglePhotoMobileBtn.style.display = "inline-flex";
 
       // Update page info
       this.updatePageInfo();

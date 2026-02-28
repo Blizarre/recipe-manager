@@ -100,7 +100,7 @@ class FileTree {
 
     dirElement.innerHTML = `
             <input type="checkbox" class="file-tree-checkbox" data-path="${directory.path}">
-            <span class="expand-icon">${isExpanded ? "▼" : "▶"}</span>
+            <span class="expand-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             <span class="icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -252,14 +252,16 @@ class FileTree {
 
       // Update icon
       const expandIcon = element.querySelector(".expand-icon");
-      expandIcon.textContent = "▶";
+      expandIcon.innerHTML =
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
     } else {
       this.expandedFolders.add(path);
       element.classList.add("expanded");
 
       // Update icon
       const expandIcon = element.querySelector(".expand-icon");
-      expandIcon.textContent = "▼";
+      expandIcon.innerHTML =
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
       // Add children container
       const childrenContainer = document.createElement("div");
