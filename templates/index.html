@@ -7,36 +7,110 @@
       content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>Recipe Manager</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                "Inter",
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "Segoe UI",
+                "Roboto",
+                "sans-serif",
+              ],
+            },
+            animation: {
+              "fade-in": "fadeIn 0.2s ease",
+              "slide-in":
+                "slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              "slide-out": "slideOut 0.3s ease forwards",
+            },
+            keyframes: {
+              fadeIn: {
+                from: { opacity: "0" },
+                to: { opacity: "1" },
+              },
+              slideIn: {
+                from: { opacity: "0", transform: "translateY(-20px)" },
+                to: { opacity: "1", transform: "translateY(0)" },
+              },
+              slideOut: {
+                from: { opacity: "1", transform: "translateY(0)" },
+                to: { opacity: "0", transform: "translateY(-20px)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+
     <!-- EasyMDE Markdown Editor -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script>
-      // Signal that EasyMDE is ready for app initialization
       window.EditorReady = true;
       window.dispatchEvent(new Event("editor-ready"));
     </script>
+
+    <!-- Minimal overrides for EasyMDE, animations, and dynamic states -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='styles.css') }}"
+    />
   </head>
-  <body>
-    <div class="app-container">
+  <body class="font-sans bg-gray-50 text-gray-900 leading-relaxed text-sm">
+    <div
+      class="app-container grid grid-cols-[280px_1fr] min-h-dvh max-md:block max-md:pt-[60px]"
+    >
       <!-- Mobile header -->
-      <header class="mobile-header">
-        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
-          <span></span>
-          <span></span>
-          <span></span>
+      <header
+        class="mobile-header hidden max-md:flex col-span-full h-[60px] bg-white border-b border-gray-200 px-4 items-center justify-between max-md:fixed max-md:top-0 max-md:left-0 max-md:right-0 z-[100] shadow-sm max-[480px]:px-3"
+      >
+        <button
+          class="menu-toggle bg-transparent border-none w-11 h-11 flex flex-col justify-center items-center gap-1 cursor-pointer rounded-xl relative transition-colors hover:bg-black/5 active:bg-black/10 active:scale-95"
+          id="menuToggle"
+          aria-label="Toggle menu"
+        >
+          <span
+            class="block w-5 h-0.5 bg-gray-900 rounded-sm transition-all duration-300"
+          ></span>
+          <span
+            class="block w-5 h-0.5 bg-gray-900 rounded-sm transition-all duration-300"
+          ></span>
+          <span
+            class="block w-5 h-0.5 bg-gray-900 rounded-sm transition-all duration-300"
+          ></span>
         </button>
-        <h1 id="fileName">Recipe Manager</h1>
-        <div class="header-actions">
-          <button class="btn btn-secondary" id="undoBtn" disabled title="Undo">
-            <span class="btn-icon">
+        <h1
+          class="text-lg font-semibold flex-1 text-center whitespace-nowrap overflow-hidden text-ellipsis max-[480px]:text-base max-[480px]:max-w-[120px]"
+          id="fileName"
+        >
+          Recipe Manager
+        </h1>
+        <div
+          class="header-actions flex items-center gap-2 max-md:gap-1 max-[480px]:gap-0.5"
+        >
+          <button
+            class="btn btn-secondary inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed max-md:min-w-[44px] max-md:p-2 max-md:text-base"
+            id="undoBtn"
+            disabled
+            title="Undo"
+          >
+            <span class="btn-icon inline-flex items-center justify-center mr-1.5 max-md:mr-0">
               <svg
                 width="16"
                 height="16"
@@ -46,15 +120,20 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                class="shrink-0"
               >
                 <path d="M3 7v6h6" />
                 <path d="m21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
               </svg>
             </span>
-            <span class="btn-text">Undo</span>
+            <span class="btn-text whitespace-nowrap max-md:hidden">Undo</span>
           </button>
-          <button class="btn btn-secondary" id="renameBtn" title="Rename">
-            <span class="btn-icon">
+          <button
+            class="btn btn-secondary inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed max-md:min-w-[44px] max-md:p-2 max-md:text-base"
+            id="renameBtn"
+            title="Rename"
+          >
+            <span class="btn-icon inline-flex items-center justify-center mr-1.5 max-md:mr-0">
               <svg
                 width="16"
                 height="16"
@@ -64,6 +143,7 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                class="shrink-0"
               >
                 <path
                   d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
@@ -71,35 +151,50 @@
                 <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </span>
-            <span class="btn-text">Rename</span>
+            <span class="btn-text whitespace-nowrap max-md:hidden">Rename</span>
           </button>
           <button
-            class="btn btn-secondary"
+            class="btn btn-secondary inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed max-md:min-w-[44px] max-md:p-2 max-md:text-base"
             id="translateBtn"
             title="Translate to French"
           >
-            <span class="btn-icon"> 🇫🇷 </span>
-            <span class="btn-text">Translate</span>
+            <span class="btn-icon inline-flex items-center justify-center mr-1.5 max-md:mr-0"
+              >🇫🇷</span
+            >
+            <span class="btn-text whitespace-nowrap max-md:hidden">Translate</span>
           </button>
-          <button class="btn btn-secondary" id="togglePhotoMobileBtn" title="Toggle photo view">
-            <span class="btn-icon">📷</span>
-            <span class="btn-text">Photo</span>
+          <button
+            class="btn btn-secondary inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed max-md:min-w-[44px] max-md:p-2 max-md:text-base"
+            id="togglePhotoMobileBtn"
+            title="Toggle photo view"
+          >
+            <span class="btn-icon inline-flex items-center justify-center mr-1.5 max-md:mr-0">📷</span>
+            <span class="btn-text whitespace-nowrap max-md:hidden">Photo</span>
           </button>
         </div>
       </header>
 
-      <!-- Sidebar for file tree (same as main page) -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-          <h2>Recipes</h2>
+      <!-- Sidebar -->
+      <aside
+        class="sidebar bg-white border-r border-gray-200 flex flex-col shadow-sm max-h-dvh max-md:fixed max-md:top-[60px] max-md:left-0 max-md:bottom-0 max-md:w-[280px] max-md:z-[95] max-md:-translate-x-full max-md:transition-transform max-md:duration-[350ms] max-md:ease-[cubic-bezier(0.4,0,0.2,1)] max-md:will-change-transform max-md:shadow-none"
+        id="sidebar"
+      >
+        <div
+          class="sidebar-header flex items-center justify-between px-4 pt-6 pb-[18px] border-b border-gray-100"
+        >
+          <h2 class="text-lg font-bold text-gray-900">Recipes</h2>
           <button
-            class="new-recipe-btn desktop-new-btn"
+            class="w-9 h-9 rounded-full border-none bg-indigo-500 text-white cursor-pointer flex items-center justify-center text-xl font-light shadow-sm transition-all hover:bg-indigo-600 hover:scale-[1.08] hover:shadow-md active:scale-100 active:shadow-sm"
             id="desktopNewBtn"
             title="New Recipe"
           >
             +
           </button>
-          <button class="new-folder-btn" id="newFolderBtn" title="New Folder">
+          <button
+            class="w-9 h-9 rounded-full border-none bg-slate-500 text-white cursor-pointer flex items-center justify-center ml-2 shadow-sm transition-all hover:bg-slate-600 hover:scale-[1.08] hover:shadow-md active:scale-100 active:shadow-sm"
+            id="newFolderBtn"
+            title="New Folder"
+          >
             <svg
               width="16"
               height="16"
@@ -117,7 +212,11 @@
               <line x1="9" y1="14" x2="15" y2="14" />
             </svg>
           </button>
-          <button class="edit-mode-btn" id="editModeBtn" title="Edit">
+          <button
+            class="edit-mode-btn w-9 h-9 rounded-full border-none bg-slate-500 text-white cursor-pointer flex items-center justify-center ml-2 shadow-sm transition-all hover:bg-slate-600 hover:scale-[1.08] hover:shadow-md active:scale-100 active:shadow-sm"
+            id="editModeBtn"
+            title="Edit"
+          >
             <svg
               width="16"
               height="16"
@@ -137,17 +236,17 @@
         </div>
 
         <!-- Search component -->
-        <div class="search-container">
-          <div class="search-input-wrapper">
+        <div class="search-container p-4 bg-white border-b border-gray-100">
+          <div class="relative mb-3">
             <input
               type="text"
               id="searchInput"
-              class="search-input"
+              class="search-input w-full py-2.5 pl-3.5 pr-8 border-[1.5px] border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-900 transition-all placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/10 focus:bg-white"
               placeholder="Search recipes..."
               autocomplete="off"
             />
             <button
-              class="search-clear"
+              class="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-base text-gray-400 cursor-pointer p-1 rounded-full transition-all hover:bg-black/10 hover:text-gray-900"
               id="searchClear"
               style="display: none"
               title="Clear search"
@@ -155,137 +254,241 @@
               &times;
             </button>
           </div>
-          <div class="search-filters">
-            <label class="search-filter">
-              <input type="radio" name="searchType" value="content" checked />
-              <span>Content</span>
+          <div class="flex gap-3 mb-3">
+            <label
+              class="flex items-center cursor-pointer text-xs text-gray-500"
+            >
+              <input
+                type="radio"
+                name="searchType"
+                value="content"
+                checked
+                class="mr-1.5 accent-indigo-500"
+              />
+              <span class="peer-checked:text-indigo-500 peer-checked:font-medium"
+                >Content</span
+              >
             </label>
-            <label class="search-filter">
-              <input type="radio" name="searchType" value="files" />
+            <label
+              class="flex items-center cursor-pointer text-xs text-gray-500"
+            >
+              <input
+                type="radio"
+                name="searchType"
+                value="files"
+                class="mr-1.5 accent-indigo-500"
+              />
               <span>Files</span>
             </label>
           </div>
-          <div class="search-results" id="searchResults" style="display: none">
-            <div class="search-results-header">
-              <span class="search-results-count" id="searchResultsCount"
+          <div
+            class="search-results max-h-[300px] overflow-y-auto bg-white border-[1.5px] border-gray-200 rounded-lg mt-2 shadow-sm"
+            id="searchResults"
+            style="display: none"
+          >
+            <div
+              class="flex justify-between items-center px-3 py-2 bg-white border-b border-gray-200 text-[11px] text-gray-400"
+            >
+              <span
+                class="font-medium text-gray-500"
+                id="searchResultsCount"
                 >0 results</span
               >
-              <span class="search-duration" id="searchDuration"></span>
+              <span id="searchDuration"></span>
             </div>
-            <div class="search-results-list" id="searchResultsList"></div>
+            <div
+              class="search-results-list max-h-[250px] overflow-y-auto"
+              id="searchResultsList"
+            ></div>
           </div>
         </div>
 
-        <div class="file-tree-container">
-          <div class="file-tree" id="fileTree">
-            <div class="loading">Loading recipes...</div>
+        <div class="file-tree-container flex-1 overflow-y-auto py-2 min-h-0">
+          <div class="file-tree text-[13px]" id="fileTree">
+            <div class="p-5 text-center text-gray-400 italic">
+              Loading recipes...
+            </div>
           </div>
         </div>
 
         <!-- Edit mode actions -->
-        <div class="edit-mode-actions" id="editModeActions">
-          <span class="selected-count" id="selectedCount">0 selected</span>
-          <button class="btn btn-danger" id="deleteSelectedBtn">Delete</button>
+        <div
+          class="edit-mode-actions hidden border-t border-gray-200 bg-white px-4 py-3"
+          id="editModeActions"
+        >
+          <span class="flex-1 text-sm text-gray-500" id="selectedCount"
+            >0 selected</span
+          >
+          <button
+            class="px-[18px] py-2.5 border-none rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-red-500 text-white shadow-sm transition-all hover:bg-red-600 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            id="deleteSelectedBtn"
+          >
+            Delete
+          </button>
         </div>
 
-        <div class="sidebar-footer">
-          <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+        <div class="px-4 py-4 bg-white border-t border-gray-100">
+          <button
+            class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98]"
+            id="refreshBtn"
+          >
+            Refresh
+          </button>
         </div>
       </aside>
 
       <!-- Main content area -->
-      <main class="main-content">
+      <main class="flex flex-col">
         <!-- Default loading state -->
-        <div class="loading" id="initialLoading">Loading...</div>
+        <div class="p-5 text-center text-gray-400 italic" id="initialLoading">
+          Loading...
+        </div>
 
-        <!-- Welcome screen (shown when no file selected) -->
-        <div class="welcome-screen" id="welcomeScreen" style="display: none">
-          <div class="welcome-content">
+        <!-- Welcome screen -->
+        <div
+          class="flex-1 flex items-center justify-center text-center p-10 max-md:p-0 max-md:items-stretch max-md:justify-stretch max-md:text-left"
+          id="welcomeScreen"
+          style="display: none"
+        >
+          <div
+            class="flex flex-col h-full w-full max-md:p-5"
+          >
             <!-- Desktop welcome message -->
-            <div class="desktop-welcome" id="desktopWelcome">
-              <h1>Recipe Manager</h1>
-              <p>
+            <div class="desktop-welcome block max-md:hidden">
+              <h1
+                class="text-4xl font-bold mb-3 text-gray-900 tracking-tight"
+              >
+                Recipe Manager
+              </h1>
+              <p class="text-[17px] text-gray-500 mb-6 leading-relaxed">
                 Select a recipe from the sidebar to start editing, or create a
                 new one.
               </p>
             </div>
 
-            <!-- Mobile file tree (shown when sidebar is hidden) -->
-            <div class="mobile-file-tree" id="mobileFileTree">
-              <div class="loading">Loading recipes...</div>
+            <!-- Mobile file tree -->
+            <div
+              class="mobile-file-tree hidden max-md:flex max-md:flex-col flex-1 overflow-y-auto text-sm"
+              id="mobileFileTree"
+            >
+              <div class="p-5 text-center text-gray-400 italic">
+                Loading recipes...
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Editor interface (shown when file selected) -->
-        <div
-          class="editor-interface"
-          id="editorInterface"
-          style="display: none"
-        >
-          <div class="editor-header">
-            <div class="file-info">
-              <span class="file-name" id="fileNameDesktop">Loading...</span>
-              <span class="file-status" id="fileStatus"></span>
+        <!-- Editor interface -->
+        <div class="flex-1" id="editorInterface" style="display: none">
+          <div
+            class="editor-header flex items-center justify-between px-6 py-[18px] bg-white border-b border-gray-100 max-md:hidden"
+          >
+            <div class="flex items-center gap-3">
+              <span class="font-medium text-gray-900" id="fileNameDesktop"
+                >Loading...</span
+              >
+              <span class="file-status text-xs text-gray-400" id="fileStatus"></span>
             </div>
-            <div class="editor-actions">
-              <div class="action-buttons">
-                <!-- Buttons moved to mobile header, styled via CSS -->
-              </div>
-              <div class="view-toggle">
-                <button class="btn btn-secondary" id="togglePhotoBtn" title="Toggle photo view">
-                  <span class="btn-icon">📷</span>
-                  <span class="btn-text">Photo</span>
+            <div class="flex items-center gap-4">
+              <div class="action-buttons flex gap-2"></div>
+              <div class="flex gap-2">
+                <button
+                  class="btn btn-secondary inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  id="togglePhotoBtn"
+                  title="Toggle photo view"
+                >
+                  <span class="btn-icon inline-flex items-center justify-center mr-1.5">📷</span>
+                  <span class="btn-text whitespace-nowrap">Photo</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <div class="editor-container">
-            <div class="editor-wrapper" id="editorWrapper">
-              <div class="loading" id="editorLoading">Loading...</div>
-              
+          <div class="flex-1">
+            <div class="flex-1" id="editorWrapper">
+              <div class="p-5 text-center text-gray-400 italic" id="editorLoading">
+                Loading...
+              </div>
+
               <!-- Editor Panel -->
-              <div class="editor-panel" id="editorPanel" style="display: none">
+              <div class="flex-1" id="editorPanel" style="display: none">
                 <div class="easymde-container" id="editorContainer">
                   <textarea id="editor"></textarea>
                 </div>
               </div>
-              
+
               <!-- Photo Panel -->
-              <div class="photo-panel" id="photoPanel" style="display: none">
-                <div class="photo-view">
-                  <div class="photo-placeholder" id="photoPlaceholder">
-                    <div class="placeholder-content">
-                      <div class="placeholder-icon">📷</div>
-                      <h3>No Photo Yet</h3>
-                      <p>Add a photo to make your recipe more appealing</p>
-                      <button class="btn btn-primary" id="addPhotoBtn">
-                        <span class="btn-icon">📷</span>
-                        <span class="btn-text">Add Photo</span>
+              <div
+                class="flex-1 flex flex-col bg-gray-50"
+                id="photoPanel"
+                style="display: none"
+              >
+                <div
+                  class="photo-view flex-1 flex flex-col justify-center items-center px-5 py-10"
+                >
+                  <div
+                    class="text-center max-w-[400px]"
+                    id="photoPlaceholder"
+                  >
+                    <div class="flex flex-col items-center gap-4">
+                      <div class="text-[64px] opacity-50">📷</div>
+                      <h3 class="text-gray-900 text-2xl font-bold">
+                        No Photo Yet
+                      </h3>
+                      <p class="text-gray-500 text-base leading-normal">
+                        Add a photo to make your recipe more appealing
+                      </p>
+                      <button
+                        class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-none rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-indigo-500 text-white shadow-sm transition-all hover:bg-indigo-600 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm"
+                        id="addPhotoBtn"
+                      >
+                        <span class="btn-icon inline-flex items-center justify-center mr-1.5">📷</span>
+                        <span class="btn-text whitespace-nowrap">Add Photo</span>
                       </button>
                     </div>
                   </div>
-                  <div class="photo-display" id="photoDisplay" style="display: none">
-                    <div class="photo-image-container">
-                      <img id="photoImage" alt="Recipe photo" />
+                  <div
+                    class="text-center w-full max-w-[600px]"
+                    id="photoDisplay"
+                    style="display: none"
+                  >
+                    <div class="mb-5">
+                      <img
+                        id="photoImage"
+                        alt="Recipe photo"
+                        class="max-w-full h-auto max-h-[70vh] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.15)]"
+                      />
                     </div>
-                    <div class="photo-actions">
-                      <button class="btn btn-secondary" id="changePhotoBtn">
-                        <span class="btn-icon">🔄</span>
-                        <span class="btn-text">Change Photo</span>
+                    <div class="flex justify-center gap-3">
+                      <button
+                        class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98]"
+                        id="changePhotoBtn"
+                      >
+                        <span class="btn-icon inline-flex items-center justify-center mr-1.5">🔄</span>
+                        <span class="btn-text whitespace-nowrap">Change Photo</span>
                       </button>
-                      <button class="btn btn-danger" id="deletePhotoBtn">
-                        <span class="btn-icon">🗑️</span>
-                        <span class="btn-text">Delete Photo</span>
+                      <button
+                        class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-none rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-red-500 text-white shadow-sm transition-all hover:bg-red-600 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm"
+                        id="deletePhotoBtn"
+                      >
+                        <span class="btn-icon inline-flex items-center justify-center mr-1.5">🗑️</span>
+                        <span class="btn-text whitespace-nowrap">Delete Photo</span>
                       </button>
                     </div>
                   </div>
-                  <input type="file" id="photoFileInput" accept=".jpg,.jpeg" style="display: none" />
+                  <input
+                    type="file"
+                    id="photoFileInput"
+                    accept=".jpg,.jpeg"
+                    style="display: none"
+                  />
                 </div>
               </div>
-              
-              <div class="editor-status" style="display: none">
+
+              <div
+                class="px-6 py-2.5 bg-white border-t border-gray-100 flex justify-between items-center text-xs text-gray-400"
+                style="display: none"
+              >
                 <span id="charCount">0 characters</span>
               </div>
             </div>
@@ -294,46 +497,80 @@
       </main>
 
       <!-- Overlay for mobile -->
-      <div class="overlay" id="overlay"></div>
+      <div
+        class="overlay hidden fixed inset-0 bg-black/50 z-[90]"
+        id="overlay"
+      ></div>
 
       <!-- Modal for new recipe -->
-      <div class="modal" id="newRecipeModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Create New Recipe</h3>
-            <button class="modal-close" id="modalClose">&times;</button>
+      <div
+        class="modal hidden fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center p-5 z-[1000] animate-fade-in"
+        id="newRecipeModal"
+      >
+        <div
+          class="bg-white rounded-xl shadow-xl w-full max-w-[420px] max-h-[90vh] overflow-y-auto animate-slide-in border border-gray-200"
+        >
+          <div class="flex items-center justify-between px-6 pt-6">
+            <h3 class="text-xl font-semibold text-gray-900">
+              Create New Recipe
+            </h3>
+            <button
+              class="bg-transparent border-none text-2xl cursor-pointer text-gray-400 w-8 h-8 flex items-center justify-center"
+              id="modalClose"
+            >
+              &times;
+            </button>
           </div>
-          <div class="modal-body">
+          <div class="p-5">
             <form id="newRecipeForm">
-              <div class="form-group">
-                <label for="recipeTitle">Recipe Title:</label>
+              <div class="mb-4">
+                <label
+                  for="recipeTitle"
+                  class="block mb-1 font-medium text-gray-900"
+                  >Recipe Title:</label
+                >
                 <input
                   type="text"
                   id="recipeTitle"
                   required
                   placeholder="e.g. Chocolate Chip Cookies"
+                  class="w-full py-2.5 px-3.5 border-[1.5px] border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-900 transition-all placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/10 focus:bg-white"
                 />
               </div>
-              <div class="form-group">
-                <label for="recipeFolder">Folder (optional):</label>
-                <div class="autocomplete-container">
+              <div class="mb-4">
+                <label
+                  for="recipeFolder"
+                  class="block mb-1 font-medium text-gray-900"
+                  >Folder (optional):</label
+                >
+                <div class="autocomplete-container relative">
                   <input
                     type="text"
                     id="recipeFolder"
                     placeholder="e.g. desserts"
                     autocomplete="off"
+                    class="w-full py-2.5 px-3.5 border-[1.5px] border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-900 transition-all placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/10 focus:bg-white"
                   />
                   <div
-                    class="autocomplete-dropdown"
+                    class="autocomplete-dropdown absolute top-full left-0 right-0 bg-gray-50 border border-gray-200 border-t-0 rounded-b-xl shadow-md max-h-[200px] overflow-y-auto z-[1000] hidden"
                     id="recipeFolderDropdown"
                   ></div>
                 </div>
               </div>
-              <div class="form-actions">
-                <button type="button" class="btn btn-secondary" id="cancelNew">
+              <div
+                class="flex gap-2 justify-end mt-5 max-[480px]:flex-col"
+              >
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] max-[480px]:w-full"
+                  id="cancelNew"
+                >
                   Cancel
                 </button>
-                <button type="submit" class="btn btn-primary">
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-none rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-indigo-500 text-white shadow-sm transition-all hover:bg-indigo-600 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm max-[480px]:w-full"
+                >
                   Create Recipe
                 </button>
               </div>
@@ -343,32 +580,54 @@
       </div>
 
       <!-- New Folder Modal -->
-      <div class="modal" id="newFolderModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Create New Folder</h3>
-            <button class="modal-close" id="folderModalClose">&times;</button>
+      <div
+        class="modal hidden fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center p-5 z-[1000] animate-fade-in"
+        id="newFolderModal"
+      >
+        <div
+          class="bg-white rounded-xl shadow-xl w-full max-w-[420px] max-h-[90vh] overflow-y-auto animate-slide-in border border-gray-200"
+        >
+          <div class="flex items-center justify-between px-6 pt-6">
+            <h3 class="text-xl font-semibold text-gray-900">
+              Create New Folder
+            </h3>
+            <button
+              class="bg-transparent border-none text-2xl cursor-pointer text-gray-400 w-8 h-8 flex items-center justify-center"
+              id="folderModalClose"
+            >
+              &times;
+            </button>
           </div>
-          <div class="modal-body">
+          <div class="p-5">
             <form id="newFolderForm">
-              <div class="form-group">
-                <label for="folderName">Folder Name:</label>
+              <div class="mb-4">
+                <label
+                  for="folderName"
+                  class="block mb-1 font-medium text-gray-900"
+                  >Folder Name:</label
+                >
                 <input
                   type="text"
                   id="folderName"
                   required
                   placeholder="e.g. desserts"
+                  class="w-full py-2.5 px-3.5 border-[1.5px] border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-900 transition-all placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/10 focus:bg-white"
                 />
               </div>
-              <div class="form-actions">
+              <div
+                class="flex gap-2 justify-end mt-5 max-[480px]:flex-col"
+              >
                 <button
                   type="button"
-                  class="btn btn-secondary"
+                  class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] max-[480px]:w-full"
                   id="cancelNewFolder"
                 >
                   Cancel
                 </button>
-                <button type="submit" class="btn btn-primary">
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-none rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-indigo-500 text-white shadow-sm transition-all hover:bg-indigo-600 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm max-[480px]:w-full"
+                >
                   Create Folder
                 </button>
               </div>
@@ -378,32 +637,54 @@
       </div>
 
       <!-- Rename File Modal -->
-      <div class="modal" id="renameFileModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Rename File</h3>
-            <button class="modal-close" id="renameModalClose">&times;</button>
+      <div
+        class="modal hidden fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center p-5 z-[1000] animate-fade-in"
+        id="renameFileModal"
+      >
+        <div
+          class="bg-white rounded-xl shadow-xl w-full max-w-[420px] max-h-[90vh] overflow-y-auto animate-slide-in border border-gray-200"
+        >
+          <div class="flex items-center justify-between px-6 pt-6">
+            <h3 class="text-xl font-semibold text-gray-900">Rename File</h3>
+            <button
+              class="bg-transparent border-none text-2xl cursor-pointer text-gray-400 w-8 h-8 flex items-center justify-center"
+              id="renameModalClose"
+            >
+              &times;
+            </button>
           </div>
-          <div class="modal-body">
+          <div class="p-5">
             <form id="renameFileForm">
-              <div class="form-group">
-                <label for="newFileName">New File Name:</label>
+              <div class="mb-4">
+                <label
+                  for="newFileName"
+                  class="block mb-1 font-medium text-gray-900"
+                  >New File Name:</label
+                >
                 <input
                   type="text"
                   id="newFileName"
                   required
                   placeholder="e.g. chocolate-cake.md"
+                  class="w-full py-2.5 px-3.5 border-[1.5px] border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-900 transition-all placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/10 focus:bg-white"
                 />
               </div>
-              <div class="form-actions">
+              <div
+                class="flex gap-2 justify-end mt-5 max-[480px]:flex-col"
+              >
                 <button
                   type="button"
-                  class="btn btn-secondary"
+                  class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-[1.5px] border-gray-200 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-white text-gray-900 shadow-sm transition-all hover:bg-gray-100 hover:border-gray-400 active:scale-[0.98] max-[480px]:w-full"
                   id="cancelRename"
                 >
                   Cancel
                 </button>
-                <button type="submit" class="btn btn-primary">Rename</button>
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 border-none rounded-lg text-sm font-medium cursor-pointer min-h-[44px] bg-indigo-500 text-white shadow-sm transition-all hover:bg-indigo-600 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm max-[480px]:w-full"
+                >
+                  Rename
+                </button>
               </div>
             </form>
           </div>
@@ -414,8 +695,6 @@
     <script src="{{ url_for('static', path='utils.js') }}"></script>
     <script src="{{ url_for('static', path='api.js') }}"></script>
     <script src="{{ url_for('static', path='file-tree.js') }}"></script>
-    <script src="{{ url_for('static', path='search.js') }}"></script>
-    <script src="{{ url_for('static', path='touch-gestures.js') }}"></script>
     <script src="{{ url_for('static', path='sidebar-manager.js') }}"></script>
     <script src="{{ url_for('static', path='easymde-editor.js') }}"></script>
     <script src="{{ url_for('static', path='photo-manager.js') }}"></script>

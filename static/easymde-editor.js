@@ -136,8 +136,6 @@ class MarkdownEditor {
           fileStatus.classList.remove("auto-saved");
         }, 2000);
       }
-
-      window.app?.fileTree?.notifyFileChanged(this.currentFile);
     } catch (error) {
       console.error("Auto-save failed:", error);
 

@@ -105,10 +105,6 @@ class RecipeAPI {
   }
 
   // Directory operations
-  async getDirectoryTree(path = "") {
-    return this.request("GET", `/directories?path=${encodeURIComponent(path)}`);
-  }
-
   async createDirectory(path) {
     return this.request("POST", `/directories/${encodeURIComponent(path)}`);
   }
@@ -118,14 +114,6 @@ class RecipeAPI {
   }
 
   // Recipe-specific operations
-
-  async saveRecipe(path, content, version = null) {
-    return this.request("PUT", `/recipes/${encodeURIComponent(path)}`, {
-      content,
-      version,
-    });
-  }
-
   async createRecipe(path) {
     return this.request("POST", `/recipes/${encodeURIComponent(path)}`);
   }
@@ -143,27 +131,6 @@ class RecipeAPI {
       "GET",
       `/search/files?q=${encodeURIComponent(query)}&limit=${limit}`,
     );
-  }
-
-  // Upload
-  async uploadFile(file, path) {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("path", path);
-
-    const response = await fetch(`${this.baseURL}/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ detail: "Upload failed" }));
-      throw new Error(errorData.detail || `HTTP ${response.status}`);
-    }
-
-    return await response.json();
   }
 }
 
