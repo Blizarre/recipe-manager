@@ -17,6 +17,7 @@ class UnifiedRecipeApp {
       undoBtn: document.getElementById("undoBtn"),
       renameBtn: document.getElementById("renameBtn"),
       translateBtn: document.getElementById("translateBtn"),
+      formatBtn: document.getElementById("formatBtn"),
       togglePhotoBtn: document.getElementById("togglePhotoBtn"),
       togglePhotoMobileBtn: document.getElementById("togglePhotoMobileBtn"),
       headerActions: document.querySelector(".header-actions"),
@@ -82,6 +83,9 @@ class UnifiedRecipeApp {
     document
       .getElementById("translateBtn")
       ?.addEventListener("click", () => this.redirectToTranslate());
+    document
+      .getElementById("formatBtn")
+      ?.addEventListener("click", () => this.formatRecipe());
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
@@ -97,6 +101,7 @@ class UnifiedRecipeApp {
         undoBtn,
         renameBtn,
         translateBtn,
+        formatBtn,
         togglePhotoBtn,
         togglePhotoMobileBtn,
         headerActions,
@@ -132,6 +137,9 @@ class UnifiedRecipeApp {
         }
         if (!actionButtons.contains(translateBtn)) {
           actionButtons.appendChild(translateBtn);
+        }
+        if (formatBtn && !actionButtons.contains(formatBtn)) {
+          actionButtons.appendChild(formatBtn);
         }
 
         // Show desktop photo button
@@ -170,6 +178,7 @@ class UnifiedRecipeApp {
       undoBtn,
       renameBtn,
       translateBtn,
+      formatBtn,
       togglePhotoBtn,
       togglePhotoMobileBtn,
       fileName,
@@ -189,6 +198,7 @@ class UnifiedRecipeApp {
       if (undoBtn) undoBtn.style.display = "inline-flex";
       if (renameBtn) renameBtn.style.display = "inline-flex";
       if (translateBtn) translateBtn.style.display = "inline-flex";
+      if (formatBtn) formatBtn.style.display = "inline-flex";
       if (togglePhotoBtn) togglePhotoBtn.style.display = "inline-flex";
       if (togglePhotoMobileBtn)
         togglePhotoMobileBtn.style.display = "inline-flex";
@@ -204,6 +214,7 @@ class UnifiedRecipeApp {
       if (undoBtn) undoBtn.style.display = "none";
       if (renameBtn) renameBtn.style.display = "none";
       if (translateBtn) translateBtn.style.display = "none";
+      if (formatBtn) formatBtn.style.display = "none";
       if (togglePhotoBtn) togglePhotoBtn.style.display = "none";
       if (togglePhotoMobileBtn) togglePhotoMobileBtn.style.display = "none";
 
@@ -500,6 +511,33 @@ class UnifiedRecipeApp {
 
     // Redirect from /edit/filename.md to /translate/filename.md
     window.location.href = `/translate/${this.currentFile}`;
+  }
+
+  async formatRecipe() {
+    if (!this.currentFile) return;
+
+    const { formatBtn } = this.elements;
+    if (formatBtn) {
+      formatBtn.disabled = true;
+    }
+    this.showStatus("Formatting...");
+
+    try {
+      const result = await window.api.formatRecipe(this.currentFile);
+      this.editor.setContent(result.content);
+      this.editor.isDirty = true;
+      this.editor.updateUI();
+      this.showSuccess("Recipe formatted successfully");
+    } catch (error) {
+      console.error("Failed to format recipe:", error);
+      this.showError(
+        "Failed to format recipe: " + Utils.extractErrorMessage(error),
+      );
+    } finally {
+      if (formatBtn) {
+        formatBtn.disabled = false;
+      }
+    }
   }
 }
 

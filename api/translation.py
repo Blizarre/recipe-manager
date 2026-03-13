@@ -1,8 +1,9 @@
-from openai import AsyncOpenAI, APIError, RateLimitError, APITimeoutError
+from openai import APIError, RateLimitError, APITimeoutError
 import logging
 import markdown
 from typing import Dict, Optional
 from dataclasses import dataclass
+from . import openai_client as _openai_module
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +23,11 @@ class TranslationError(Exception):
     pass
 
 
-# OpenAI client - initialized in FastAPI lifespan event
-client: AsyncOpenAI = None
-
 # Translation cache - maps file path to cached translation
 translation_cache: Dict[str, CachedTranslation] = {}
 
-# Placeholder translation prompt - to be customized later
 TRANSLATION_PROMPT = """
-Translate the following markdown recipe content to French. 
+Translate the following markdown recipe content to French.
 
 - Preserve the general markdown formatting and structure.
 - Keep ingredient quantities and measurements accurate.
@@ -39,12 +36,6 @@ Translate the following markdown recipe content to French.
 Content to translate:
 {content}
 """
-
-
-def initialize_openai_client():
-    """Initialize the OpenAI client - called during FastAPI startup"""
-    global client
-    client = AsyncOpenAI()
 
 
 def get_cached_translation(
@@ -87,17 +78,17 @@ async def translate_markdown(content: str) -> str:
     if not content or not content.strip():
         raise ValueError("Content cannot be empty")
 
-    if client is None:
+    if _openai_module.openai_client is None:
         raise TranslationError("OpenAI client not initialized")
 
     try:
-        response = await client.chat.completions.create(
-            model="gpt-4o",
+        response = await _openai_module.openai_client.chat.completions.create(
+            model="gpt-5-mini",
             messages=[
                 {"role": "user", "content": TRANSLATION_PROMPT.format(content=content)}
             ],
-            max_tokens=16000,
-            temperature=0.3,  # Lower temperature for more consistent translations
+
+
             timeout=30.0,  # 30 second timeout
         )
 

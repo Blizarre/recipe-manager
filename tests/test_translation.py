@@ -21,7 +21,7 @@ async def test_translate_markdown_success():
     mock_response.choices = [AsyncMock()]
     mock_response.choices[0].message.content = expected_french
 
-    with patch("api.translation.client") as mock_client:
+    with patch("api.openai_client.openai_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
         result = await translate_markdown(test_content)
         assert result == expected_french
@@ -42,7 +42,7 @@ async def test_translate_markdown_api_error():
     """Test error handling for OpenAI API failure"""
     test_content = "# Test Recipe"
 
-    with patch("api.translation.client") as mock_client:
+    with patch("api.openai_client.openai_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(
             side_effect=Exception("API Error")
         )
@@ -63,7 +63,7 @@ async def test_translate_markdown_empty_response():
     mock_response.choices = [AsyncMock()]
     mock_response.choices[0].message.content = None
 
-    with patch("api.translation.client") as mock_client:
+    with patch("api.openai_client.openai_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
         with pytest.raises(
             TranslationError, match="Translation service returned empty response"

@@ -118,6 +118,10 @@ class RecipeAPI {
     return this.request("POST", `/recipes/${encodeURIComponent(path)}`);
   }
 
+  async formatRecipe(path) {
+    return this.request("POST", `/recipes/${encodeURIComponent(path)}/format`);
+  }
+
   // Search operations
   async searchContent(query, limit = 50) {
     return this.request(

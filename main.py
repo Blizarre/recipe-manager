@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from api.routes import router as api_router
 from api.routes import translate_recipe
-from api.translation import initialize_openai_client
+from api.openai_client import initialize_openai_client
 from random import randint
 
 

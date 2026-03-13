@@ -13,6 +13,7 @@ from .translation import (
     get_cached_translation,
     cache_translation,
 )
+from .formatting import format_recipe_markdown, FormattingError
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +121,32 @@ async def save_recipe(path: str, recipe_data: FileUpdateContent) -> Dict[str, An
     return await fs_manager.write_file(path, recipe_data.content, recipe_data.version)
 
 
+@router.post("/recipes/{path:path}/format")
+async def format_recipe(path: str) -> Dict[str, str]:
+    """Format a recipe using LLM and return the reformatted markdown content"""
+    try:
+        if not path.endswith(".md"):
+            path += ".md"
+
+        markdown_content = await fs_manager.read_file(path)
+        formatted_content = await format_recipe_markdown(markdown_content)
+
+        return {"content": formatted_content}
+
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Recipe file '{path}' not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FormattingError as e:
+        logger.error(f"Formatting error for path '{path}': {str(e)}")
+        raise HTTPException(
+            status_code=503, detail="Formatting service temporarily unavailable"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error formatting '{path}': {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.post("/recipes/{path:path}")
 async def create_recipe(path: str) -> Dict[str, Any]:
     """Create a new recipe file with basic template"""
@@ -132,11 +159,11 @@ async def create_recipe(path: str) -> Dict[str, Any]:
 
 ## Ingredients
 
-- 
+-
 
 ## Instructions
 
-1. 
+1.
 
 ## Notes
 
