@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -8,6 +10,11 @@ from api.routes import router as api_router
 from api.routes import translate_recipe
 from api.openai_client import initialize_openai_client
 from random import randint
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 
 @asynccontextmanager
@@ -70,7 +77,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
         proxy_headers=True,
         forwarded_allow_ips="*",
     )
