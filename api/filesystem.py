@@ -1,3 +1,5 @@
+import asyncio
+import os
 import aiofiles
 from pathlib import Path
 from fastapi import HTTPException
@@ -10,12 +12,16 @@ class FileSystemManager:
 
     def __init__(self, base_dir: str = None):
         if base_dir is None:
-            import os
-
             base_dir = os.getenv("RECIPES_DIR", "recipes")
         self.base_dir = Path(base_dir).resolve()
         self.base_dir.mkdir(exist_ok=True)
         self.logger = logging.getLogger(__name__)
+        self._file_locks: Dict[str, asyncio.Lock] = {}
+
+    def _get_lock(self, path: str) -> asyncio.Lock:
+        if path not in self._file_locks:
+            self._file_locks[path] = asyncio.Lock()
+        return self._file_locks[path]
 
     def _validate_path(self, path: str) -> Path:
         """Validate and sanitize file paths to prevent directory traversal"""
@@ -104,28 +110,33 @@ class FileSystemManager:
         try:
             file_path = self._validate_path(path)
 
-            # Check for version conflicts if expected_version is provided
-            if expected_version is not None and file_path.exists():
-                current_version = int(file_path.stat().st_mtime * 1000)
-                if current_version != expected_version:
-                    raise HTTPException(
-                        status_code=409,
-                        detail={
-                            "type": "version_conflict",
-                            "message": "File was modified by another session. Please refresh and retry.",
-                            "current_version": current_version,
-                            "expected_version": expected_version,
-                        },
-                    )
+            async with self._get_lock(path):
+                # Check for version conflicts if expected_version is provided
+                if expected_version is not None and file_path.exists():
+                    current_version = int(file_path.stat().st_mtime * 1000)
+                    if current_version != expected_version:
+                        raise HTTPException(
+                            status_code=409,
+                            detail={
+                                "type": "version_conflict",
+                                "message": "File was modified by another session. Please refresh and retry.",
+                                "current_version": current_version,
+                                "expected_version": expected_version,
+                            },
+                        )
 
-            # Create parent directories if needed
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+                # Create parent directories if needed
+                file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
-                await f.write(content)
+                async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+                    await f.write(content)
 
-            # Get new version after write
-            new_version = int(file_path.stat().st_mtime * 1000)
+                # Get new version after write; bump mtime if it hasn't advanced
+                new_version = int(file_path.stat().st_mtime * 1000)
+                if expected_version is not None and new_version <= expected_version:
+                    new_mtime = (expected_version + 1) / 1000
+                    os.utime(file_path, (new_mtime, new_mtime))
+                    new_version = expected_version + 1
 
             return {
                 "message": "File saved successfully",

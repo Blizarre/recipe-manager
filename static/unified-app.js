@@ -509,6 +509,13 @@ class UnifiedRecipeApp {
   redirectToTranslate() {
     if (!this.currentFile) return;
 
+    const { translateBtn } = this.elements;
+    if (translateBtn) {
+      translateBtn.disabled = true;
+      translateBtn.innerHTML =
+        '<span class="btn-spinner"></span><span class="max-md:hidden">Translating...</span>';
+    }
+
     // Redirect from /edit/filename.md to /translate/filename.md
     window.location.href = `/translate/${this.currentFile}`;
   }
@@ -517,8 +524,11 @@ class UnifiedRecipeApp {
     if (!this.currentFile) return;
 
     const { formatBtn } = this.elements;
+    const originalHTML = formatBtn ? formatBtn.innerHTML : null;
     if (formatBtn) {
       formatBtn.disabled = true;
+      formatBtn.innerHTML =
+        '<span class="btn-spinner"></span><span class="max-md:hidden">Formatting...</span>';
     }
     this.showStatus("Formatting...");
 
@@ -536,6 +546,7 @@ class UnifiedRecipeApp {
     } finally {
       if (formatBtn) {
         formatBtn.disabled = false;
+        formatBtn.innerHTML = originalHTML;
       }
     }
   }

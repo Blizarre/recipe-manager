@@ -63,15 +63,19 @@ async def format_recipe_markdown(content: str) -> str:
         raise FormattingError("OpenAI client not initialized")
 
     try:
+        import time
+
+        logger.info(f"Starting OpenAI formatting request ({len(content)} chars)")
+        start = time.time()
         response = await _openai_module.openai_client.chat.completions.create(
             model="gpt-5-mini",
             messages=[
                 {"role": "user", "content": FORMATTING_PROMPT.format(content=content)}
             ],
-
-
-            timeout=30.0,
+            timeout=120.0,
         )
+        duration = time.time() - start
+        logger.info(f"OpenAI formatting completed in {duration:.1f}s")
 
         formatted_content = response.choices[0].message.content
 

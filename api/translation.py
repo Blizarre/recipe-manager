@@ -82,15 +82,19 @@ async def translate_markdown(content: str) -> str:
         raise TranslationError("OpenAI client not initialized")
 
     try:
+        import time
+
+        logger.info(f"Starting OpenAI translation request ({len(content)} chars)")
+        start = time.time()
         response = await _openai_module.openai_client.chat.completions.create(
             model="gpt-5-mini",
             messages=[
                 {"role": "user", "content": TRANSLATION_PROMPT.format(content=content)}
             ],
-
-
-            timeout=30.0,  # 30 second timeout
+            timeout=120.0,
         )
+        duration = time.time() - start
+        logger.info(f"OpenAI translation completed in {duration:.1f}s")
 
         translated_content = response.choices[0].message.content
 
