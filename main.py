@@ -9,7 +9,6 @@ from pathlib import Path
 from api.routes import router as api_router
 from api.routes import translate_recipe
 from api.openai_client import initialize_openai_client
-from random import randint
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,11 +35,8 @@ app = FastAPI(
 RECIPES_DIR = Path("recipes")
 RECIPES_DIR.mkdir(exist_ok=True)
 
-# For cache-busting, every time we restart the server a new session
-# id is generated and will be used to serve the static files
 templates = Jinja2Templates(directory="templates")
-static_dir = f"/static_dir/{randint(1440, 1989)}"
-app.mount(static_dir, StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include API routes
 app.include_router(api_router)

@@ -97,6 +97,7 @@ class FileTree {
     const dirElement = document.createElement("div");
     dirElement.className = `file-tree-item directory ${isExpanded ? "expanded" : ""}`;
     dirElement.style.paddingLeft = `${16 + level * 20}px`;
+    dirElement.dataset.level = level;
 
     dirElement.innerHTML = `
             <input type="checkbox" class="file-tree-checkbox" data-path="${directory.path}">
@@ -112,19 +113,8 @@ class FileTree {
     dirElement.addEventListener("click", async (e) => {
       e.stopPropagation();
 
-      // If in edit mode, handle selection
       if (this.editMode) {
-        // If clicking directly on checkbox, use its state
-        if (e.target.type === "checkbox") {
-          this.onCheckboxChange(directory.path, e.target.checked);
-        } else if (!e.target.classList.contains("expand-icon")) {
-          // If not clicking on expand icon, toggle checkbox
-          const checkbox = dirElement.querySelector(".file-tree-checkbox");
-          if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-            this.onCheckboxChange(directory.path, checkbox.checked);
-          }
-        }
+        this.handleEditModeClick(e, directory.path, dirElement);
         return;
       }
 
@@ -176,22 +166,10 @@ class FileTree {
 
     // Handle clicks on file elements
     fileElement.addEventListener("click", (e) => {
-      // If in edit mode, always prevent navigation and handle as selection
       if (this.editMode) {
         e.preventDefault();
         e.stopPropagation();
-
-        // If clicking directly on checkbox, use its state
-        if (e.target.type === "checkbox") {
-          this.onCheckboxChange(file.path, e.target.checked);
-        } else {
-          // If clicking elsewhere on the item, toggle the checkbox
-          const checkbox = fileElement.querySelector(".file-tree-checkbox");
-          if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-            this.onCheckboxChange(file.path, checkbox.checked);
-          }
-        }
+        this.handleEditModeClick(e, file.path, fileElement);
         return;
       }
 
@@ -213,6 +191,20 @@ class FileTree {
     this.setupDragAndDrop(fileElement, file.path, "file");
 
     container.appendChild(fileElement);
+  }
+
+  handleEditModeClick(e, path, element) {
+    // Clicking the checkbox uses its own state; clicking anywhere else toggles
+    // the selection. Clicking a directory's expand icon does nothing.
+    if (e.target.type === "checkbox") {
+      this.onCheckboxChange(path, e.target.checked);
+    } else if (!e.target.classList.contains("expand-icon")) {
+      const checkbox = element.querySelector(".file-tree-checkbox");
+      if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        this.onCheckboxChange(path, checkbox.checked);
+      }
+    }
   }
 
   createSvgIcon(paths) {
@@ -246,19 +238,9 @@ class FileTree {
       if (nextSibling && nextSibling.classList.contains("file-tree-children")) {
         nextSibling.remove();
       }
-
-      // Update icon
-      const expandIcon = element.querySelector(".expand-icon");
-      expandIcon.innerHTML =
-        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
     } else {
       this.expandedFolders.add(path);
       element.classList.add("expanded");
-
-      // Update icon
-      const expandIcon = element.querySelector(".expand-icon");
-      expandIcon.innerHTML =
-        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
       // Add children container
       const childrenContainer = document.createElement("div");
@@ -269,8 +251,7 @@ class FileTree {
       try {
         const children = await this.loadDirectoryContents(path);
         const childTree = this.buildTree(children);
-        const level = (element.style.paddingLeft.match(/\d+/) || ["16"])[0];
-        const currentLevel = Math.floor((parseInt(level) - 16) / 20);
+        const currentLevel = parseInt(element.dataset.level, 10);
         this.renderTree(childTree, childrenContainer, currentLevel + 1);
       } catch (error) {
         childrenContainer.innerHTML = `<div class="loading" style="color: #ef4444;">Error loading folder</div>`;

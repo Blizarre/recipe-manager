@@ -360,17 +360,11 @@ class UnifiedRecipeApp {
   }
 
   showSuccess(message) {
-    this.showToast(message, "success");
+    Utils.showToast(message, "success");
   }
 
   showError(message) {
-    this.showToast(message, "error");
-  }
-
-  showToast(message, type = "info") {
-    if (this.sidebar) {
-      this.sidebar.showToast(message, type);
-    }
+    Utils.showToast(message, "error");
   }
 
   // Rename functionality

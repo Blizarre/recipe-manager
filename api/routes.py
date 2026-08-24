@@ -9,11 +9,11 @@ from .filesystem import FileSystemManager
 from .translation import (
     translate_markdown,
     markdown_to_html,
-    TranslationError,
     get_cached_translation,
     cache_translation,
 )
-from .formatting import format_recipe_markdown, FormattingError
+from .formatting import format_recipe_markdown
+from .llm import LLMError
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ async def format_recipe(path: str) -> Dict[str, str]:
         raise HTTPException(status_code=404, detail=f"Recipe file '{path}' not found")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except FormattingError as e:
+    except LLMError as e:
         logger.error(f"Formatting error for path '{path}': {str(e)}")
         raise HTTPException(
             status_code=503, detail="Formatting service temporarily unavailable"
@@ -510,7 +510,7 @@ async def translate_recipe(path: str) -> HTMLResponse:
         raise HTTPException(status_code=404, detail=f"Recipe file '{path}' not found")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except TranslationError as e:
+    except LLMError as e:
         logger.error(f"Translation error for path '{path}': {str(e)}")
         raise HTTPException(
             status_code=503, detail="Translation service temporarily unavailable"

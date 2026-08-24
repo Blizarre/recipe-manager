@@ -3,11 +3,11 @@ from unittest.mock import AsyncMock, patch
 from api.translation import (
     translate_markdown,
     markdown_to_html,
-    TranslationError,
     get_cached_translation,
     cache_translation,
     translation_cache,
 )
+from api.llm import LLMError
 
 
 @pytest.mark.asyncio
@@ -47,8 +47,8 @@ async def test_translate_markdown_api_error():
             side_effect=Exception("API Error")
         )
         with pytest.raises(
-            TranslationError,
-            match="Translation service encountered an unexpected error",
+            LLMError,
+            match="LLM service encountered an unexpected error",
         ):
             await translate_markdown(test_content)
 
@@ -66,7 +66,7 @@ async def test_translate_markdown_empty_response():
     with patch("api.openai_client.openai_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
         with pytest.raises(
-            TranslationError, match="Translation service returned empty response"
+            LLMError, match="LLM service returned empty response"
         ):
             await translate_markdown(test_content)
 

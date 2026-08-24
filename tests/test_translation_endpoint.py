@@ -2,7 +2,8 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from main import app
-from api.translation import TranslationError, translation_cache
+from api.translation import translation_cache
+from api.llm import LLMError
 
 client = TestClient(app)
 
@@ -146,7 +147,7 @@ def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
 
     # Setup mocks
     mock_fs_manager.read_file.return_value = "# Recette"
-    mock_translate.side_effect = TranslationError("OpenAI API error")
+    mock_translate.side_effect = LLMError("OpenAI API error")
 
     response = client.get("/api/recipes/test-recipe/translate")
 

@@ -1,9 +1,8 @@
-from openai import APIError, RateLimitError, APITimeoutError
 import logging
 import markdown
 from typing import Dict, Optional
 from dataclasses import dataclass
-from . import openai_client as _openai_module
+from .llm import chat_completion
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +15,6 @@ class CachedTranslation:
     html_content: str
     file_mtime: float
     has_photo: bool
-
-
-class TranslationError(Exception):
-    """Custom exception for translation service errors"""
-
-    pass
 
 
 # Translation cache - maps file path to cached translation
@@ -68,74 +61,16 @@ def cache_translation(
 
 
 async def translate_markdown(content: str) -> str:
-    """
-    Translate markdown recipe content using OpenAI API.
-
-    Args:
-        content: The markdown content to translate
-
-    Returns:
-        The translated markdown content in French
+    """Translate markdown recipe content to French.
 
     Raises:
-        ValueError: If content is empty
-        TranslationError: If OpenAI API call fails
+        ValueError: If content is empty.
+        LLMError: If the LLM request fails.
     """
     if not content or not content.strip():
         raise ValueError("Content cannot be empty")
 
-    if _openai_module.openai_client is None:
-        raise TranslationError("OpenAI client not initialized")
-
-    try:
-        import time
-
-        logger.info(f"Starting OpenAI translation request ({len(content)} chars)")
-        start = time.time()
-        response = await _openai_module.openai_client.chat.completions.create(
-            model="gpt-5-mini",
-            messages=[
-                {"role": "user", "content": TRANSLATION_PROMPT.format(content=content)}
-            ],
-            timeout=120.0,
-        )
-        duration = time.time() - start
-        logger.info(f"OpenAI translation completed in {duration:.1f}s")
-
-        translated_content = response.choices[0].message.content
-
-        # Because sometimes it doesn't matter how much you tell the LLM not to do something, it
-        # will still try to do it
-        if translated_content and translated_content.startswith("```markdown"):
-            translated_content = translated_content.removeprefix("```markdown")
-            translated_content = translated_content.removesuffix("```")
-
-        if not translated_content:
-            logger.error("OpenAI API returned empty response")
-            raise TranslationError("Translation service returned empty response")
-
-        logger.info(
-            f"Successfully translated content ({len(content)} -> {len(translated_content)} characters)"
-        )
-        return translated_content.strip()
-
-    except TranslationError:
-        # Re-raise TranslationError as-is
-        raise
-    except RateLimitError as e:
-        logger.error(f"OpenAI rate limit exceeded: {str(e)}")
-        raise TranslationError("Translation service is currently rate limited") from e
-    except APITimeoutError as e:
-        logger.error(f"OpenAI API timeout: {str(e)}")
-        raise TranslationError("Translation service timeout") from e
-    except APIError as e:
-        logger.error(f"OpenAI API error: {str(e)}")
-        raise TranslationError("Translation service is currently unavailable") from e
-    except Exception as e:
-        logger.error(f"Unexpected translation error: {str(e)}")
-        raise TranslationError(
-            "Translation service encountered an unexpected error"
-        ) from e
+    return await chat_completion(TRANSLATION_PROMPT.format(content=content))
 
 
 def markdown_to_html(
