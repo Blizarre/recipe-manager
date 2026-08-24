@@ -189,3 +189,32 @@ Translation and auto-formatting require an OpenAI API key:
 ```bash
 export OPENAI_API_KEY=sk-...
 ```
+
+## 🔀 Reverse Proxy (Caddy)
+
+The app intentionally sends no `Cache-Control` headers — caching is delegated to a
+reverse proxy. A recommended Caddyfile (caches static assets and translated recipe
+pages for one hour, and never caches the stateful API/editor):
+
+```caddy
+recipes.example.com {
+    encode gzip
+
+    reverse_proxy localhost:8000
+
+    # Static assets: cache for 1 hour
+    @static path /static/* /favicon.ico
+    header @static Cache-Control "public, max-age=3600"
+
+    # Translated recipe pages: cache for 1 hour
+    @translate path /translate/*
+    header @translate Cache-Control "public, max-age=3600"
+
+    # Never cache the API or the editor (stateful, optimistic-concurrency)
+    @dynamic path /api/* /edit/* /
+    header @dynamic Cache-Control "no-store"
+}
+```
+
+Make sure the app binds to the same host/port that `reverse_proxy` targets
+(`localhost:8000` in the example).
