@@ -411,7 +411,6 @@ async def get_photo(path: str) -> Response:
         content=photo_content,
         media_type="image/jpeg",
         headers={
-            "Cache-Control": "public, max-age=3600",
             "Content-Disposition": f"inline; filename={path.replace('.md', '.jpeg')}",
         },
     )

@@ -156,8 +156,8 @@ class TestPhotoEndpoints:
         assert response.status_code == 200
         assert response.json()["recipe_path"] == "test-recipe.md"
 
-    def test_photo_cache_headers(self, client_with_temp_dir):
-        """Test that photo responses include appropriate cache headers"""
+    def test_photo_content_disposition_header(self, client_with_temp_dir):
+        """Test that photo responses include the content-disposition header"""
         # Upload photo
         fake_jpeg = create_fake_jpeg_content()
         files = {"file": ("test.jpg", BytesIO(fake_jpeg), "image/jpeg")}
@@ -167,8 +167,6 @@ class TestPhotoEndpoints:
         # Get photo and check headers
         response = client_with_temp_dir.get("/api/photos/test-recipe.md")
         assert response.status_code == 200
-        assert "Cache-Control" in response.headers
-        assert "public, max-age=3600" in response.headers["Cache-Control"]
         assert "Content-Disposition" in response.headers
         assert "test-recipe.jpeg" in response.headers["Content-Disposition"]
 
