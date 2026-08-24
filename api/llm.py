@@ -9,7 +9,7 @@ from . import openai_client as _openai_module
 
 logger = logging.getLogger(__name__)
 
-MODEL = "gpt-5-mini"
+MODEL = "gpt-5.6-terra"
 TIMEOUT_SECONDS = 120.0
 
 
