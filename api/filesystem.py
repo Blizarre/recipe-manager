@@ -61,6 +61,8 @@ class FileSystemManager:
                 )
 
             return sorted(items, key=lambda x: (x["type"] == "file", x["name"]))
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to list directory: {str(e)}"
@@ -191,6 +193,8 @@ class FileSystemManager:
                 "message": "Directory created successfully",
                 "path": str(dir_path.relative_to(self.base_dir)),
             }
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to create directory: {str(e)}"
