@@ -15,6 +15,7 @@ class CachedTranslation:
     translated_content: str
     html_content: str
     file_mtime: float
+    has_photo: bool
 
 
 class TranslationError(Exception):
@@ -50,13 +51,18 @@ def get_cached_translation(
 
 
 def cache_translation(
-    file_path: str, translated_content: str, html_content: str, file_mtime: float
+    file_path: str,
+    translated_content: str,
+    html_content: str,
+    file_mtime: float,
+    has_photo: bool,
 ):
     """Cache a translation with file modification time"""
     translation_cache[file_path] = CachedTranslation(
         translated_content=translated_content,
         html_content=html_content,
         file_mtime=file_mtime,
+        has_photo=has_photo,
     )
     logger.info(f"Cached translation for {file_path}")
 

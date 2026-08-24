@@ -165,7 +165,7 @@ def test_cache_translation():
     file_mtime = 1234567890.0
 
     # Cache the translation
-    cache_translation(file_path, translated_content, html_content, file_mtime)
+    cache_translation(file_path, translated_content, html_content, file_mtime, True)
 
     # Verify it's in cache
     assert file_path in translation_cache
@@ -173,6 +173,7 @@ def test_cache_translation():
     assert cached.translated_content == translated_content
     assert cached.html_content == html_content
     assert cached.file_mtime == file_mtime
+    assert cached.has_photo is True
 
 
 def test_get_cached_translation_hit():
@@ -186,7 +187,7 @@ def test_get_cached_translation_hit():
     file_mtime = 1234567890.0
 
     # Cache the translation
-    cache_translation(file_path, translated_content, html_content, file_mtime)
+    cache_translation(file_path, translated_content, html_content, file_mtime, False)
 
     # Get from cache with same mtime (cache hit)
     cached = get_cached_translation(file_path, file_mtime)
@@ -206,7 +207,7 @@ def test_get_cached_translation_miss_newer_file():
     file_mtime = 1234567890.0
 
     # Cache the translation
-    cache_translation(file_path, translated_content, html_content, file_mtime)
+    cache_translation(file_path, translated_content, html_content, file_mtime, False)
 
     # Get from cache with newer mtime (cache miss)
     newer_mtime = file_mtime + 100.0

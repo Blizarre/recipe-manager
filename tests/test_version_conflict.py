@@ -12,6 +12,10 @@ from api.routes import router
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
+# JavaScript Number.MAX_SAFE_INTEGER — versions beyond this lose precision when
+# serialized as JSON to the browser.
+JS_MAX_SAFE_INTEGER = 2**53 - 1
+
 
 @pytest.mark.asyncio
 async def test_version_conflict():
@@ -61,6 +65,29 @@ async def test_version_conflict():
                 print(f"ERROR: Unexpected error: {e}")
 
         assert conflict_detected, "Version conflict should have been detected"
+
+
+@pytest.mark.asyncio
+async def test_version_fits_in_js_safe_integer():
+    """Versions must survive a JSON round-trip to the browser without precision loss.
+
+    Browsers can exactly represent integers only up to 2**53 - 1. A version
+    derived from e.g. nanosecond mtimes (~1.7e18) would be silently rounded,
+    causing the next save to send back a mismatched version and a spurious
+    409 conflict.
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        fs = FileSystemManager(temp_dir)
+
+        created = await fs.write_file("recipe.md", "# Initial")
+        read = await fs.read_file_with_version("recipe.md")
+        updated = await fs.write_file("recipe.md", "# Updated", read["version"])
+
+        for result in (created, read, updated):
+            version = result["version"]
+            assert 0 <= version <= JS_MAX_SAFE_INTEGER, (
+                f"Version {version} is not a JS safe integer"
+            )
 
 
 def test_api_endpoints():

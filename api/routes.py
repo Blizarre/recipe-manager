@@ -133,6 +133,8 @@ async def format_recipe(path: str) -> Dict[str, str]:
 
         return {"content": formatted_content}
 
+    except HTTPException:
+        raise
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Recipe file '{path}' not found")
     except ValueError as e:
@@ -297,19 +299,16 @@ async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
         elif query_lower in name_lower:
             score = 25
         else:
-            # Fuzzy matching
-            matched_chars = sum(1 for c in query_lower if c in name_lower)
-            score = matched_chars * 2 if matched_chars >= len(query_lower) * 0.7 else 0
+            continue
 
-        if score > 0:
-            results.append(
-                {
-                    "path": file_info["path"],
-                    "name": file_info["name"],
-                    "type": file_info["type"],
-                    "score": score,
-                }
-            )
+        results.append(
+            {
+                "path": file_info["path"],
+                "name": file_info["name"],
+                "type": file_info["type"],
+                "score": score,
+            }
+        )
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:limit]
@@ -479,21 +478,12 @@ async def translate_recipe(path: str) -> HTMLResponse:
         file_path = fs_manager._validate_path(path)
         file_mtime = file_path.stat().st_mtime
 
-        # Check cache first (but we still need to check for photo changes)
+        # Photo presence affects the rendered HTML, so it's part of the cache key.
+        has_photo = await fs_manager.photo_exists(path)
+
         cached = get_cached_translation(path, file_mtime)
-        if cached:
-            # Even with cached translation, we need to check if photo status changed
-            photo_url = None
-            if await fs_manager.photo_exists(path):
-                photo_url = f"/api/photos/{path}"
-
-            # If the cached content doesn't match current photo status, regenerate
-            has_photo_in_cache = 'class="recipe-photo"' in cached.html_content
-            has_photo_now = photo_url is not None
-
-            if has_photo_in_cache == has_photo_now:
-                return HTMLResponse(content=cached.html_content, status_code=200)
-            # If photo status changed, continue to regenerate
+        if cached and cached.has_photo == has_photo:
+            return HTMLResponse(content=cached.html_content, status_code=200)
 
         # Read the recipe file using existing filesystem manager
         markdown_content = await fs_manager.read_file(path)
@@ -504,19 +494,18 @@ async def translate_recipe(path: str) -> HTMLResponse:
         # Translate content to French
         translated_content = await translate_markdown(markdown_content)
 
-        # Check if photo exists for this recipe
-        photo_url = None
-        if await fs_manager.photo_exists(path):
-            photo_url = f"/api/photos/{path}"
+        photo_url = f"/api/photos/{path}" if has_photo else None
 
         # Convert to HTML
         html_content = markdown_to_html(translated_content, title, photo_url)
 
         # Cache the result
-        cache_translation(path, translated_content, html_content, file_mtime)
+        cache_translation(path, translated_content, html_content, file_mtime, has_photo)
 
         return HTMLResponse(content=html_content, status_code=200)
 
+    except HTTPException:
+        raise
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Recipe file '{path}' not found")
     except ValueError as e:

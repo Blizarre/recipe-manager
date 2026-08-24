@@ -16,23 +16,13 @@ class FileSystemManager:
         self.base_dir = Path(base_dir).resolve()
         self.base_dir.mkdir(exist_ok=True)
         self.logger = logging.getLogger(__name__)
-        self._file_locks: Dict[str, asyncio.Lock] = {}
-
-    def _get_lock(self, path: str) -> asyncio.Lock:
-        if path not in self._file_locks:
-            self._file_locks[path] = asyncio.Lock()
-        return self._file_locks[path]
+        self._write_lock = asyncio.Lock()
 
     def _validate_path(self, path: str) -> Path:
-        """Validate and sanitize file paths to prevent directory traversal"""
-        # Remove any path traversal attempts
-        clean_path = path.replace("../", "")
-        clean_path = clean_path.strip("/")
+        """Resolve a path and ensure it stays within base_dir."""
+        full_path = (self.base_dir / path.strip("/")).resolve()
 
-        # Resolve the full path and ensure it's within base_dir
-        full_path = (self.base_dir / clean_path).resolve()
-
-        if not str(full_path).startswith(str(self.base_dir)):
+        if not full_path.is_relative_to(self.base_dir):
             raise HTTPException(status_code=400, detail="Invalid path")
 
         return full_path
@@ -112,7 +102,7 @@ class FileSystemManager:
         try:
             file_path = self._validate_path(path)
 
-            async with self._get_lock(path):
+            async with self._write_lock:
                 # Check for version conflicts if expected_version is provided
                 if expected_version is not None and file_path.exists():
                     current_version = int(file_path.stat().st_mtime * 1000)
@@ -133,7 +123,10 @@ class FileSystemManager:
                 async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
                     await f.write(content)
 
-                # Get new version after write; bump mtime if it hasn't advanced
+                # Version uses milliseconds (not nanoseconds) so it stays within
+                # JavaScript's safe-integer range on the client. If mtime hasn't
+                # advanced (coarse filesystem timestamp), bump it to keep the
+                # version monotonic for conflict detection.
                 new_version = int(file_path.stat().st_mtime * 1000)
                 if expected_version is not None and new_version <= expected_version:
                     new_mtime = (expected_version + 1) / 1000
