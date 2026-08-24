@@ -17,7 +17,7 @@ uv run pytest
 It has to be run before any commit
 
 ```
-make format
+make fmt
 ```
 
 To check that everything is ready for a commit:

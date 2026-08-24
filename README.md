@@ -9,12 +9,13 @@ THAT IS PROPERLY CONFIGURED.**
 
 ## ✨ Features
 
-- **📝 Simple Editor**: Lightweight textarea with Prism.js markdown syntax highlighting
+- **📝 Simple Editor**: EasyMDE (CodeMirror) Markdown editor with live syntax highlighting
 - **🔍 Powerful Search**: Search by content or filename with real-time results
 - **📁 File Organization**: Create folders and organize recipes hierarchically
-- **💾 Auto-Save**: Automatic saving with debounced input and retry logic
+- **🖼️ Recipe Photos**: Attach a photo to each recipe
+- **🇫🇷 Translate & Format**: Translate recipes to French and auto-format them (via OpenAI)
+- **💾 Auto-Save**: Automatic saving with debounced input and version-conflict detection
 - **📱 Mobile-Friendly**: Touch gestures, responsive design, optimized for mobile
-- **🌙 Dark Mode**: Automatic dark/light theme based on system preferences
 
 ## 🚀 Quick Start
 
@@ -69,17 +70,24 @@ uv run python main.py
 
 Configure the application using environment variables:
 
-| Variable      | Default        | Description                     |
-| ------------- | -------------- | ------------------------------- |
-| `RECIPES_DIR` | `/app/recipes` | Directory to store recipe files |
-| `HOST`        | `0.0.0.0`      | Server host binding             |
-| `PORT`        | `8000`         | Server port                     |
+| Variable         | Default    | Description                            |
+| ---------------- | ---------- | -------------------------------------- |
+| `RECIPES_DIR`    | `recipes`  | Directory to store recipe files        |
+| `HOST`           | `0.0.0.0`  | Server host binding (via `main.py`)    |
+| `PORT`           | `8000`     | Server port (via `main.py`)            |
+| `OPENAI_API_KEY` | —          | Required for translate/format features |
 
 Example with custom configuration:
 
 ```bash
-docker run -p 3000:3000 -e PORT=3000 -v ./my-recipes:/app/recipes recipe-manager
+export RECIPES_DIR=/path/to/your/recipes
+export PORT=3000
+OPENAI_API_KEY=sk-... uv run python main.py
 ```
+
+> **Note:** `HOST`/`PORT` only apply when starting the server with
+> `uv run python main.py` (not when using `uvicorn` directly). In the Docker image
+> they default to `0.0.0.0`/`8000`.
 
 ## 🔧 API Endpoints
 
@@ -96,6 +104,8 @@ docker run -p 3000:3000 -e PORT=3000 -v ./my-recipes:/app/recipes recipe-manager
 
 - `PUT /api/recipes/{path}` - Save recipe
 - `POST /api/recipes/{path}` - Create recipe with template
+- `POST /api/recipes/{path}/format` - Auto-format recipe (returns reformatted markdown)
+- `GET /api/recipes/{path}/translate` - Translate recipe to French (returns HTML)
 
 ### Search
 
@@ -107,16 +117,18 @@ docker run -p 3000:3000 -e PORT=3000 -v ./my-recipes:/app/recipes recipe-manager
 - `POST /api/directories/{path}` - Create directory
 - `DELETE /api/directories/{path}` - Delete directory
 
+### Photos
+
+- `GET /api/photos/{path}` - Get the photo for a recipe
+- `POST /api/photos/{path}` - Upload a recipe photo (JPEG)
+- `DELETE /api/photos/{path}` - Delete a recipe photo
+
 ## 🧪 Testing
 
-Run the comprehensive test suite:
+Run the test suite:
 
 ```bash
-# Using uv
-uv run pytest tests/ -v
-
-# Or directly
-pytest tests/ -v
+uv run pytest
 ```
 
 ## 🏗️ Development
@@ -139,10 +151,10 @@ pytest tests/ -v
 
 **Editor System:**
 
-- Textarea + syntax overlay approach
-- Prism.js for lightweight syntax highlighting
-- Real-time highlighting without performance impact
-- Scroll synchronization between textarea and overlay
+- EasyMDE (CodeMirror) with `contenteditable` input for mobile keyboard support
+- Native browser spellchecking and autocapitalize
+- Optimistic concurrency via an mtime-based version with conflict detection
+- The `/translate/{path}` route serves a standalone HTML version of a recipe
 
 ### Key Design Decisions
 
@@ -163,9 +175,17 @@ export RECIPES_DIR=/path/to/your/recipes
 
 ### Server Settings
 
-Configure the server host and port:
+Configure the server host and port (applies when running `uv run python main.py`):
 
 ```bash
 export HOST=0.0.0.0
 export PORT=8000
+```
+
+### OpenAI
+
+Translation and auto-formatting require an OpenAI API key:
+
+```bash
+export OPENAI_API_KEY=sk-...
 ```
