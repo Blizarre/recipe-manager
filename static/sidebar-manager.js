@@ -472,7 +472,7 @@ class SidebarManager {
       }
 
       // Create the folder
-      await this.fileTree.createFile(sanitizedName, true);
+      await this.fileTree.createDirectory(sanitizedName);
 
       // Refresh file tree and close modal
       await this.refreshFileTree();

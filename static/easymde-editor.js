@@ -1,8 +1,7 @@
 // EasyMDE Markdown Editor wrapper for Recipe Manager
 class MarkdownEditor {
-  constructor(container, onContentChange) {
+  constructor(container) {
     this.container = container;
-    this.onContentChange = onContentChange;
     this.editor = null;
     this.currentFile = null;
     this.isDirty = false;
@@ -60,7 +59,6 @@ class MarkdownEditor {
       // Listen to CodeMirror change events
       this.editor.codemirror.on("change", () => {
         this.isDirty = true;
-        this.onContentChange?.();
         this.scheduleAutoSave();
         this.updateUI();
       });
@@ -194,14 +192,6 @@ class MarkdownEditor {
     }
   }
 
-  showSuccess(message) {
-    if (window.app) {
-      window.app.showSuccess(message);
-    } else {
-      console.log(message);
-    }
-  }
-
   getCurrentFile() {
     return this.currentFile;
   }
@@ -241,44 +231,5 @@ class MarkdownEditor {
     this.showError(
       "File was modified in another browser. Editor is now read-only. Please refresh the page to see the latest changes.",
     );
-  }
-
-  async refreshFile() {
-    if (!this.currentFile) return;
-
-    try {
-      const response = await window.api.getFile(this.currentFile);
-      this.setContent(response.content || "");
-      this.lastSavedContent = response.content || "";
-      this.currentVersion = response.version;
-      this.isDirty = false;
-
-      // Re-enable textarea
-      const textarea = document.getElementById("editor");
-      if (textarea) {
-        textarea.disabled = false;
-      }
-
-      const fileStatus = document.getElementById("fileStatus");
-      if (fileStatus) {
-        fileStatus.textContent = "";
-        fileStatus.classList.remove("conflict-warning");
-      }
-
-      this.showSuccess("Recipe refreshed with latest changes");
-    } catch (error) {
-      this.showError("Failed to refresh: " + Utils.extractErrorMessage(error));
-    }
-  }
-
-  destroy() {
-    this.cancelAutoSave();
-    if (this.resizeHandler) {
-      window.removeEventListener("resize", this.resizeHandler);
-    }
-    if (this.editor) {
-      this.editor.toTextArea();
-      this.editor = null;
-    }
   }
 }

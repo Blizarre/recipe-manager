@@ -67,7 +67,7 @@ async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
     # Write to new location
     await fs_manager.write_file(move_data.destination, content)
 
-    # Delete old file (this will also handle photo cleanup if move failed)
+    # Delete old file (the associated photo, if any, was already moved above)
     await fs_manager.delete_file(path)
 
     return {"message": f"File moved from {path} to {move_data.destination}"}
@@ -154,7 +154,7 @@ async def create_recipe(path: str) -> Dict[str, Any]:
         path += ".md"
 
     # Create with basic recipe template
-    title = path.replace(".md", "").replace("_", " ").replace("-", " ").title()
+    title = _path_to_title(path)
     content = f"""# {title}
 
 ## Ingredients
@@ -272,7 +272,8 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
                     }
                 )
 
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to search file '{file_info['path']}': {str(e)}")
             continue
 
     results.sort(key=lambda x: x["score"], reverse=True)
@@ -330,11 +331,16 @@ async def _get_all_files_recursive(path: str) -> List[Dict[str, Any]]:
                 sub_files = await _get_all_files_recursive(subpath)
                 all_files.extend(sub_files)
 
-    except Exception:
-        # Skip directories that can't be read
-        pass
+    except Exception as e:
+        # A directory can't be read — log it and continue with what we have.
+        logger.warning(f"Failed to list directory '{path}': {str(e)}")
 
     return all_files
+
+
+def _path_to_title(path: str) -> str:
+    """Convert a file path into a human-readable title."""
+    return path.replace(".md", "").replace("_", " ").replace("-", " ").title()
 
 
 def _extract_title_from_content(content: str) -> Optional[str]:
@@ -493,10 +499,7 @@ async def translate_recipe(path: str) -> HTMLResponse:
         markdown_content = await fs_manager.read_file(path)
 
         # Extract title from content for HTML title
-        title = (
-            _extract_title_from_content(markdown_content)
-            or path.replace(".md", "").replace("_", " ").replace("-", " ").title()
-        )
+        title = _extract_title_from_content(markdown_content) or _path_to_title(path)
 
         # Translate content to French
         translated_content = await translate_markdown(markdown_content)

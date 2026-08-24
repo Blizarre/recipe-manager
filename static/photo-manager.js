@@ -2,7 +2,6 @@
 class PhotoManager {
   constructor() {
     this.currentRecipe = null;
-    this.isLoading = false;
     this.isPhotoViewActive = false;
     this.setupEventListeners();
   }

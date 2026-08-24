@@ -20,7 +20,6 @@ class UnifiedRecipeApp {
       formatBtn: document.getElementById("formatBtn"),
       togglePhotoBtn: document.getElementById("togglePhotoBtn"),
       togglePhotoMobileBtn: document.getElementById("togglePhotoMobileBtn"),
-      headerActions: document.querySelector(".header-actions"),
       actionButtons: document.querySelector(".action-buttons"),
       fileName: document.getElementById("fileName"),
     };
@@ -104,7 +103,6 @@ class UnifiedRecipeApp {
         formatBtn,
         togglePhotoBtn,
         togglePhotoMobileBtn,
-        headerActions,
         actionButtons,
       } = this.elements;
 
@@ -112,7 +110,6 @@ class UnifiedRecipeApp {
         !undoBtn ||
         !renameBtn ||
         !translateBtn ||
-        !headerActions ||
         !actionButtons
       )
         return;
@@ -246,24 +243,14 @@ class UnifiedRecipeApp {
   }
 
   async initializeEditorMode() {
-    // Initialize editor when EasyMDE is ready
-    if (window.EditorReady) {
-      await this.setupEditor();
-      this.loadRecipeContent();
-    } else {
-      window.addEventListener("editor-ready", async () => {
-        await this.setupEditor();
-        this.loadRecipeContent();
-      });
-    }
+    await this.setupEditor();
+    this.loadRecipeContent();
   }
 
   async setupEditor() {
     try {
       const editorContainer = document.getElementById("editorContainer");
-      this.editor = new MarkdownEditor(editorContainer, () =>
-        this.onContentChange(),
-      );
+      this.editor = new MarkdownEditor(editorContainer);
     } catch (error) {
       console.error("Failed to setup editor:", error);
       this.showError("Failed to initialize editor");
@@ -335,11 +322,6 @@ class UnifiedRecipeApp {
       // Navigate to the file's URL - this will load the page for that file
       window.location.href = `/edit/${path}`;
     }
-  }
-
-  onContentChange() {
-    // Called when editor content changes
-    // The MarkdownEditor class handles auto-save and UI updates
   }
 
   // Handle file operations that affect current URL

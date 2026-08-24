@@ -160,18 +160,9 @@ class FileSystemManager:
                 raise HTTPException(status_code=404, detail="File not found")
 
             if file_path.is_file():
-                # If it's a recipe file (.md), try to delete associated photo
-                if path.endswith(".md"):
-                    try:
-                        await self.delete_photo(path)
-                    except HTTPException:
-                        # Photo doesn't exist, that's fine
-                        pass
-                    except Exception as e:
-                        # Log but don't fail the file deletion
-                        self.logger.warning(
-                            f"Failed to delete photo for {path}: {str(e)}"
-                        )
+                # If it's a recipe file (.md), delete the associated photo first.
+                if path.endswith(".md") and await self.photo_exists(path):
+                    await self.delete_photo(path)
 
                 file_path.unlink()
                 return {"message": "File deleted successfully"}
@@ -214,14 +205,8 @@ class FileSystemManager:
 
     async def photo_exists(self, recipe_path: str) -> bool:
         """Check if a photo exists for the given recipe"""
-        try:
-            photo_path = self._get_photo_path_for_recipe(recipe_path)
-            return photo_path.exists() and photo_path.is_file()
-        except Exception as e:
-            self.logger.warning(
-                f"Error checking photo existence for {recipe_path}: {str(e)}"
-            )
-            return False
+        photo_path = self._get_photo_path_for_recipe(recipe_path)
+        return photo_path.exists() and photo_path.is_file()
 
     async def write_photo(
         self, recipe_path: str, photo_content: bytes
@@ -283,27 +268,31 @@ class FileSystemManager:
                 status_code=500, detail=f"Failed to delete photo: {str(e)}"
             )
 
-    async def move_photo(self, old_recipe_path: str, new_recipe_path: str) -> bool:
-        """Move photo when recipe is moved/renamed. Returns True if successful or no photo exists"""
+    async def move_photo(self, old_recipe_path: str, new_recipe_path: str) -> None:
+        """Move the photo when its recipe is moved/renamed.
+
+        No-op when no photo exists. Raises HTTPException if the photo exists
+        but cannot be moved.
+        """
+        old_photo_path = self._get_photo_path_for_recipe(old_recipe_path)
+        if not old_photo_path.exists():
+            # No photo to move
+            return
+
+        new_photo_path = self._get_photo_path_for_recipe(new_recipe_path)
         try:
-            old_photo_path = self._get_photo_path_for_recipe(old_recipe_path)
-            if not old_photo_path.exists():
-                # No photo to move, return success
-                return True
-
-            new_photo_path = self._get_photo_path_for_recipe(new_recipe_path)
-
             # Create parent directories if needed
             new_photo_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Move the photo file
             old_photo_path.rename(new_photo_path)
-
-            self.logger.info(f"Photo moved from {old_recipe_path} to {new_recipe_path}")
-            return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(
                 f"Failed to move photo from {old_recipe_path} to {new_recipe_path}: {str(e)}"
             )
-            # Don't raise exception - photo operations should not break file operations
-            return False
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to move photo for recipe '{old_recipe_path}'",
+            ) from e
+
+        self.logger.info(f"Photo moved from {old_recipe_path} to {new_recipe_path}")

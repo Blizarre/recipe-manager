@@ -1,6 +1,7 @@
 import pytest
 import tempfile
 import shutil
+from fastapi import HTTPException
 from api.filesystem import FileSystemManager
 
 
@@ -73,8 +74,7 @@ async def test_photo_move_functionality(temp_filesystem):
     await fs.write_photo("old_recipe.md", test_content)
 
     # Move photo
-    success = await fs.move_photo("old_recipe.md", "new_recipe.md")
-    assert success is True
+    await fs.move_photo("old_recipe.md", "new_recipe.md")
 
     # Verify photo moved
     assert await fs.photo_exists("old_recipe.md") is False
@@ -87,12 +87,29 @@ async def test_photo_move_functionality(temp_filesystem):
 
 @pytest.mark.asyncio
 async def test_photo_move_without_existing_photo(temp_filesystem):
-    """Test moving when no photo exists (should succeed)"""
+    """Test moving when no photo exists (no-op, should not raise)"""
     fs = temp_filesystem
 
     # Move photo that doesn't exist
-    success = await fs.move_photo("nonexistent.md", "new_recipe.md")
-    assert success is True  # Should succeed even if no photo exists
+    await fs.move_photo("nonexistent.md", "new_recipe.md")
+
+
+@pytest.mark.asyncio
+async def test_photo_move_failure_raises(temp_filesystem):
+    """Test that move_photo raises when the photo cannot be moved"""
+    fs = temp_filesystem
+    await fs.write_file("old_recipe.md", "# Old Recipe")
+    await fs.write_photo("old_recipe.md", b"fake content")
+
+    # A directory at the destination photo path makes rename fail
+    (fs.base_dir / "new_recipe.jpeg").mkdir()
+
+    with pytest.raises(HTTPException):
+        await fs.move_photo("old_recipe.md", "new_recipe.md")
+
+    # The original photo must be left intact
+    assert await fs.photo_exists("old_recipe.md") is True
+    assert await fs.photo_exists("new_recipe.md") is False
 
 
 @pytest.mark.asyncio

@@ -224,17 +224,14 @@ class FileTree {
     const docBase =
       '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/>';
 
-    const icons = {
-      md: `${docBase}<line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>`,
-      markdown: `${docBase}<line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>`,
-      txt: `${docBase}<line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="12" y1="9" x2="8" y2="9"/>`,
-      jpg: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>',
-      jpeg: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>',
-      png: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>',
-      gif: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>',
-    };
+    // The file tree only lists markdown recipe files (photo files are filtered
+    // out), so we only need the markdown icon and a generic fallback.
+    const isMarkdown = extension === "md" || extension === "markdown";
+    const icon = isMarkdown
+      ? `${docBase}<line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>`
+      : docBase;
 
-    return this.createSvgIcon(icons[extension] || docBase);
+    return this.createSvgIcon(icon);
   }
 
   async toggleDirectory(path, element) {
@@ -285,22 +282,13 @@ class FileTree {
     return await window.api.listFiles(path);
   }
 
-  async createFile(path, isDirectory = false) {
+  async createDirectory(path) {
     try {
-      if (isDirectory) {
-        await window.api.createDirectory(path);
-      } else {
-        // Check if it's a recipe file
-        if (path.endsWith(".md")) {
-          await window.api.createRecipe(path, true);
-        } else {
-          await window.api.createFile(path, "");
-        }
-      }
+      await window.api.createDirectory(path);
       await this.refresh();
     } catch (error) {
       throw new Error(
-        `Failed to create ${isDirectory ? "folder" : "file"}: ${error.message}`,
+        `Failed to create folder: ${error.message}`,
       );
     }
   }
