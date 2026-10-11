@@ -1,9 +1,11 @@
+import os
+import shutil
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
-import tempfile
-import shutil
-import os
+
 from main import app
 
 
@@ -15,6 +17,7 @@ def clean_test_dir():
 
     # Re-import to get fresh filesystem manager with new test dir
     import importlib
+
     import api.routes
 
     importlib.reload(api.routes)

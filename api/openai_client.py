@@ -1,9 +1,7 @@
-from typing import Optional
-
 from openai import AsyncOpenAI
 
 # Shared OpenAI client - initialized during FastAPI startup
-openai_client: Optional[AsyncOpenAI] = None
+openai_client: AsyncOpenAI | None = None
 
 
 def initialize_openai_client():

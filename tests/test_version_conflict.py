@@ -4,13 +4,15 @@ Test script to verify version conflict detection works properly.
 This creates a test recipe, simulates concurrent modifications, and tests conflict detection.
 """
 
-import pytest
 import os
 import tempfile
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 from api.filesystem import FileSystemManager
 from api.routes import router
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
 # JavaScript Number.MAX_SAFE_INTEGER — versions beyond this lose precision when
 # serialized as JSON to the browser.

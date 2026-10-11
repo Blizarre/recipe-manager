@@ -1,19 +1,21 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile
-from fastapi.responses import HTMLResponse, Response
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+import logging
 import re
 import time
-import logging
+from typing import Any
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import HTMLResponse, Response
+from pydantic import BaseModel
+
 from .filesystem import FileSystemManager
-from .translation import (
-    translate_markdown,
-    markdown_to_html,
-    get_cached_translation,
-    cache_translation,
-)
 from .formatting import format_recipe_markdown
 from .llm import LLMError
+from .translation import (
+    cache_translation,
+    get_cached_translation,
+    markdown_to_html,
+    translate_markdown,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +37,13 @@ class FileMoveRequest(BaseModel):
 
 
 @router.get("/files")
-async def list_files(path: str = "") -> List[Dict[str, Any]]:
+async def list_files(path: str = "") -> list[dict[str, Any]]:
     """List files and directories at the specified path"""
     return await fs_manager.list_directory(path)
 
 
 @router.get("/files/{path:path}")
-async def get_file_content(path: str) -> Dict[str, Any]:
+async def get_file_content(path: str) -> dict[str, Any]:
     """Get the content of a specific file with version info"""
     return await fs_manager.read_file_with_version(path)
 
@@ -49,13 +51,13 @@ async def get_file_content(path: str) -> Dict[str, Any]:
 @router.put("/files/{path:path}")
 async def update_file_content(
     path: str, file_data: FileUpdateContent
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update the content of a specific file with version conflict detection"""
     return await fs_manager.write_file(path, file_data.content, file_data.version)
 
 
 @router.post("/files/{path:path}/move")
-async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
+async def move_file(path: str, move_data: FileMoveRequest) -> dict[str, str]:
     """Move/rename a file to a new location"""
     # Read the file content
     content = await fs_manager.read_file(path)
@@ -74,25 +76,25 @@ async def move_file(path: str, move_data: FileMoveRequest) -> Dict[str, str]:
 
 
 @router.post("/files/{path:path}")
-async def create_file(path: str, file_data: FileCreateContent) -> Dict[str, Any]:
+async def create_file(path: str, file_data: FileCreateContent) -> dict[str, Any]:
     """Create a new file with content"""
     return await fs_manager.write_file(path, file_data.content)
 
 
 @router.delete("/files/{path:path}")
-async def delete_file(path: str) -> Dict[str, str]:
+async def delete_file(path: str) -> dict[str, str]:
     """Delete a specific file"""
     return await fs_manager.delete_file(path)
 
 
 @router.post("/directories/{path:path}")
-async def create_directory(path: str) -> Dict[str, str]:
+async def create_directory(path: str) -> dict[str, str]:
     """Create a new directory"""
     return await fs_manager.create_directory(path)
 
 
 @router.delete("/directories/{path:path}")
-async def delete_directory(path: str) -> Dict[str, str]:
+async def delete_directory(path: str) -> dict[str, str]:
     """Delete a directory (must be empty)"""
     dir_path = fs_manager._validate_path(path)
     if not dir_path.exists():
@@ -113,7 +115,7 @@ async def delete_directory(path: str) -> Dict[str, str]:
 
 
 @router.put("/recipes/{path:path}")
-async def save_recipe(path: str, recipe_data: FileUpdateContent) -> Dict[str, Any]:
+async def save_recipe(path: str, recipe_data: FileUpdateContent) -> dict[str, Any]:
     """Save a recipe file with version conflict detection"""
     if not path.endswith(".md"):
         path += ".md"
@@ -122,7 +124,7 @@ async def save_recipe(path: str, recipe_data: FileUpdateContent) -> Dict[str, An
 
 
 @router.post("/recipes/{path:path}/format")
-async def format_recipe(path: str) -> Dict[str, str]:
+async def format_recipe(path: str) -> dict[str, str]:
     """Format a recipe using LLM and return the reformatted markdown content"""
     try:
         if not path.endswith(".md"):
@@ -140,17 +142,17 @@ async def format_recipe(path: str) -> Dict[str, str]:
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except LLMError as e:
-        logger.error(f"Formatting error for path '{path}': {str(e)}")
+        logger.error(f"Formatting error for path '{path}': {e!s}")
         raise HTTPException(
             status_code=503, detail="Formatting service temporarily unavailable"
         )
     except Exception as e:
-        logger.error(f"Unexpected error formatting '{path}': {str(e)}")
+        logger.error(f"Unexpected error formatting '{path}': {e!s}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/recipes/{path:path}")
-async def create_recipe(path: str) -> Dict[str, Any]:
+async def create_recipe(path: str) -> dict[str, Any]:
     """Create a new recipe file with basic template"""
     if not path.endswith(".md"):
         path += ".md"
@@ -175,7 +177,7 @@ async def create_recipe(path: str) -> Dict[str, Any]:
 
 
 @router.get("/search")
-async def search_content(q: str, limit: int = 50) -> Dict[str, Any]:
+async def search_content(q: str, limit: int = 50) -> dict[str, Any]:
     """Search for content within recipe files"""
     start_time = time.time()
 
@@ -194,7 +196,7 @@ async def search_content(q: str, limit: int = 50) -> Dict[str, Any]:
 
 
 @router.get("/search/files")
-async def search_files(q: str, limit: int = 50) -> Dict[str, Any]:
+async def search_files(q: str, limit: int = 50) -> dict[str, Any]:
     """Search for files by filename"""
     start_time = time.time()
 
@@ -212,7 +214,7 @@ async def search_files(q: str, limit: int = 50) -> Dict[str, Any]:
     }
 
 
-async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
+async def _search_file_contents(query: str, limit: int) -> list[dict[str, Any]]:
     """Internal function to search file contents"""
     results = []
     query_lower = query.lower()
@@ -275,14 +277,14 @@ async def _search_file_contents(query: str, limit: int) -> List[Dict[str, Any]]:
                 )
 
         except Exception as e:
-            logger.warning(f"Failed to search file '{file_info['path']}': {str(e)}")
+            logger.warning(f"Failed to search file '{file_info['path']}': {e!s}")
             continue
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:limit]
 
 
-async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
+async def _search_filenames(query: str, limit: int) -> list[dict[str, Any]]:
     """Internal function to search filenames"""
     results = []
     query_lower = query.lower()
@@ -314,7 +316,7 @@ async def _search_filenames(query: str, limit: int) -> List[Dict[str, Any]]:
     return results[:limit]
 
 
-async def _get_all_files_recursive(path: str) -> List[Dict[str, Any]]:
+async def _get_all_files_recursive(path: str) -> list[dict[str, Any]]:
     """Recursively get all files from directory"""
     all_files = []
 
@@ -332,7 +334,7 @@ async def _get_all_files_recursive(path: str) -> List[Dict[str, Any]]:
 
     except Exception as e:
         # A directory can't be read — log it and continue with what we have.
-        logger.warning(f"Failed to list directory '{path}': {str(e)}")
+        logger.warning(f"Failed to list directory '{path}': {e!s}")
 
     return all_files
 
@@ -342,7 +344,7 @@ def _path_to_title(path: str) -> str:
     return path.replace(".md", "").replace("_", " ").replace("-", " ").title()
 
 
-def _extract_title_from_content(content: str) -> Optional[str]:
+def _extract_title_from_content(content: str) -> str | None:
     """Extract title from markdown content"""
     lines = content.split("\n")
     for line in lines:
@@ -353,7 +355,7 @@ def _extract_title_from_content(content: str) -> Optional[str]:
 
 
 def _generate_content_preview(
-    content: str, query_words: List[str], max_length: int
+    content: str, query_words: list[str], max_length: int
 ) -> str:
     """Generate a content preview highlighting search terms"""
     content = content.strip()
@@ -417,7 +419,7 @@ async def get_photo(path: str) -> Response:
 
 
 @router.post("/photos/{path:path}")
-async def upload_photo(path: str, file: UploadFile = File(...)) -> Dict[str, str]:
+async def upload_photo(path: str, file: UploadFile = File(...)) -> dict[str, str]:
     """Upload a photo for a recipe - only JPEG files allowed"""
     # Ensure path ends with .md for consistency
     if not path.endswith(".md"):
@@ -453,7 +455,7 @@ async def upload_photo(path: str, file: UploadFile = File(...)) -> Dict[str, str
 
 
 @router.delete("/photos/{path:path}")
-async def delete_photo(path: str) -> Dict[str, str]:
+async def delete_photo(path: str) -> dict[str, str]:
     """Delete photo for a recipe"""
     # Ensure path ends with .md for consistency
     if not path.endswith(".md"):
@@ -510,10 +512,10 @@ async def translate_recipe(path: str) -> HTMLResponse:
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except LLMError as e:
-        logger.error(f"Translation error for path '{path}': {str(e)}")
+        logger.error(f"Translation error for path '{path}': {e!s}")
         raise HTTPException(
             status_code=503, detail="Translation service temporarily unavailable"
         )
     except Exception as e:
-        logger.error(f"Unexpected error translating '{path}': {str(e)}")
+        logger.error(f"Unexpected error translating '{path}': {e!s}")
         raise HTTPException(status_code=500, detail="Internal server error")

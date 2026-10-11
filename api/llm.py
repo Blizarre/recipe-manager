@@ -51,14 +51,14 @@ async def chat_completion(prompt: str) -> str:
     except LLMError:
         raise
     except RateLimitError as e:
-        logger.error(f"LLM rate limit exceeded: {str(e)}")
+        logger.error(f"LLM rate limit exceeded: {e!s}")
         raise LLMError("LLM service is currently rate limited") from e
     except APITimeoutError as e:
-        logger.error(f"LLM API timeout: {str(e)}")
+        logger.error(f"LLM API timeout: {e!s}")
         raise LLMError("LLM service timeout") from e
     except APIError as e:
-        logger.error(f"LLM API error: {str(e)}")
+        logger.error(f"LLM API error: {e!s}")
         raise LLMError("LLM service is currently unavailable") from e
     except Exception as e:
-        logger.error(f"Unexpected LLM error: {str(e)}")
+        logger.error(f"Unexpected LLM error: {e!s}")
         raise LLMError("LLM service encountered an unexpected error") from e

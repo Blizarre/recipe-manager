@@ -1,8 +1,10 @@
+import shutil
+import tempfile
+from io import BytesIO
+
 import pytest
 from fastapi.testclient import TestClient
-from io import BytesIO
-import tempfile
-import shutil
+
 from main import app
 
 

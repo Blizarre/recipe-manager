@@ -1,13 +1,15 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
+from api.llm import LLMError
 from api.translation import (
-    translate_markdown,
-    markdown_to_html,
-    get_cached_translation,
     cache_translation,
+    get_cached_translation,
+    markdown_to_html,
+    translate_markdown,
     translation_cache,
 )
-from api.llm import LLMError
 
 
 @pytest.mark.asyncio
@@ -84,7 +86,7 @@ async def test_translation_service_integration():
         assert "recette" in result.lower() or "ingrédients" in result.lower()
     except Exception as e:
         # Skip test if API key not available or API call fails
-        pytest.skip(f"Integration test skipped: {str(e)}")
+        pytest.skip(f"Integration test skipped: {e!s}")
 
 
 def test_markdown_to_html_basic():

@@ -1,7 +1,8 @@
 import logging
-import markdown
-from typing import Dict, Optional
 from dataclasses import dataclass
+
+import markdown
+
 from .llm import chat_completion
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ class CachedTranslation:
 
 
 # Translation cache - maps file path to cached translation
-translation_cache: Dict[str, CachedTranslation] = {}
+translation_cache: dict[str, CachedTranslation] = {}
 
 TRANSLATION_PROMPT = """
 Translate the following markdown recipe content to French.
@@ -34,7 +35,7 @@ Content to translate:
 
 def get_cached_translation(
     file_path: str, file_mtime: float
-) -> Optional[CachedTranslation]:
+) -> CachedTranslation | None:
     """Get cached translation if file hasn't been modified"""
     cached = translation_cache.get(file_path)
     if cached and cached.file_mtime >= file_mtime:
@@ -74,7 +75,7 @@ async def translate_markdown(content: str) -> str:
 
 
 def markdown_to_html(
-    markdown_content: str, title: str = "Recette", photo_url: Optional[str] = None
+    markdown_content: str, title: str = "Recette", photo_url: str | None = None
 ) -> str:
     """
     Convert markdown content to a complete HTML document with styling.

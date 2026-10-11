@@ -1,10 +1,11 @@
 import asyncio
-import os
-import aiofiles
-from pathlib import Path
-from fastapi import HTTPException
-from typing import List, Dict, Any
 import logging
+import os
+from pathlib import Path
+from typing import Any
+
+import aiofiles
+from fastapi import HTTPException
 
 
 class FileSystemManager:
@@ -27,7 +28,7 @@ class FileSystemManager:
 
         return full_path
 
-    async def list_directory(self, path: str = "") -> List[Dict[str, Any]]:
+    async def list_directory(self, path: str = "") -> list[dict[str, Any]]:
         """List files and directories, filtering out photo files"""
         try:
             dir_path = self._validate_path(path)
@@ -55,7 +56,7 @@ class FileSystemManager:
             raise
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"Failed to list directory: {str(e)}"
+                status_code=500, detail=f"Failed to list directory: {e!s}"
             )
 
     async def read_file(self, path: str) -> str:
@@ -70,11 +71,9 @@ class FileSystemManager:
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to read file: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to read file: {e!s}")
 
-    async def read_file_with_version(self, path: str) -> Dict[str, Any]:
+    async def read_file_with_version(self, path: str) -> dict[str, Any]:
         """Read file content with version timestamp"""
         try:
             file_path = self._validate_path(path)
@@ -91,13 +90,11 @@ class FileSystemManager:
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to read file: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to read file: {e!s}")
 
     async def write_file(
         self, path: str, content: str, expected_version: int = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Write content to file with optional version conflict detection"""
         try:
             file_path = self._validate_path(path)
@@ -141,11 +138,9 @@ class FileSystemManager:
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to write file: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to write file: {e!s}")
 
-    async def delete_file(self, path: str) -> Dict[str, str]:
+    async def delete_file(self, path: str) -> dict[str, str]:
         """Delete a file and associated photo if it's a recipe"""
         try:
             file_path = self._validate_path(path)
@@ -164,11 +159,9 @@ class FileSystemManager:
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to delete file: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to delete file: {e!s}")
 
-    async def create_directory(self, path: str) -> Dict[str, str]:
+    async def create_directory(self, path: str) -> dict[str, str]:
         """Create a directory"""
         try:
             dir_path = self._validate_path(path)
@@ -181,7 +174,7 @@ class FileSystemManager:
             raise
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"Failed to create directory: {str(e)}"
+                status_code=500, detail=f"Failed to create directory: {e!s}"
             )
 
     # Photo-specific methods
@@ -203,7 +196,7 @@ class FileSystemManager:
 
     async def write_photo(
         self, recipe_path: str, photo_content: bytes
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Write photo content to corresponding photo file"""
         try:
             photo_path = self._get_photo_path_for_recipe(recipe_path)
@@ -221,10 +214,8 @@ class FileSystemManager:
                 "path": str(photo_path.relative_to(self.base_dir)),
             }
         except Exception as e:
-            self.logger.error(f"Failed to write photo for {recipe_path}: {str(e)}")
-            raise HTTPException(
-                status_code=500, detail=f"Failed to save photo: {str(e)}"
-            )
+            self.logger.error(f"Failed to write photo for {recipe_path}: {e!s}")
+            raise HTTPException(status_code=500, detail=f"Failed to save photo: {e!s}")
 
     async def read_photo(self, recipe_path: str) -> bytes:
         """Read photo content as bytes"""
@@ -238,12 +229,10 @@ class FileSystemManager:
         except HTTPException:
             raise
         except Exception as e:
-            self.logger.error(f"Failed to read photo for {recipe_path}: {str(e)}")
-            raise HTTPException(
-                status_code=500, detail=f"Failed to read photo: {str(e)}"
-            )
+            self.logger.error(f"Failed to read photo for {recipe_path}: {e!s}")
+            raise HTTPException(status_code=500, detail=f"Failed to read photo: {e!s}")
 
-    async def delete_photo(self, recipe_path: str) -> Dict[str, str]:
+    async def delete_photo(self, recipe_path: str) -> dict[str, str]:
         """Delete photo associated with a recipe"""
         try:
             photo_path = self._get_photo_path_for_recipe(recipe_path)
@@ -256,9 +245,9 @@ class FileSystemManager:
         except HTTPException:
             raise
         except Exception as e:
-            self.logger.error(f"Failed to delete photo for {recipe_path}: {str(e)}")
+            self.logger.error(f"Failed to delete photo for {recipe_path}: {e!s}")
             raise HTTPException(
-                status_code=500, detail=f"Failed to delete photo: {str(e)}"
+                status_code=500, detail=f"Failed to delete photo: {e!s}"
             )
 
     async def move_photo(self, old_recipe_path: str, new_recipe_path: str) -> None:
@@ -281,7 +270,7 @@ class FileSystemManager:
             old_photo_path.rename(new_photo_path)
         except OSError as e:
             self.logger.error(
-                f"Failed to move photo from {old_recipe_path} to {new_recipe_path}: {str(e)}"
+                f"Failed to move photo from {old_recipe_path} to {new_recipe_path}: {e!s}"
             )
             raise HTTPException(
                 status_code=500,
