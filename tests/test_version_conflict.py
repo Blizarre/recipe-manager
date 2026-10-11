@@ -85,9 +85,9 @@ async def test_version_fits_in_js_safe_integer():
 
         for result in (created, read, updated):
             version = result["version"]
-            assert 0 <= version <= JS_MAX_SAFE_INTEGER, (
-                f"Version {version} is not a JS safe integer"
-            )
+            assert (
+                0 <= version <= JS_MAX_SAFE_INTEGER
+            ), f"Version {version} is not a JS safe integer"
 
 
 def test_api_endpoints():

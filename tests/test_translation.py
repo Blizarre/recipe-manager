@@ -65,9 +65,7 @@ async def test_translate_markdown_empty_response():
 
     with patch("api.openai_client.openai_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-        with pytest.raises(
-            LLMError, match="LLM service returned empty response"
-        ):
+        with pytest.raises(LLMError, match="LLM service returned empty response"):
             await translate_markdown(test_content)
 
 
