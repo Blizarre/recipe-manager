@@ -16,7 +16,9 @@ class SidebarManager {
     this.setupMobile();
     this.setupModal();
     this.setupFolderModal();
+    this.setupMoveModal();
     this.setupFolderAutocomplete();
+    this.setupMoveFolderAutocomplete();
 
     // Initial load of file tree
     this.refreshFileTree();
@@ -60,6 +62,11 @@ class SidebarManager {
       .getElementById("deleteSelectedBtn")
       ?.addEventListener("click", () => this.deleteSelectedItems());
 
+    // Move selected button
+    document
+      .getElementById("moveSelectedBtn")
+      ?.addEventListener("click", () => this.showMoveModal());
+
     // Refresh button
     document
       .getElementById("refreshBtn")
@@ -86,6 +93,7 @@ class SidebarManager {
       if (e.key === "Escape") {
         this.hideModal();
         this.hideFolderModal();
+        this.hideMoveModal();
         // Search escape is handled in search.js
       }
     });
@@ -339,6 +347,17 @@ class SidebarManager {
     });
   }
 
+  setupMoveModal() {
+    this.setupGenericModal({
+      modalId: "moveFileModal",
+      formId: "moveFileForm",
+      closeBtnId: "moveModalClose",
+      cancelBtnId: "cancelMove",
+      onClose: () => this.hideMoveModal(),
+      onSubmit: () => this.moveSelectedItems(),
+    });
+  }
+
   // File selection handler
   handleFileSelect(path) {
     if (window.innerWidth <= 768) {
@@ -387,6 +406,118 @@ class SidebarManager {
   hideFolderModal() {
     const modal = document.getElementById("newFolderModal");
     modal.classList.remove("active");
+  }
+
+  showMoveModal() {
+    if (!this.fileTree) return;
+
+    const selectedItems = this.fileTree.getSelectedItems();
+    if (selectedItems.length === 0) {
+      alert("No items selected");
+      return;
+    }
+
+    const modal = document.getElementById("moveFileModal");
+    const destinationInput = document.getElementById("moveDestination");
+    const summary = document.getElementById("moveItemsSummary");
+
+    // Reset the form and reload the folder suggestions
+    document.getElementById("moveFileForm").reset();
+    this.loadDirectoriesForMove?.();
+
+    if (summary) {
+      summary.textContent = `${selectedItems.length} item${selectedItems.length !== 1 ? "s" : ""} selected`;
+    }
+
+    modal.classList.add("active");
+    destinationInput.focus();
+  }
+
+  hideMoveModal() {
+    const modal = document.getElementById("moveFileModal");
+    modal.classList.remove("active");
+  }
+
+  async moveSelectedItems() {
+    if (!this.fileTree) return;
+
+    const selectedItems = this.fileTree.getSelectedItems();
+    if (selectedItems.length === 0) {
+      this.hideMoveModal();
+      return;
+    }
+
+    // Normalize the destination folder (blank means the top level)
+    const destinationFolder = document
+      .getElementById("moveDestination")
+      .value.trim()
+      .replace(/\\/g, "/")
+      .replace(/^\/+|\/+$/g, "");
+
+    const moves = [];
+    let skippedFolders = 0;
+
+    selectedItems.forEach((path) => {
+      const type = this.fileTree.getSelectedItemType(path);
+
+      // The backend move endpoint only supports files, so folders are skipped.
+      if (type === "directory") {
+        skippedFolders += 1;
+        return;
+      }
+
+      const fileName = path.split("/").pop();
+      const destination = destinationFolder
+        ? `${destinationFolder}/${fileName}`
+        : fileName;
+
+      if (destination !== path) {
+        moves.push({ path, destination });
+      }
+    });
+
+    if (moves.length === 0) {
+      this.hideMoveModal();
+      if (skippedFolders > 0) {
+        Utils.showToast("Folders cannot be moved yet", "error");
+      }
+      return;
+    }
+
+    await this.performMoves(moves, skippedFolders);
+  }
+
+  async performMoves(moves, skippedFolders = 0) {
+    try {
+      await Promise.all(
+        moves.map(({ path, destination }) =>
+          window.api.moveFile(path, destination),
+        ),
+      );
+
+      await this.refreshFileTree();
+      this.fileTree.toggleEditMode();
+
+      // Let the app update the URL/editor if the open file was moved
+      moves.forEach(({ path, destination }) => {
+        this.onFileRenamed?.(path, destination);
+      });
+
+      this.hideMoveModal();
+      Utils.showToast(
+        `Moved ${moves.length} file${moves.length !== 1 ? "s" : ""} successfully`,
+        "success",
+      );
+      if (skippedFolders > 0) {
+        Utils.showToast("Folders cannot be moved yet", "error");
+      }
+    } catch (error) {
+      console.error("Failed to move items:", error);
+      Utils.showToast(
+        "Failed to move items: " + Utils.extractErrorMessage(error),
+        "error",
+      );
+    }
   }
 
   // File operations
@@ -488,16 +619,15 @@ class SidebarManager {
     }
   }
 
-  setupFolderAutocomplete() {
-    const folderInput = document.getElementById("recipeFolder");
-    const dropdown = document.getElementById("recipeFolderDropdown");
+  // Attach folder autocomplete to an input + dropdown pair. Returns a loader
+  // that refreshes the suggestion list from the cached directory listing.
+  attachFolderAutocomplete(input, dropdown) {
     let directories = [];
     let selectedIndex = -1;
 
-    // Load directories when modal opens
+    // Load directories when the modal opens
     const loadDirectories = () => {
       try {
-        // Use cached files if available, otherwise empty array
         const files = this.cachedFiles || [];
         directories = files
           .filter((file) => file.type === "directory")
@@ -507,6 +637,13 @@ class SidebarManager {
         console.error("Failed to load directories:", error);
         directories = [];
       }
+    };
+
+    // Update visual selection
+    const updateSelection = (items) => {
+      items.forEach((item, index) => {
+        item.classList.toggle("selected", index === selectedIndex);
+      });
     };
 
     // Filter and show matching directories
@@ -527,13 +664,13 @@ class SidebarManager {
 
       dropdown.innerHTML = matches
         .map(
-          (dir, index) =>
-            `<div class="autocomplete-item" data-value="${dir}" data-index="${index}">
+          (dir) =>
+            `<div class="autocomplete-item" data-value="${dir}">
                     <span class="folder-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
-                    </span>${dir}
+                    </span>${Utils.escapeHtml(dir)}
                 </div>`,
         )
         .join("");
@@ -543,12 +680,12 @@ class SidebarManager {
     };
 
     // Handle input events
-    folderInput?.addEventListener("input", (e) => {
+    input?.addEventListener("input", (e) => {
       showMatches(e.target.value);
     });
 
     // Handle keyboard navigation
-    folderInput?.addEventListener("keydown", (e) => {
+    input?.addEventListener("keydown", (e) => {
       const items = dropdown.querySelectorAll(".autocomplete-item");
 
       if (e.key === "ArrowDown") {
@@ -572,7 +709,7 @@ class SidebarManager {
     dropdown?.addEventListener("click", (e) => {
       const item = e.target.closest(".autocomplete-item");
       if (item) {
-        folderInput.value = item.dataset.value;
+        input.value = item.dataset.value;
         dropdown.classList.remove("show");
         selectedIndex = -1;
       }
@@ -580,21 +717,31 @@ class SidebarManager {
 
     // Hide dropdown when clicking outside
     document.addEventListener("click", (e) => {
-      if (!folderInput?.contains(e.target) && !dropdown?.contains(e.target)) {
+      if (!input?.contains(e.target) && !dropdown?.contains(e.target)) {
         dropdown?.classList.remove("show");
         selectedIndex = -1;
       }
     });
 
-    // Update visual selection
-    const updateSelection = (items) => {
-      items.forEach((item, index) => {
-        item.classList.toggle("selected", index === selectedIndex);
-      });
-    };
+    return loadDirectories;
+  }
 
-    // Load directories when modal is shown
-    this.loadDirectoriesForAutocomplete = loadDirectories;
+  setupFolderAutocomplete() {
+    const folderInput = document.getElementById("recipeFolder");
+    const dropdown = document.getElementById("recipeFolderDropdown");
+    this.loadDirectoriesForAutocomplete = this.attachFolderAutocomplete(
+      folderInput,
+      dropdown,
+    );
+  }
+
+  setupMoveFolderAutocomplete() {
+    const destinationInput = document.getElementById("moveDestination");
+    const dropdown = document.getElementById("moveDestinationDropdown");
+    this.loadDirectoriesForMove = this.attachFolderAutocomplete(
+      destinationInput,
+      dropdown,
+    );
   }
 
   // Utility methods

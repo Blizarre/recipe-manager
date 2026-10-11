@@ -106,13 +106,7 @@ class UnifiedRecipeApp {
         actionButtons,
       } = this.elements;
 
-      if (
-        !undoBtn ||
-        !renameBtn ||
-        !translateBtn ||
-        !actionButtons
-      )
-        return;
+      if (!undoBtn || !renameBtn || !translateBtn || !actionButtons) return;
 
       if (window.innerWidth <= 768) {
         // Mobile: keep buttons in header - they're already there
@@ -330,6 +324,12 @@ class UnifiedRecipeApp {
       window.history.replaceState({}, "", `/edit/${newPath}`);
       this.currentFile = newPath;
       this.updatePageInfo();
+
+      // Keep the editor pointed at the new path so autosave doesn't recreate
+      // the old file.
+      if (this.editor) {
+        this.editor.currentFile = newPath;
+      }
 
       // Update photo manager with new recipe path
       if (this.photoManager) {

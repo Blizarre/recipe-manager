@@ -8,6 +8,7 @@ class FileTree {
     this.expandedFolders = new Set();
     this.editMode = false;
     this.selectedItems = new Set();
+    this.selectedItemTypes = new Map();
 
     this.init();
   }
@@ -114,7 +115,7 @@ class FileTree {
       e.stopPropagation();
 
       if (this.editMode) {
-        this.handleEditModeClick(e, directory.path, dirElement);
+        this.handleEditModeClick(e, directory.path, dirElement, "directory");
         return;
       }
 
@@ -169,7 +170,7 @@ class FileTree {
       if (this.editMode) {
         e.preventDefault();
         e.stopPropagation();
-        this.handleEditModeClick(e, file.path, fileElement);
+        this.handleEditModeClick(e, file.path, fileElement, "file");
         return;
       }
 
@@ -182,7 +183,7 @@ class FileTree {
       checkbox.addEventListener("click", (e) => {
         if (this.editMode) {
           e.stopPropagation();
-          this.onCheckboxChange(file.path, e.target.checked);
+          this.onCheckboxChange(file.path, e.target.checked, "file");
         }
       });
     }
@@ -193,16 +194,16 @@ class FileTree {
     container.appendChild(fileElement);
   }
 
-  handleEditModeClick(e, path, element) {
+  handleEditModeClick(e, path, element, type) {
     // Clicking the checkbox uses its own state; clicking anywhere else toggles
     // the selection. Clicking a directory's expand icon does nothing.
     if (e.target.type === "checkbox") {
-      this.onCheckboxChange(path, e.target.checked);
+      this.onCheckboxChange(path, e.target.checked, type);
     } else if (!e.target.classList.contains("expand-icon")) {
       const checkbox = element.querySelector(".file-tree-checkbox");
       if (checkbox) {
         checkbox.checked = !checkbox.checked;
-        this.onCheckboxChange(path, checkbox.checked);
+        this.onCheckboxChange(path, checkbox.checked, type);
       }
     }
   }
@@ -268,9 +269,7 @@ class FileTree {
       await window.api.createDirectory(path);
       await this.refresh();
     } catch (error) {
-      throw new Error(
-        `Failed to create folder: ${error.message}`,
-      );
+      throw new Error(`Failed to create folder: ${error.message}`);
     }
   }
 
@@ -302,6 +301,7 @@ class FileTree {
     element.addEventListener("dragend", (e) => {
       element.classList.remove("dragging");
       this.removeDragGhost();
+      this.stopAutoScroll();
       // Clean up any drag-over states
       this.clearDragStates();
     });
@@ -319,6 +319,8 @@ class FileTree {
     element.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      this.autoScroll(e);
 
       const dragData = this.getDragData(e);
       if (dragData && dragData.path !== targetPath) {
@@ -353,6 +355,11 @@ class FileTree {
     const fileTreeContainer = this.container;
 
     fileTreeContainer.addEventListener("dragover", (e) => {
+      // Keep the tree scrolling while the drag is anywhere over it. This
+      // handler also receives bubbled events from plain file rows (directory
+      // rows stop propagation), so it reliably drives the auto-scroll.
+      this.autoScroll(e);
+
       // Only allow drop on empty space (not on file/folder elements)
       if (!e.target.closest(".file-tree-item")) {
         e.preventDefault();
@@ -486,6 +493,67 @@ class FileTree {
     });
   }
 
+  // Find the nearest scrollable ancestor (the file tree is nested inside a
+  // scroll container so its own overflow is not enough).
+  getScrollContainer() {
+    let el = this.container;
+    while (el && el !== document.body) {
+      const overflowY = getComputedStyle(el).overflowY;
+      if (
+        (overflowY === "auto" || overflowY === "scroll") &&
+        el.scrollHeight > el.clientHeight
+      ) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  // Auto-scroll the tree while dragging near its top/bottom edge so drop
+  // targets that are out of view can be reached (critical on desktop drag,
+  // where the pointer cannot scroll the container itself).
+  autoScroll(e) {
+    const container = this.getScrollContainer();
+    if (!container) return;
+
+    this._autoScrollContainer = container;
+    this._autoScrollY = e.clientY;
+    this._autoScrollRect = container.getBoundingClientRect();
+
+    if (this._autoScrollRAF) return;
+
+    const step = () => {
+      const rect = this._autoScrollRect;
+      const pointerY = this._autoScrollY;
+      if (rect && pointerY != null) {
+        const threshold = Math.min(80, rect.height / 3);
+        if (pointerY < rect.top + threshold) {
+          container.scrollTop -= Math.ceil(
+            (rect.top + threshold - pointerY) / 4,
+          );
+        } else if (pointerY > rect.bottom - threshold) {
+          container.scrollTop += Math.ceil(
+            (pointerY - (rect.bottom - threshold)) / 4,
+          );
+        }
+      }
+      this._autoScrollRAF = requestAnimationFrame(step);
+    };
+
+    this._autoScrollRAF = requestAnimationFrame(step);
+  }
+
+  stopAutoScroll() {
+    if (this._autoScrollRAF) {
+      cancelAnimationFrame(this._autoScrollRAF);
+      this._autoScrollRAF = null;
+    }
+    this._autoScrollY = null;
+    this._autoScrollRect = null;
+    this._autoScrollContainer = null;
+  }
+
   getFileName(path) {
     return path.split("/").pop() || path;
   }
@@ -494,6 +562,7 @@ class FileTree {
   toggleEditMode() {
     this.editMode = !this.editMode;
     this.selectedItems.clear();
+    this.selectedItemTypes.clear();
 
     if (this.editMode) {
       this.container.classList.add("edit-mode");
@@ -524,11 +593,15 @@ class FileTree {
     }
   }
 
-  onCheckboxChange(path, checked) {
+  onCheckboxChange(path, checked, type) {
     if (checked) {
       this.selectedItems.add(path);
+      if (type) {
+        this.selectedItemTypes.set(path, type);
+      }
     } else {
       this.selectedItems.delete(path);
+      this.selectedItemTypes.delete(path);
     }
 
     this.updateEditModeUI();
@@ -547,5 +620,9 @@ class FileTree {
 
   getSelectedItems() {
     return Array.from(this.selectedItems);
+  }
+
+  getSelectedItemType(path) {
+    return this.selectedItemTypes.get(path);
   }
 }
