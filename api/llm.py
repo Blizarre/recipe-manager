@@ -1,15 +1,17 @@
-"""Shared OpenAI chat-completion helper."""
+"""Shared OpenRouter chat-completion helper."""
 
 import logging
+import os
 import time
 
 from openai import APIError, APITimeoutError, RateLimitError
 
-from . import openai_client as _openai_module
+from . import openrouter_client as _openrouter_module
 
 logger = logging.getLogger(__name__)
 
-MODEL = "gpt-5.6-terra"
+MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-6-luna")
+REASONING_EFFORT = os.getenv("OPENROUTER_REASONING_EFFORT", "high")
 TIMEOUT_SECONDS = 120.0
 
 
@@ -23,16 +25,17 @@ async def chat_completion(prompt: str) -> str:
     Raises:
         LLMError: If the client isn't initialized or the request fails.
     """
-    if _openai_module.openai_client is None:
+    if _openrouter_module.openrouter_client is None:
         raise LLMError("LLM client not initialized")
 
     try:
         logger.info(f"Starting LLM request ({len(prompt)} chars)")
         start = time.time()
-        response = await _openai_module.openai_client.chat.completions.create(
+        response = await _openrouter_module.openrouter_client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": prompt}],
             timeout=TIMEOUT_SECONDS,
+            extra_body={"reasoning": {"effort": REASONING_EFFORT}},
         )
         logger.info(f"LLM request completed in {time.time() - start:.1f}s")
 

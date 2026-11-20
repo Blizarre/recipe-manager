@@ -18,12 +18,12 @@ async def test_translate_markdown_success():
     test_content = "# Test Recipe\n\n## Ingredients\n\n- 1 cup flour\n\n## Instructions\n\n1. Mix ingredients"
     expected_french = "# Recette de Test\n\n## Ingrédients\n\n- 1 tasse de farine\n\n## Instructions\n\n1. Mélanger les ingrédients"
 
-    # Mock OpenAI response
+    # Mock OpenRouter response
     mock_response = AsyncMock()
     mock_response.choices = [AsyncMock()]
     mock_response.choices[0].message.content = expected_french
 
-    with patch("api.openai_client.openai_client") as mock_client:
+    with patch("api.openrouter_client.openrouter_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
         result = await translate_markdown(test_content)
         assert result == expected_french
@@ -41,10 +41,10 @@ async def test_translate_markdown_empty_content():
 
 @pytest.mark.asyncio
 async def test_translate_markdown_api_error():
-    """Test error handling for OpenAI API failure"""
+    """Test error handling for OpenRouter API failure"""
     test_content = "# Test Recipe"
 
-    with patch("api.openai_client.openai_client") as mock_client:
+    with patch("api.openrouter_client.openrouter_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(
             side_effect=Exception("API Error")
         )
@@ -65,7 +65,7 @@ async def test_translate_markdown_empty_response():
     mock_response.choices = [AsyncMock()]
     mock_response.choices[0].message.content = None
 
-    with patch("api.openai_client.openai_client") as mock_client:
+    with patch("api.openrouter_client.openrouter_client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
         with pytest.raises(LLMError, match="LLM service returned empty response"):
             await translate_markdown(test_content)
@@ -75,7 +75,7 @@ async def test_translate_markdown_empty_response():
 async def test_translation_service_integration():
     """
     Integration test to verify translation service works with actual API.
-    This test requires OPENAI_API_KEY environment variable.
+    This test requires OPENROUTER_API_KEY environment variable.
     """
     test_content = "# Test Recipe\n\n## Ingredients\n\n- 1 cup flour\n\n## Instructions\n\n1. Mix ingredients"
 

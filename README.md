@@ -13,7 +13,7 @@ THAT IS PROPERLY CONFIGURED.**
 - **🔍 Powerful Search**: Search by content or filename with real-time results
 - **📁 File Organization**: Create folders and organize recipes hierarchically
 - **🖼️ Recipe Photos**: Attach a photo to each recipe
-- **🇫🇷 Translate & Format**: Translate recipes to French and auto-format them (via OpenAI)
+- **🇫🇷 Translate & Format**: Translate recipes to French and auto-format them (via OpenRouter)
 - **💾 Auto-Save**: Automatic saving with debounced input and version-conflict detection
 - **📱 Mobile-Friendly**: Touch gestures, responsive design, optimized for mobile
 
@@ -70,19 +70,23 @@ uv run python main.py
 
 Configure the application using environment variables:
 
-| Variable         | Default    | Description                            |
-| ---------------- | ---------- | -------------------------------------- |
-| `RECIPES_DIR`    | `recipes`  | Directory to store recipe files        |
-| `HOST`           | `0.0.0.0`  | Server host binding (via `main.py`)    |
-| `PORT`           | `8000`     | Server port (via `main.py`)            |
-| `OPENAI_API_KEY` | —          | Required for translate/format features |
+| Variable                    | Default                 | Description                                |
+| --------------------------- | ----------------------- | ------------------------------------------ |
+| `RECIPES_DIR`               | `recipes`               | Directory to store recipe files            |
+| `HOST`                      | `0.0.0.0`               | Server host binding (via `main.py`)        |
+| `PORT`                      | `8000`                  | Server port (via `main.py`)                |
+| `OPENROUTER_API_KEY`        | —                       | Required for translate/format features     |
+| `OPENROUTER_MODEL`          | `openai/gpt-6-luna`     | OpenRouter model used for translate/format |
+| `OPENROUTER_REASONING_EFFORT` | `high`                | Reasoning effort passed to OpenRouter      |
+| `OPENROUTER_SITE_URL`       | `http://localhost:8000` | Optional site URL sent to OpenRouter       |
+| `OPENROUTER_APP_NAME`       | `Recipe Manager`        | Optional app name sent to OpenRouter       |
 
 Example with custom configuration:
 
 ```bash
 export RECIPES_DIR=/path/to/your/recipes
 export PORT=3000
-OPENAI_API_KEY=sk-... uv run python main.py
+OPENROUTER_API_KEY=sk-or-... uv run python main.py
 ```
 
 > **Note:** `HOST`/`PORT` only apply when starting the server with
@@ -182,13 +186,17 @@ export HOST=0.0.0.0
 export PORT=8000
 ```
 
-### OpenAI
+### OpenRouter
 
-Translation and auto-formatting require an OpenAI API key:
+Translation and auto-formatting require an OpenRouter API key:
 
 ```bash
-export OPENAI_API_KEY=sk-...
+export OPENROUTER_API_KEY=sk-or-...
 ```
+
+The model defaults to `openai/gpt-6-luna` and can be changed with
+`OPENROUTER_MODEL` (any model ID supported by OpenRouter). Reasoning effort
+defaults to `high` and can be changed with `OPENROUTER_REASONING_EFFORT`.
 
 ## 🔀 Reverse Proxy (Caddy)
 

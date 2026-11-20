@@ -149,7 +149,7 @@ def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
 
     # Setup mocks
     mock_fs_manager.read_file.return_value = "# Recette"
-    mock_translate.side_effect = LLMError("OpenAI API error")
+    mock_translate.side_effect = LLMError("OpenRouter API error")
 
     response = client.get("/api/recipes/test-recipe/translate")
 

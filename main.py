@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from api.openai_client import initialize_openai_client
+from api.openrouter_client import initialize_openrouter_client
 from api.routes import router as api_router
 from api.routes import translate_recipe
 
@@ -20,7 +20,7 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    initialize_openai_client()
+    initialize_openrouter_client()
     yield
     # Shutdown (nothing to cleanup currently)
 
