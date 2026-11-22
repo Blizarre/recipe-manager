@@ -9,6 +9,8 @@ class MarkdownEditor {
     this.currentVersion = null;
     this.autoSaveTimeoutId = null;
     this.autoSaveDelay = 1000; // 1 second
+    this.isReadOnly = false;
+    this.hasConflict = false;
 
     this.init();
   }
@@ -68,6 +70,10 @@ class MarkdownEditor {
       window.addEventListener("resize", this.resizeHandler);
 
       this.setupBeforeUnloadWarning();
+
+      // Mobile and tablet devices start in read-only mode to prevent
+      // accidental edits. The user can opt in via the Edit button.
+      this.setReadOnly(window.innerWidth <= 1024);
     } catch (error) {
       console.error("Failed to setup EasyMDE editor:", error);
       this.showError("Editor setup failed: " + error.message);
@@ -93,6 +99,14 @@ class MarkdownEditor {
   getContent() {
     if (!this.editor) return "";
     return this.editor.value();
+  }
+
+  setReadOnly(readOnly) {
+    this.isReadOnly = readOnly;
+    if (this.editor && this.editor.codemirror) {
+      this.editor.codemirror.setOption("readOnly", readOnly);
+    }
+    this.updateUI();
   }
 
   scheduleAutoSave() {
@@ -157,11 +171,11 @@ class MarkdownEditor {
   updateUI() {
     const undoBtn = document.getElementById("undoBtn");
     if (undoBtn && this.editor) {
-      undoBtn.disabled = !this.canUndo();
+      undoBtn.disabled = this.isReadOnly || !this.canUndo();
     }
     const redoBtn = document.getElementById("redoBtn");
     if (redoBtn && this.editor) {
-      redoBtn.disabled = !this.canRedo();
+      redoBtn.disabled = this.isReadOnly || !this.canRedo();
     }
     this.updateCharCount();
   }
@@ -177,7 +191,7 @@ class MarkdownEditor {
   }
 
   undo() {
-    if (!this.editor) return false;
+    if (!this.editor || this.isReadOnly) return false;
     this.editor.codemirror.undo();
     this.updateUI();
     return true;
@@ -189,7 +203,7 @@ class MarkdownEditor {
   }
 
   redo() {
-    if (!this.editor) return false;
+    if (!this.editor || this.isReadOnly) return false;
     this.editor.codemirror.redo();
     this.updateUI();
     return true;
@@ -214,9 +228,11 @@ class MarkdownEditor {
 
   calculateMaxHeight() {
     const isMobile = window.innerWidth <= 768;
+    const isMobileOrTablet = window.innerWidth <= 1024;
     const headerHeight = isMobile ? 60 : 80;
     const footerHeight = 40;
-    return `${window.innerHeight - headerHeight - footerHeight}px`;
+    const modeBarHeight = isMobileOrTablet ? 52 : 0;
+    return `${window.innerHeight - headerHeight - footerHeight - modeBarHeight}px`;
   }
 
   updateEditorHeight() {
@@ -229,11 +245,8 @@ class MarkdownEditor {
   }
 
   showConflictWarning() {
-    // Disable the textarea directly
-    const textarea = document.getElementById("editor");
-    if (textarea) {
-      textarea.disabled = true;
-    }
+    this.hasConflict = true;
+    this.setReadOnly(true);
 
     alert(
       "Version Conflict!\n\nThis recipe was modified in another browser tab or session. The editor is now read-only.\n\nPlease refresh the page to see the latest changes.",
@@ -247,5 +260,9 @@ class MarkdownEditor {
     this.showError(
       "File was modified in another browser. Editor is now read-only. Please refresh the page to see the latest changes.",
     );
+
+    if (window.app && typeof window.app.updateEditorModeBar === "function") {
+      window.app.updateEditorModeBar();
+    }
   }
 }

@@ -644,6 +644,56 @@
 
               <!-- Editor Panel -->
               <div class="flex-1" id="editorPanel" style="display: none">
+                <div
+                  class="editor-mode-bar items-center justify-between gap-3 px-4 py-2 bg-sand-100 border-b border-sand-200"
+                  id="editorModeBar"
+                  style="display: none"
+                >
+                  <span
+                    class="text-xs font-medium text-sand-500"
+                    id="editorModeLabel"
+                    >Read-only</span
+                  >
+                  <button
+                    class="btn-base btn-primary max-md:p-2.5 max-md:min-w-[44px]"
+                    id="editorEditToggle"
+                    title="Edit recipe"
+                    type="button"
+                  >
+                    <svg
+                      id="editorEditIcon"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="shrink-0"
+                    >
+                      <path
+                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                      />
+                      <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    <svg
+                      id="editorDoneIcon"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="shrink-0 hidden"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span id="editorEditToggleLabel">Edit</span>
+                  </button>
+                </div>
                 <div class="easymde-container" id="editorContainer">
                   <textarea id="editor"></textarea>
                 </div>

@@ -23,6 +23,12 @@ class UnifiedRecipeApp {
       togglePhotoMobileBtn: document.getElementById("togglePhotoMobileBtn"),
       actionButtons: document.querySelector(".action-buttons"),
       fileName: document.getElementById("fileName"),
+      editorModeBar: document.getElementById("editorModeBar"),
+      editorModeLabel: document.getElementById("editorModeLabel"),
+      editorEditToggle: document.getElementById("editorEditToggle"),
+      editorEditToggleLabel: document.getElementById("editorEditToggleLabel"),
+      editorEditIcon: document.getElementById("editorEditIcon"),
+      editorDoneIcon: document.getElementById("editorDoneIcon"),
     };
 
     this.init();
@@ -89,6 +95,9 @@ class UnifiedRecipeApp {
     document
       .getElementById("formatBtn")
       ?.addEventListener("click", () => this.formatRecipe());
+    document
+      .getElementById("editorEditToggle")
+      ?.addEventListener("click", () => this.toggleEditorEditMode());
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
@@ -151,6 +160,8 @@ class UnifiedRecipeApp {
           togglePhotoMobileBtn.style.display = "none";
         }
       }
+
+      this.updateEditorModeBar();
     };
 
     // Initial positioning and resize listener
@@ -228,6 +239,82 @@ class UnifiedRecipeApp {
       document.title = "Recipe Manager";
       fileName.textContent = "Recipe Manager";
     }
+
+    this.updateEditorModeBar();
+  }
+
+  updateEditorModeBar() {
+    const {
+      editorModeBar,
+      editorModeLabel,
+      editorEditToggle,
+      editorEditToggleLabel,
+      editorEditIcon,
+      editorDoneIcon,
+    } = this.elements;
+
+    if (!editorModeBar || !editorEditToggle) return;
+
+    const isSmallScreen = window.innerWidth <= 1024;
+
+    // Unlock a recipe that was only read-only because of the viewport size
+    // once the layout returns to desktop width.
+    if (!isSmallScreen && this.editor?.isReadOnly && !this.editor.hasConflict) {
+      this.editor.setReadOnly(false);
+    }
+
+    const isReadOnly = this.editor ? this.editor.isReadOnly : isSmallScreen;
+    const hasConflict = Boolean(this.editor?.hasConflict);
+
+    editorModeBar.style.display =
+      this.currentFile && isSmallScreen ? "flex" : "none";
+    editorEditToggle.disabled = hasConflict;
+
+    if (editorModeLabel) {
+      editorModeLabel.textContent = hasConflict
+        ? "Refresh required"
+        : isReadOnly
+          ? "Read-only"
+          : "Editing";
+    }
+
+    if (editorEditToggleLabel) {
+      editorEditToggleLabel.textContent = isReadOnly ? "Edit" : "Done";
+    }
+
+    if (editorEditIcon) editorEditIcon.classList.toggle("hidden", !isReadOnly);
+    if (editorDoneIcon) editorDoneIcon.classList.toggle("hidden", isReadOnly);
+
+    editorEditToggle.title = isReadOnly ? "Edit recipe" : "Done editing";
+    editorEditToggle.classList.toggle("btn-primary", isReadOnly);
+    editorEditToggle.classList.toggle("btn-secondary", !isReadOnly);
+
+    if (this.elements.formatBtn) {
+      this.elements.formatBtn.disabled = isReadOnly;
+    }
+    if (this.elements.renameBtn) {
+      this.elements.renameBtn.disabled = isReadOnly;
+    }
+
+    this.editor?.updateEditorHeight();
+  }
+
+  async toggleEditorEditMode() {
+    if (!this.editor || this.editor.hasConflict) return;
+
+    if (this.editor.isReadOnly) {
+      this.editor.setReadOnly(false);
+      if (this.editor.editor?.codemirror) {
+        this.editor.editor.codemirror.focus();
+      }
+    } else {
+      // Flush pending edits before locking the editor again.
+      this.editor.cancelAutoSave();
+      await this.editor.autoSave();
+      this.editor.setReadOnly(true);
+    }
+
+    this.updateEditorModeBar();
   }
 
   updatePageInfo() {
@@ -257,6 +344,7 @@ class UnifiedRecipeApp {
     try {
       const editorContainer = document.getElementById("editorContainer");
       this.editor = new MarkdownEditor(editorContainer);
+      this.updateEditorModeBar();
     } catch (error) {
       console.error("Failed to setup editor:", error);
       this.showError("Failed to initialize editor");
@@ -308,6 +396,7 @@ class UnifiedRecipeApp {
     if (editorPanel) {
       editorPanel.style.display = "block";
     }
+    this.updateEditorModeBar();
 
     // Load photo for the current recipe
     if (this.photoManager && this.currentFile) {
