@@ -1,37 +1,4 @@
-import os
-import shutil
-import tempfile
-from pathlib import Path
-
-import pytest
-from fastapi.testclient import TestClient
-
-from main import app
-
-
-@pytest.fixture(autouse=True)
-def clean_test_dir():
-    """Clean test directory before and after each test"""
-    test_dir = tempfile.mkdtemp()
-    os.environ["RECIPES_DIR"] = test_dir
-
-    # Re-import to get fresh filesystem manager with new test dir
-    import importlib
-
-    import api.routes
-
-    importlib.reload(api.routes)
-
-    yield
-
-    if Path(test_dir).exists():
-        shutil.rmtree(test_dir)
-
-
-client = TestClient(app)
-
-
-def test_create_recipe():
+def test_create_recipe(client):
     """Test creating a new recipe"""
     response = client.post("/api/recipes/chocolate-cake")
     assert response.status_code == 200
@@ -44,7 +11,7 @@ def test_create_recipe():
     assert "## Ingredients" in content
 
 
-def test_save_recipe():
+def test_save_recipe(client):
     """Test saving a recipe without validation"""
     recipe_content = """# Test Recipe
 
@@ -79,7 +46,7 @@ Test
     assert data["content"] == recipe_content
 
 
-def test_save_recipe_any_format():
+def test_save_recipe_any_format(client):
     """Test saving a recipe with any format (no validation)"""
     recipe_content = """# Simple Recipe
 
@@ -104,7 +71,7 @@ This should work fine now.
     assert data["content"] == recipe_content
 
 
-def test_create_recipe_in_subdirectory():
+def test_create_recipe_in_subdirectory(client):
     """Test creating a recipe in a subdirectory"""
     # Create directory first
     client.post("/api/directories/desserts")
@@ -122,7 +89,7 @@ def test_create_recipe_in_subdirectory():
     assert "## Instructions" in content
 
 
-def test_save_recipe_updates_existing():
+def test_save_recipe_updates_existing(client):
     """Test that saving a recipe updates existing content"""
     # Create initial recipe
     create_response = client.post("/api/recipes/update-test")

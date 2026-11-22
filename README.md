@@ -78,6 +78,7 @@ Configure the application using environment variables:
 | `OPENROUTER_API_KEY`        | —                       | Required for translate/format features     |
 | `OPENROUTER_MODEL`          | `openai/gpt-6-luna`     | OpenRouter model used for translate/format |
 | `OPENROUTER_REASONING_EFFORT` | `high`                | Reasoning effort passed to OpenRouter      |
+| `OPENROUTER_TIMEOUT_SECONDS` | `120`                  | LLM request timeout in seconds             |
 | `OPENROUTER_SITE_URL`       | `http://localhost:8000` | Optional site URL sent to OpenRouter       |
 | `OPENROUTER_APP_NAME`       | `Recipe Manager`        | Optional app name sent to OpenRouter       |
 
@@ -131,6 +132,13 @@ Run the test suite:
 
 ```bash
 uv run pytest
+```
+
+To run the full formatting and lint suite (requires Node.js):
+
+```bash
+npm install
+make check
 ```
 
 ## 🏗️ Development

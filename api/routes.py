@@ -3,13 +3,14 @@ import re
 import time
 from typing import Annotated, Any
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 
 from .filesystem import FileSystemManager
 from .formatting import format_recipe_markdown
 from .llm import LLMError
+from .settings import Settings
 from .translation import (
     cache_translation,
     get_cached_translation,
@@ -20,7 +21,20 @@ from .translation import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["files"])
-fs_manager = FileSystemManager()
+
+
+async def get_fs_manager(request: Request) -> FileSystemManager:
+    """Return the filesystem manager configured for this app instance."""
+    return request.app.state.fs_manager
+
+
+async def get_settings(request: Request) -> Settings:
+    """Return the settings configured for this app instance."""
+    return request.app.state.settings
+
+
+FSManagerDep = Annotated[FileSystemManager, Depends(get_fs_manager)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 class FileUpdateContent(BaseModel):
@@ -33,58 +47,53 @@ class FileMoveRequest(BaseModel):
 
 
 @router.get("/files")
-async def list_files(path: str = "") -> list[dict[str, Any]]:
+async def list_files(fs_manager: FSManagerDep, path: str = "") -> list[dict[str, Any]]:
     """List files and directories at the specified path"""
     return await fs_manager.list_directory(path)
 
 
 @router.get("/files/{path:path}")
-async def get_file_content(path: str) -> dict[str, Any]:
+async def get_file_content(path: str, fs_manager: FSManagerDep) -> dict[str, Any]:
     """Get the content of a specific file with version info"""
     return await fs_manager.read_file_with_version(path)
 
 
 @router.put("/files/{path:path}")
 async def update_file_content(
-    path: str, file_data: FileUpdateContent
+    path: str, file_data: FileUpdateContent, fs_manager: FSManagerDep
 ) -> dict[str, Any]:
     """Update the content of a specific file with version conflict detection"""
     return await fs_manager.write_file(path, file_data.content, file_data.version)
 
 
 @router.post("/files/{path:path}/move")
-async def move_file(path: str, move_data: FileMoveRequest) -> dict[str, str]:
+async def move_file(
+    path: str, move_data: FileMoveRequest, fs_manager: FSManagerDep
+) -> dict[str, str]:
     """Move/rename a file to a new location"""
-    # Read the file content
-    content = await fs_manager.read_file(path)
-
     # If it's a recipe file, try to move associated photo first
     if path.endswith(".md") and move_data.destination.endswith(".md"):
         await fs_manager.move_photo(path, move_data.destination)
 
-    # Write to new location
-    await fs_manager.write_file(move_data.destination, content)
-
-    # Delete old file (the associated photo, if any, was already moved above)
-    await fs_manager.delete_file(path)
+    await fs_manager.move_file(path, move_data.destination)
 
     return {"message": f"File moved from {path} to {move_data.destination}"}
 
 
 @router.delete("/files/{path:path}")
-async def delete_file(path: str) -> dict[str, str]:
+async def delete_file(path: str, fs_manager: FSManagerDep) -> dict[str, str]:
     """Delete a specific file"""
     return await fs_manager.delete_file(path)
 
 
 @router.post("/directories/{path:path}")
-async def create_directory(path: str) -> dict[str, str]:
+async def create_directory(path: str, fs_manager: FSManagerDep) -> dict[str, str]:
     """Create a new directory"""
     return await fs_manager.create_directory(path)
 
 
 @router.delete("/directories/{path:path}")
-async def delete_directory(path: str) -> dict[str, str]:
+async def delete_directory(path: str, fs_manager: FSManagerDep) -> dict[str, str]:
     """Delete a directory (must be empty)"""
     dir_path = fs_manager._validate_path(path)
     if not dir_path.exists():
@@ -105,14 +114,21 @@ async def delete_directory(path: str) -> dict[str, str]:
 
 
 @router.post("/recipes/{path:path}/format")
-async def format_recipe(path: str) -> dict[str, str]:
+async def format_recipe(
+    path: str, fs_manager: FSManagerDep, settings: SettingsDep
+) -> dict[str, str]:
     """Format a recipe using LLM and return the reformatted markdown content"""
     try:
         if not path.endswith(".md"):
             path += ".md"
 
         markdown_content = await fs_manager.read_file(path)
-        formatted_content = await format_recipe_markdown(markdown_content)
+        formatted_content = await format_recipe_markdown(
+            markdown_content,
+            model=settings.openrouter_model,
+            reasoning_effort=settings.openrouter_reasoning_effort,
+            timeout_seconds=settings.llm_timeout_seconds,
+        )
 
         return {"content": formatted_content}
 
@@ -133,7 +149,7 @@ async def format_recipe(path: str) -> dict[str, str]:
 
 
 @router.post("/recipes/{path:path}")
-async def create_recipe(path: str) -> dict[str, Any]:
+async def create_recipe(path: str, fs_manager: FSManagerDep) -> dict[str, Any]:
     """Create a new recipe file with basic template"""
     if not path.endswith(".md"):
         path += ".md"
@@ -158,14 +174,16 @@ async def create_recipe(path: str) -> dict[str, Any]:
 
 
 @router.get("/search")
-async def search_content(q: str, limit: int = 50) -> dict[str, Any]:
+async def search_content(
+    q: str, fs_manager: FSManagerDep, limit: int = 50
+) -> dict[str, Any]:
     """Search for content within recipe files"""
     start_time = time.time()
 
     if not q or len(q.strip()) < 2:
         return {"query": q, "results": [], "total": 0, "duration_ms": 0}
 
-    results = await _search_file_contents(q.strip(), limit)
+    results = await _search_file_contents(q.strip(), limit, fs_manager)
     duration_ms = int((time.time() - start_time) * 1000)
 
     return {
@@ -177,14 +195,16 @@ async def search_content(q: str, limit: int = 50) -> dict[str, Any]:
 
 
 @router.get("/search/files")
-async def search_files(q: str, limit: int = 50) -> dict[str, Any]:
+async def search_files(
+    q: str, fs_manager: FSManagerDep, limit: int = 50
+) -> dict[str, Any]:
     """Search for files by filename"""
     start_time = time.time()
 
     if not q or len(q.strip()) < 1:
         return {"query": q, "results": [], "total": 0, "duration_ms": 0}
 
-    results = await _search_filenames(q.strip(), limit)
+    results = await _search_filenames(q.strip(), limit, fs_manager)
     duration_ms = int((time.time() - start_time) * 1000)
 
     return {
@@ -195,12 +215,14 @@ async def search_files(q: str, limit: int = 50) -> dict[str, Any]:
     }
 
 
-async def _search_file_contents(query: str, limit: int) -> list[dict[str, Any]]:
+async def _search_file_contents(
+    query: str, limit: int, fs_manager: FileSystemManager
+) -> list[dict[str, Any]]:
     """Internal function to search file contents"""
     results = []
     query_lower = query.lower()
     query_words = re.findall(r"\w+", query_lower)
-    all_files = await _get_all_files_recursive("")
+    all_files = await _get_all_files_recursive("", fs_manager)
 
     for file_info in all_files:
         if file_info["type"] != "file" or not file_info["name"].endswith(".md"):
@@ -265,11 +287,13 @@ async def _search_file_contents(query: str, limit: int) -> list[dict[str, Any]]:
     return results[:limit]
 
 
-async def _search_filenames(query: str, limit: int) -> list[dict[str, Any]]:
+async def _search_filenames(
+    query: str, limit: int, fs_manager: FileSystemManager
+) -> list[dict[str, Any]]:
     """Internal function to search filenames"""
     results = []
     query_lower = query.lower()
-    all_files = await _get_all_files_recursive("")
+    all_files = await _get_all_files_recursive("", fs_manager)
 
     for file_info in all_files:
         name_lower = file_info["name"].lower()
@@ -297,7 +321,9 @@ async def _search_filenames(query: str, limit: int) -> list[dict[str, Any]]:
     return results[:limit]
 
 
-async def _get_all_files_recursive(path: str) -> list[dict[str, Any]]:
+async def _get_all_files_recursive(
+    path: str, fs_manager: FileSystemManager
+) -> list[dict[str, Any]]:
     """Recursively get all files from directory"""
     all_files = []
 
@@ -310,7 +336,7 @@ async def _get_all_files_recursive(path: str) -> list[dict[str, Any]]:
             elif item["type"] == "directory":
                 # Recursively search subdirectories
                 subpath = f"{path}/{item['name']}" if path else item["name"]
-                sub_files = await _get_all_files_recursive(subpath)
+                sub_files = await _get_all_files_recursive(subpath, fs_manager)
                 all_files.extend(sub_files)
 
     except HTTPException as e:
@@ -376,7 +402,7 @@ def _generate_content_preview(
 
 
 @router.get("/photos/{path:path}")
-async def get_photo(path: str) -> Response:
+async def get_photo(path: str, fs_manager: FSManagerDep) -> Response:
     """Get photo for a recipe - returns 404 if no photo exists"""
     # Ensure path ends with .md for consistency
     if not path.endswith(".md"):
@@ -401,7 +427,7 @@ async def get_photo(path: str) -> Response:
 
 @router.post("/photos/{path:path}")
 async def upload_photo(
-    path: str, file: Annotated[UploadFile, File()]
+    path: str, file: Annotated[UploadFile, File()], fs_manager: FSManagerDep
 ) -> dict[str, str]:
     """Upload a photo for a recipe - only JPEG files allowed"""
     # Ensure path ends with .md for consistency
@@ -438,7 +464,7 @@ async def upload_photo(
 
 
 @router.delete("/photos/{path:path}")
-async def delete_photo(path: str) -> dict[str, str]:
+async def delete_photo(path: str, fs_manager: FSManagerDep) -> dict[str, str]:
     """Delete photo for a recipe"""
     # Ensure path ends with .md for consistency
     if not path.endswith(".md"):
@@ -451,7 +477,9 @@ async def delete_photo(path: str) -> dict[str, str]:
 
 
 @router.get("/recipes/{path:path}/translate", response_class=HTMLResponse)
-async def translate_recipe(path: str) -> HTMLResponse:
+async def translate_recipe(
+    path: str, fs_manager: FSManagerDep, settings: SettingsDep
+) -> HTMLResponse:
     """Translate a recipe to French and return as HTML"""
     try:
         # Ensure path ends with .md
@@ -476,7 +504,12 @@ async def translate_recipe(path: str) -> HTMLResponse:
         title = _extract_title_from_content(markdown_content) or _path_to_title(path)
 
         # Translate content to French
-        translated_content = await translate_markdown(markdown_content)
+        translated_content = await translate_markdown(
+            markdown_content,
+            model=settings.openrouter_model,
+            reasoning_effort=settings.openrouter_reasoning_effort,
+            timeout_seconds=settings.llm_timeout_seconds,
+        )
 
         photo_url = f"/api/photos/{path}" if has_photo else None
 

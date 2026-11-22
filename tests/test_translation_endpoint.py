@@ -1,31 +1,28 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 
 from api.llm import LLMError
 from api.translation import translation_cache
-from main import app
-
-client = TestClient(app)
 
 
 @pytest.fixture
-def mock_fs_manager():
+def mock_fs_manager(app):
     """Mock filesystem manager"""
-    with patch("api.routes.fs_manager") as mock:
-        # Make read_file return an async coroutine
-        mock.read_file = AsyncMock()
+    mock = MagicMock()
+    # Make read_file return an async coroutine
+    mock.read_file = AsyncMock()
 
-        # Make photo_exists return an async coroutine
-        mock.photo_exists = AsyncMock(return_value=False)
+    # Make photo_exists return an async coroutine
+    mock.photo_exists = AsyncMock(return_value=False)
 
-        # Mock _validate_path to return a file-like object with stat
-        mock_file = mock._validate_path.return_value
-        mock_file.stat.return_value.st_mtime = 1234567890.0
-        mock_file.exists.return_value = True
+    # Mock _validate_path to return a file-like object with stat
+    mock_file = mock._validate_path.return_value
+    mock_file.stat.return_value.st_mtime = 1234567890.0
+    mock_file.exists.return_value = True
 
-        yield mock
+    app.state.fs_manager = mock
+    return mock
 
 
 @pytest.fixture
@@ -40,7 +37,7 @@ def mock_translation():
         yield mock_translate, mock_html
 
 
-def test_translate_recipe_success(mock_fs_manager, mock_translation):
+def test_translate_recipe_success(client, mock_fs_manager, mock_translation):
     """Test successful recipe translation"""
     mock_translate, mock_html = mock_translation
 
@@ -63,7 +60,7 @@ def test_translate_recipe_success(mock_fs_manager, mock_translation):
     assert "<h1>Recette de Test</h1>" in response.text
 
 
-def test_translate_recipe_caching(mock_fs_manager, mock_translation):
+def test_translate_recipe_caching(client, mock_fs_manager, mock_translation):
     """Test that translation caching works correctly"""
     mock_translate, mock_html = mock_translation
 
@@ -78,37 +75,36 @@ def test_translate_recipe_caching(mock_fs_manager, mock_translation):
     mock_html.return_value = "<html><body><h1>Recette de Test</h1></body></html>"
 
     # Mock file stat for mtime
-    with patch("api.routes.fs_manager._validate_path") as mock_validate:
-        mock_file = mock_validate.return_value
-        mock_file.stat.return_value.st_mtime = 1234567890.0
+    mock_file = mock_fs_manager._validate_path.return_value
+    mock_file.stat.return_value.st_mtime = 1234567890.0
 
-        # First request - should translate and cache
-        response1 = client.get("/api/recipes/test-recipe/translate")
-        assert response1.status_code == 200
-        assert mock_translate.call_count == 1
-        assert mock_html.call_count == 1
+    # First request - should translate and cache
+    response1 = client.get("/api/recipes/test-recipe/translate")
+    assert response1.status_code == 200
+    assert mock_translate.call_count == 1
+    assert mock_html.call_count == 1
 
-        # Second request with same mtime - should use cache
-        response2 = client.get("/api/recipes/test-recipe/translate")
-        assert response2.status_code == 200
-        assert response2.text == response1.text
-        # Translation functions should not be called again
-        assert mock_translate.call_count == 1
-        assert mock_html.call_count == 1
+    # Second request with same mtime - should use cache
+    response2 = client.get("/api/recipes/test-recipe/translate")
+    assert response2.status_code == 200
+    assert response2.text == response1.text
+    # Translation functions should not be called again
+    assert mock_translate.call_count == 1
+    assert mock_html.call_count == 1
 
-        # Third request with newer mtime - should translate again
-        mock_file.stat.return_value.st_mtime = 1234567990.0  # 100 seconds later
-        response3 = client.get("/api/recipes/test-recipe/translate")
-        assert response3.status_code == 200
-        # Translation functions should be called again
-        assert mock_translate.call_count == 2
-        assert mock_html.call_count == 2
+    # Third request with newer mtime - should translate again
+    mock_file.stat.return_value.st_mtime = 1234567990.0  # 100 seconds later
+    response3 = client.get("/api/recipes/test-recipe/translate")
+    assert response3.status_code == 200
+    # Translation functions should be called again
+    assert mock_translate.call_count == 2
+    assert mock_html.call_count == 2
 
     # Verify file was read twice (first request and third request with newer mtime)
     assert mock_fs_manager.read_file.call_count == 2
 
 
-def test_translate_recipe_with_md_extension(mock_fs_manager, mock_translation):
+def test_translate_recipe_with_md_extension(client, mock_fs_manager, mock_translation):
     """Test recipe translation when path already has .md extension"""
     mock_translate, mock_html = mock_translation
 
@@ -130,7 +126,7 @@ def test_translate_recipe_with_md_extension(mock_fs_manager, mock_translation):
     mock_fs_manager.read_file.assert_called_once_with("test-recipe.md")
 
 
-def test_translate_recipe_file_not_found(mock_fs_manager):
+def test_translate_recipe_file_not_found(client, mock_fs_manager):
     """Test translation with non-existent recipe file"""
     mock_fs_manager.read_file.side_effect = FileNotFoundError()
 
@@ -140,7 +136,7 @@ def test_translate_recipe_file_not_found(mock_fs_manager):
     assert "not found" in response.json()["detail"]
 
 
-def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
+def test_translate_recipe_translation_error(client, mock_fs_manager, mock_translation):
     """Test translation service error handling"""
     mock_translate, _mock_html = mock_translation
 
@@ -157,7 +153,7 @@ def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
     assert "Translation service temporarily unavailable" in response.json()["detail"]
 
 
-def test_translate_recipe_validation_error(mock_fs_manager, mock_translation):
+def test_translate_recipe_validation_error(client, mock_fs_manager, mock_translation):
     """Test translation with validation error"""
     mock_translate, _mock_html = mock_translation
 
@@ -171,7 +167,7 @@ def test_translate_recipe_validation_error(mock_fs_manager, mock_translation):
     assert "Content cannot be empty" in response.json()["detail"]
 
 
-def test_translate_recipe_path_with_title(mock_fs_manager, mock_translation):
+def test_translate_recipe_path_with_title(client, mock_fs_manager, mock_translation):
     """Test recipe translation with title extraction"""
     mock_translate, mock_html = mock_translation
 
@@ -190,7 +186,7 @@ def test_translate_recipe_path_with_title(mock_fs_manager, mock_translation):
     )
 
 
-def test_translate_recipe_path_without_title(mock_fs_manager, mock_translation):
+def test_translate_recipe_path_without_title(client, mock_fs_manager, mock_translation):
     """Test recipe translation when content has no title"""
     mock_translate, mock_html = mock_translation
 
@@ -207,7 +203,7 @@ def test_translate_recipe_path_without_title(mock_fs_manager, mock_translation):
     mock_html.assert_called_once_with("## Ingrédients\n\n- Farine", "Some Recipe", None)
 
 
-def test_translate_recipe_unexpected_error(mock_fs_manager, mock_translation):
+def test_translate_recipe_unexpected_error(client, mock_fs_manager, mock_translation):
     """Test unexpected error handling"""
     mock_translate, _mock_html = mock_translation
 
@@ -224,7 +220,7 @@ def test_translate_recipe_unexpected_error(mock_fs_manager, mock_translation):
     assert "Internal server error" in response.json()["detail"]
 
 
-def test_translate_recipe_path_validation(mock_fs_manager, mock_translation):
+def test_translate_recipe_path_validation(client, mock_fs_manager, mock_translation):
     """Test that path validation uses existing filesystem security"""
     _mock_translate, _mock_html = mock_translation
 
@@ -237,7 +233,7 @@ def test_translate_recipe_path_validation(mock_fs_manager, mock_translation):
     assert response.status_code == 404
 
 
-def test_translate_recipe_frontend_route(mock_fs_manager, mock_translation):
+def test_translate_recipe_frontend_route(client, mock_fs_manager, mock_translation):
     """Test translation via frontend edit route"""
     mock_translate, mock_html = mock_translation
 

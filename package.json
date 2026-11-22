@@ -1,0 +1,12 @@
+{
+  "name": "recipe-manager",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "fmt": "prettier -w static/ README.md",
+    "check": "prettier --check static/"
+  },
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
+}

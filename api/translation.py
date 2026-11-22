@@ -58,7 +58,13 @@ def cache_translation(
     logger.info(f"Cached translation for {file_path}")
 
 
-async def translate_markdown(content: str) -> str:
+async def translate_markdown(
+    content: str,
+    *,
+    model: str | None = None,
+    reasoning_effort: str | None = None,
+    timeout_seconds: float | None = None,
+) -> str:
     """Translate markdown recipe content to French.
 
     Raises:
@@ -68,7 +74,12 @@ async def translate_markdown(content: str) -> str:
     if not content or not content.strip():
         raise ValueError("Content cannot be empty")
 
-    return await chat_completion(TRANSLATION_PROMPT.format(content=content))
+    return await chat_completion(
+        TRANSLATION_PROMPT.format(content=content),
+        model=model,
+        reasoning_effort=reasoning_effort,
+        timeout_seconds=timeout_seconds,
+    )
 
 
 def markdown_to_html(

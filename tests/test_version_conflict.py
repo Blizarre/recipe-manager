@@ -3,15 +3,16 @@ Test script to verify version conflict detection works properly.
 This creates a test recipe, simulates concurrent modifications, and tests conflict detection.
 """
 
-import os
 import tempfile
+from pathlib import Path
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
+from api.app import create_app
 from api.filesystem import FileSystemManager
-from api.routes import router
+from api.settings import Settings
 
 # JavaScript Number.MAX_SAFE_INTEGER — versions beyond this lose precision when
 # serialized as JSON to the browser.
@@ -85,13 +86,9 @@ async def test_version_fits_in_js_safe_integer():
 
 def test_api_endpoints():
     """Test the API endpoints with version conflicts"""
-    app = FastAPI()
-    app.include_router(router)
-    client = TestClient(app)
-
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Set the recipes directory
-        os.environ["RECIPES_DIR"] = temp_dir
+        app = create_app(Settings(recipes_dir=Path(temp_dir)))
+        client = TestClient(app)
 
         # Create a test file
         response = client.put(

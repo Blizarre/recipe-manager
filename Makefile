@@ -1,11 +1,12 @@
 fmt:
-	prettier -w static/ README.md
-	uv tool run black .
+	npx --no-install prettier -w static/ README.md
+	uv run black .
 
 check:
-	prettier --check static/
-	uv tool run black --check .
-	uv tool run ruff check
+	npx --no-install prettier --check static/
+	uv run black --check .
+	uv run ruff check
+	uv run pyright
 	uv run pytest
 
 run:

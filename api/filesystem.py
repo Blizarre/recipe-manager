@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import os
+import stat
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -73,6 +75,38 @@ class FileSystemManager:
         except OSError as e:
             raise HTTPException(status_code=500, detail=f"Failed to read file: {e!s}")
 
+    async def _atomic_write_text(self, path: Path, content: str) -> None:
+        """Write text atomically, preserving the existing file permissions."""
+        fd, temp_name = tempfile.mkstemp(
+            dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+        )
+        os.close(fd)
+        temp_path = Path(temp_name)
+        try:
+            mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o644
+            os.chmod(temp_path, mode)
+            async with aiofiles.open(temp_path, "w", encoding="utf-8") as f:
+                await f.write(content)
+            os.replace(temp_path, path)
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    async def _atomic_write_bytes(self, path: Path, content: bytes) -> None:
+        """Write bytes atomically, preserving the existing file permissions."""
+        fd, temp_name = tempfile.mkstemp(
+            dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+        )
+        os.close(fd)
+        temp_path = Path(temp_name)
+        try:
+            mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o644
+            os.chmod(temp_path, mode)
+            async with aiofiles.open(temp_path, "wb") as f:
+                await f.write(content)
+            os.replace(temp_path, path)
+        finally:
+            temp_path.unlink(missing_ok=True)
+
     async def read_file_with_version(self, path: str) -> dict[str, Any]:
         """Read file content with version timestamp"""
         try:
@@ -117,8 +151,7 @@ class FileSystemManager:
                 # Create parent directories if needed
                 file_path.parent.mkdir(parents=True, exist_ok=True)
 
-                async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
-                    await f.write(content)
+                await self._atomic_write_text(file_path, content)
 
                 # Version uses milliseconds (not nanoseconds) so it stays within
                 # JavaScript's safe-integer range on the client. If mtime hasn't
@@ -139,6 +172,34 @@ class FileSystemManager:
             raise
         except OSError as e:
             raise HTTPException(status_code=500, detail=f"Failed to write file: {e!s}")
+
+    async def move_file(self, old_path: str, new_path: str) -> dict[str, str]:
+        """Move a file, replacing the destination if it already exists."""
+        try:
+            source = self._validate_path(old_path)
+            destination = self._validate_path(new_path)
+
+            if not source.exists() or not source.is_file():
+                raise HTTPException(status_code=404, detail="File not found")
+            if destination.is_dir():
+                raise HTTPException(
+                    status_code=400, detail="Destination is a directory"
+                )
+            if source == destination:
+                return {"message": "File is already at the destination"}
+
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            async with self._write_lock:
+                source.replace(destination)
+
+            return {
+                "message": "File moved successfully",
+                "path": str(destination.relative_to(self.base_dir)),
+            }
+        except HTTPException:
+            raise
+        except OSError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to move file: {e!s}")
 
     async def delete_file(self, path: str) -> dict[str, str]:
         """Delete a file and associated photo if it's a recipe"""
@@ -205,8 +266,7 @@ class FileSystemManager:
             photo_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Write binary content for JPEG
-            async with aiofiles.open(photo_path, "wb") as f:
-                await f.write(photo_content)
+            await self._atomic_write_bytes(photo_path, photo_content)
 
             self.logger.info(f"Photo saved for recipe {recipe_path}")
             return {
@@ -267,7 +327,7 @@ class FileSystemManager:
             new_photo_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Move the photo file
-            old_photo_path.rename(new_photo_path)
+            old_photo_path.replace(new_photo_path)
         except OSError as e:
             self.logger.error(
                 f"Failed to move photo from {old_recipe_path} to {new_recipe_path}: {e!s}"

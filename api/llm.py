@@ -1,25 +1,31 @@
 """Shared OpenRouter chat-completion helper."""
 
 import logging
-import os
 import time
 
 from openai import APIError, APITimeoutError, RateLimitError
 
 from . import openrouter_client as _openrouter_module
+from .settings import (
+    DEFAULT_LLM_TIMEOUT_SECONDS,
+    DEFAULT_OPENROUTER_MODEL,
+    DEFAULT_OPENROUTER_REASONING_EFFORT,
+)
 
 logger = logging.getLogger(__name__)
-
-MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-6-luna")
-REASONING_EFFORT = os.getenv("OPENROUTER_REASONING_EFFORT", "high")
-TIMEOUT_SECONDS = 120.0
 
 
 class LLMError(Exception):
     """Raised when a request to the language model fails."""
 
 
-async def chat_completion(prompt: str) -> str:
+async def chat_completion(
+    prompt: str,
+    *,
+    model: str | None = None,
+    reasoning_effort: str | None = None,
+    timeout_seconds: float | None = None,
+) -> str:
     """Send a prompt to the LLM and return the stripped response text.
 
     Raises:
@@ -28,14 +34,18 @@ async def chat_completion(prompt: str) -> str:
     if _openrouter_module.openrouter_client is None:
         raise LLMError("LLM client not initialized")
 
+    model = model or DEFAULT_OPENROUTER_MODEL
+    reasoning_effort = reasoning_effort or DEFAULT_OPENROUTER_REASONING_EFFORT
+    timeout_seconds = timeout_seconds or DEFAULT_LLM_TIMEOUT_SECONDS
+
     try:
         logger.info(f"Starting LLM request ({len(prompt)} chars)")
         start = time.time()
         response = await _openrouter_module.openrouter_client.chat.completions.create(
-            model=MODEL,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
-            timeout=TIMEOUT_SECONDS,
-            extra_body={"reasoning": {"effort": REASONING_EFFORT}},
+            timeout=timeout_seconds,
+            extra_body={"reasoning": {"effort": reasoning_effort}},
         )
         logger.info(f"LLM request completed in {time.time() - start:.1f}s")
 

@@ -1,37 +1,4 @@
-import os
-import shutil
-import tempfile
-from pathlib import Path
-
-import pytest
-from fastapi.testclient import TestClient
-
-from main import app
-
-
-@pytest.fixture(autouse=True)
-def clean_test_dir():
-    """Clean test directory before and after each test"""
-    test_dir = tempfile.mkdtemp()
-    os.environ["RECIPES_DIR"] = test_dir
-
-    # Re-import to get fresh filesystem manager with new test dir
-    import importlib
-
-    import api.routes
-
-    importlib.reload(api.routes)
-
-    yield
-
-    if Path(test_dir).exists():
-        shutil.rmtree(test_dir)
-
-
-client = TestClient(app)
-
-
-def test_health_endpoint():
+def test_health_endpoint(client):
     """Test the health check endpoint"""
     response = client.get("/health")
     assert response.status_code == 200
@@ -40,14 +7,14 @@ def test_health_endpoint():
     assert "recipes_dir" in data
 
 
-def test_list_empty_directory():
+def test_list_empty_directory(client):
     """Test listing an empty directory"""
     response = client.get("/api/files")
     assert response.status_code == 200
     assert response.json() == []
 
 
-def test_create_and_read_file():
+def test_create_and_read_file(client):
     """Test creating and reading a file"""
     # Create a file
     file_content = {"content": "# Test Recipe\n\nThis is a test recipe."}
@@ -62,7 +29,7 @@ def test_create_and_read_file():
     assert data["content"] == "# Test Recipe\n\nThis is a test recipe."
 
 
-def test_update_file():
+def test_update_file(client):
     """Test updating a file"""
     # Create a file
     file_content = {"content": "Original content"}
@@ -80,7 +47,7 @@ def test_update_file():
     assert response.json()["content"] == "Updated content"
 
 
-def test_delete_file():
+def test_delete_file(client):
     """Test deleting a file"""
     # Create a file
     file_content = {"content": "To be deleted"}
@@ -95,7 +62,7 @@ def test_delete_file():
     assert response.status_code == 404
 
 
-def test_create_directory():
+def test_create_directory(client):
     """Test creating a directory"""
     response = client.post("/api/directories/test_dir")
     assert response.status_code == 200
@@ -109,7 +76,7 @@ def test_create_directory():
     assert dir_item["type"] == "directory"
 
 
-def test_invalid_path_security():
+def test_invalid_path_security(client):
     """Test that path traversal attempts are blocked"""
     # Try to access files outside the recipes directory
     response = client.get("/api/files/../../../etc/passwd")
@@ -118,13 +85,13 @@ def test_invalid_path_security():
     assert response.status_code in [400, 404]
 
 
-def test_file_not_found():
+def test_file_not_found(client):
     """Test accessing a non-existent file"""
     response = client.get("/api/files/nonexistent.md")
     assert response.status_code == 404
 
 
-def test_search_content():
+def test_search_content(client):
     """Test content search functionality"""
     # Create a test file with searchable content
     file_content = {
@@ -141,7 +108,7 @@ def test_search_content():
     assert any("search_test.md" in result["path"] for result in data["results"])
 
 
-def test_search_files():
+def test_search_files(client):
     """Test filename search functionality"""
     # Create test files
     client.put("/api/files/chocolate-cookies.md", json={"content": "# Cookies"})
@@ -156,7 +123,7 @@ def test_search_files():
     assert any("chocolate-cookies.md" in result["name"] for result in data["results"])
 
 
-def test_directory_operations():
+def test_directory_operations(client):
     """Test directory creation and listing"""
     # Create a directory
     response = client.post("/api/directories/test_category")

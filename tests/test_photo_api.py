@@ -1,29 +1,4 @@
-import shutil
-import tempfile
 from io import BytesIO
-
-import pytest
-from fastapi.testclient import TestClient
-
-from main import app
-
-
-@pytest.fixture
-def temp_recipes_dir():
-    """Create a temporary recipes directory for testing"""
-    temp_dir = tempfile.mkdtemp()
-    yield temp_dir
-    shutil.rmtree(temp_dir)
-
-
-@pytest.fixture
-def client_with_temp_dir(temp_recipes_dir, monkeypatch):
-    """Create test client with temporary recipes directory"""
-    # Override the FileSystemManager to use temp directory
-    monkeypatch.setenv("RECIPES_DIR", temp_recipes_dir)
-
-    with TestClient(app) as client:
-        yield client
 
 
 def create_fake_jpeg_content() -> bytes:
@@ -40,16 +15,16 @@ def create_fake_png_content() -> bytes:
 class TestPhotoEndpoints:
     """Test photo API endpoints"""
 
-    def test_get_photo_not_found(self, client_with_temp_dir):
+    def test_get_photo_not_found(self, client):
         """Test getting photo that doesn't exist returns 404"""
-        response = client_with_temp_dir.get("/api/photos/nonexistent-recipe.md")
+        response = client.get("/api/photos/nonexistent-recipe.md")
         assert response.status_code == 404
         assert "Photo not found" in response.json()["detail"]
 
-    def test_upload_and_get_photo(self, client_with_temp_dir):
+    def test_upload_and_get_photo(self, client):
         """Test uploading and retrieving a photo"""
         # Create a recipe first
-        client_with_temp_dir.post(
+        client.post(
             "/api/recipes/test-recipe.md",
             json={"content": "# Test Recipe\n\n## Ingredients\n\n- Test ingredient"},
         )
@@ -58,141 +33,135 @@ class TestPhotoEndpoints:
         fake_jpeg = create_fake_jpeg_content()
         files = {"file": ("test.jpg", BytesIO(fake_jpeg), "image/jpeg")}
 
-        response = client_with_temp_dir.post("/api/photos/test-recipe.md", files=files)
+        response = client.post("/api/photos/test-recipe.md", files=files)
         assert response.status_code == 200
         assert "Photo uploaded successfully" in response.json()["message"]
         assert response.json()["recipe_path"] == "test-recipe.md"
 
         # Get photo back
-        response = client_with_temp_dir.get("/api/photos/test-recipe.md")
+        response = client.get("/api/photos/test-recipe.md")
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/jpeg"
         assert response.content == fake_jpeg
 
-    def test_upload_photo_without_md_extension(self, client_with_temp_dir):
+    def test_upload_photo_without_md_extension(self, client):
         """Test uploading photo to path without .md extension"""
         fake_jpeg = create_fake_jpeg_content()
         files = {"file": ("test.jpg", BytesIO(fake_jpeg), "image/jpeg")}
 
-        response = client_with_temp_dir.post("/api/photos/test-recipe", files=files)
+        response = client.post("/api/photos/test-recipe", files=files)
         assert response.status_code == 200
         assert response.json()["recipe_path"] == "test-recipe.md"
 
-    def test_upload_invalid_file_extension(self, client_with_temp_dir):
+    def test_upload_invalid_file_extension(self, client):
         """Test uploading non-JPEG file fails"""
         fake_png = create_fake_png_content()
         files = {"file": ("test.png", BytesIO(fake_png), "image/png")}
 
-        response = client_with_temp_dir.post("/api/photos/test-recipe.md", files=files)
+        response = client.post("/api/photos/test-recipe.md", files=files)
         assert response.status_code == 400
         assert "Only JPEG files are allowed" in response.json()["detail"]
 
-    def test_upload_invalid_mime_type(self, client_with_temp_dir):
+    def test_upload_invalid_mime_type(self, client):
         """Test uploading file with wrong MIME type fails"""
         fake_content = b"not an image"
         files = {"file": ("test.jpg", BytesIO(fake_content), "text/plain")}
 
-        response = client_with_temp_dir.post("/api/photos/test-recipe.md", files=files)
+        response = client.post("/api/photos/test-recipe.md", files=files)
         assert response.status_code == 400
         assert "File must be a JPEG image" in response.json()["detail"]
 
-    def test_upload_empty_file(self, client_with_temp_dir):
+    def test_upload_empty_file(self, client):
         """Test uploading empty file fails"""
         files = {"file": ("test.jpg", BytesIO(b""), "image/jpeg")}
 
-        response = client_with_temp_dir.post("/api/photos/test-recipe.md", files=files)
+        response = client.post("/api/photos/test-recipe.md", files=files)
         assert response.status_code == 400
         assert "Uploaded file is empty" in response.json()["detail"]
 
-    def test_upload_large_file(self, client_with_temp_dir):
+    def test_upload_large_file(self, client):
         """Test uploading file larger than 10MB fails"""
         # Create a 11MB fake JPEG
         large_content = b"\xff\xd8\xff\xe0\x00\x10JFIF" + b"x" * (11 * 1024 * 1024)
 
         files = {"file": ("large.jpg", BytesIO(large_content), "image/jpeg")}
 
-        response = client_with_temp_dir.post("/api/photos/test-recipe.md", files=files)
+        response = client.post("/api/photos/test-recipe.md", files=files)
         assert response.status_code == 400
         assert "File size must be less than 10MB" in response.json()["detail"]
 
-    def test_delete_photo(self, client_with_temp_dir):
+    def test_delete_photo(self, client):
         """Test deleting a photo"""
         # Upload photo first
         fake_jpeg = create_fake_jpeg_content()
         files = {"file": ("test.jpg", BytesIO(fake_jpeg), "image/jpeg")}
 
-        upload_response = client_with_temp_dir.post(
-            "/api/photos/test-recipe.md", files=files
-        )
+        upload_response = client.post("/api/photos/test-recipe.md", files=files)
         assert upload_response.status_code == 200
 
         # Verify photo exists
-        get_response = client_with_temp_dir.get("/api/photos/test-recipe.md")
+        get_response = client.get("/api/photos/test-recipe.md")
         assert get_response.status_code == 200
 
         # Delete photo
-        delete_response = client_with_temp_dir.delete("/api/photos/test-recipe.md")
+        delete_response = client.delete("/api/photos/test-recipe.md")
         assert delete_response.status_code == 200
         assert "Photo deleted successfully" in delete_response.json()["message"]
 
         # Verify photo is gone
-        get_response = client_with_temp_dir.get("/api/photos/test-recipe.md")
+        get_response = client.get("/api/photos/test-recipe.md")
         assert get_response.status_code == 404
 
-    def test_delete_nonexistent_photo(self, client_with_temp_dir):
+    def test_delete_nonexistent_photo(self, client):
         """Test deleting photo that doesn't exist returns 404"""
-        response = client_with_temp_dir.delete("/api/photos/nonexistent.md")
+        response = client.delete("/api/photos/nonexistent.md")
         assert response.status_code == 404
         assert "Photo not found" in response.json()["detail"]
 
-    def test_delete_photo_without_md_extension(self, client_with_temp_dir):
+    def test_delete_photo_without_md_extension(self, client):
         """Test deleting photo using path without .md extension"""
         # Upload photo first
         fake_jpeg = create_fake_jpeg_content()
         files = {"file": ("test.jpg", BytesIO(fake_jpeg), "image/jpeg")}
 
-        client_with_temp_dir.post("/api/photos/test-recipe", files=files)
+        client.post("/api/photos/test-recipe", files=files)
 
         # Delete using path without .md
-        response = client_with_temp_dir.delete("/api/photos/test-recipe")
+        response = client.delete("/api/photos/test-recipe")
         assert response.status_code == 200
         assert response.json()["recipe_path"] == "test-recipe.md"
 
-    def test_photo_content_disposition_header(self, client_with_temp_dir):
+    def test_photo_content_disposition_header(self, client):
         """Test that photo responses include the content-disposition header"""
         # Upload photo
         fake_jpeg = create_fake_jpeg_content()
         files = {"file": ("test.jpg", BytesIO(fake_jpeg), "image/jpeg")}
 
-        client_with_temp_dir.post("/api/photos/test-recipe.md", files=files)
+        client.post("/api/photos/test-recipe.md", files=files)
 
         # Get photo and check headers
-        response = client_with_temp_dir.get("/api/photos/test-recipe.md")
+        response = client.get("/api/photos/test-recipe.md")
         assert response.status_code == 200
         assert "Content-Disposition" in response.headers
         assert "test-recipe.jpeg" in response.headers["Content-Disposition"]
 
-    def test_upload_replace_existing_photo(self, client_with_temp_dir):
+    def test_upload_replace_existing_photo(self, client):
         """Test uploading a new photo replaces existing one"""
         # Upload first photo
         fake_jpeg1 = create_fake_jpeg_content()
         files1 = {"file": ("test1.jpg", BytesIO(fake_jpeg1), "image/jpeg")}
 
-        response1 = client_with_temp_dir.post(
-            "/api/photos/test-recipe.md", files=files1
-        )
+        response1 = client.post("/api/photos/test-recipe.md", files=files1)
         assert response1.status_code == 200
 
         # Upload second photo (should replace first)
         fake_jpeg2 = b"\xff\xd8\xff\xe0\x00\x10JFIF" + b"different content" * 100
         files2 = {"file": ("test2.jpg", BytesIO(fake_jpeg2), "image/jpeg")}
 
-        response2 = client_with_temp_dir.post(
-            "/api/photos/test-recipe.md", files=files2
-        )
+        response2 = client.post("/api/photos/test-recipe.md", files=files2)
         assert response2.status_code == 200
 
         # Get photo and verify it's the second one
-        get_response = client_with_temp_dir.get("/api/photos/test-recipe.md")
+        get_response = client.get("/api/photos/test-recipe.md")
         assert get_response.status_code == 200
         assert get_response.content == fake_jpeg2

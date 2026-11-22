@@ -1,81 +1,23 @@
 import logging
-from contextlib import asynccontextmanager
-from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-
-from api.openrouter_client import initialize_openrouter_client
-from api.routes import router as api_router
-from api.routes import translate_recipe
+from api.app import create_app
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 
-
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    # Startup
-    initialize_openrouter_client()
-    yield
-    # Shutdown (nothing to cleanup currently)
-
-
-app = FastAPI(
-    title="Recipe Manager API",
-    description="A FastAPI backend for managing recipe files",
-    version="0.1.0",
-    lifespan=lifespan,
-)
-
-# Create recipes directory if it doesn't exist
-RECIPES_DIR = Path("recipes")
-RECIPES_DIR.mkdir(exist_ok=True)
-
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Include API routes
-app.include_router(api_router)
-
-
-# Serve frontend
-@app.get("/", response_class=HTMLResponse)
-async def serve_frontend(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
-
-
-# Translation endpoint for frontend routes
-@app.get("/translate/{path:path}", response_class=HTMLResponse)
-async def translate_recipe_frontend(path: str):
-    return await translate_recipe(path)
-
-
-# Serve individual recipe editor pages (now unified with main page)
-@app.get("/edit/{path:path}", response_class=HTMLResponse)
-async def serve_recipe_editor(request: Request, path: str):
-    """Serve unified HTML page for individual recipe URLs"""
-    return templates.TemplateResponse(request=request, name="index.html")
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "recipes_dir": str(RECIPES_DIR.absolute())}
+app = create_app()
 
 
 if __name__ == "__main__":
-    import os
-
     import uvicorn
 
+    settings = app.state.settings
     uvicorn.run(
         "main:app",
-        host=os.getenv("HOST", "0.0.0.0"),
-        port=int(os.getenv("PORT", "8000")),
+        host=settings.host,
+        port=settings.port,
         proxy_headers=True,
         forwarded_allow_ips="*",
     )
