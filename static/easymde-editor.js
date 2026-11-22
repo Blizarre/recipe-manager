@@ -159,6 +159,10 @@ class MarkdownEditor {
     if (undoBtn && this.editor) {
       undoBtn.disabled = !this.canUndo();
     }
+    const redoBtn = document.getElementById("redoBtn");
+    if (redoBtn && this.editor) {
+      redoBtn.disabled = !this.canRedo();
+    }
     this.updateCharCount();
   }
 
@@ -182,6 +186,18 @@ class MarkdownEditor {
   canUndo() {
     if (!this.editor || !this.editor.codemirror) return false;
     return this.editor.codemirror.historySize().undo > 0;
+  }
+
+  redo() {
+    if (!this.editor) return false;
+    this.editor.codemirror.redo();
+    this.updateUI();
+    return true;
+  }
+
+  canRedo() {
+    if (!this.editor || !this.editor.codemirror) return false;
+    return this.editor.codemirror.historySize().redo > 0;
   }
 
   showError(message) {

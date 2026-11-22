@@ -15,6 +15,7 @@ class UnifiedRecipeApp {
       editorInterface: document.getElementById("editorInterface"),
       sidebar: document.getElementById("sidebar"),
       undoBtn: document.getElementById("undoBtn"),
+      redoBtn: document.getElementById("redoBtn"),
       renameBtn: document.getElementById("renameBtn"),
       translateBtn: document.getElementById("translateBtn"),
       formatBtn: document.getElementById("formatBtn"),
@@ -77,6 +78,9 @@ class UnifiedRecipeApp {
       .getElementById("undoBtn")
       ?.addEventListener("click", () => this.editor?.undo());
     document
+      .getElementById("redoBtn")
+      ?.addEventListener("click", () => this.editor?.redo());
+    document
       .getElementById("renameBtn")
       ?.addEventListener("click", () => this.showRenameModal());
     document
@@ -98,6 +102,7 @@ class UnifiedRecipeApp {
     const moveButtons = () => {
       const {
         undoBtn,
+        redoBtn,
         renameBtn,
         translateBtn,
         formatBtn,
@@ -106,7 +111,8 @@ class UnifiedRecipeApp {
         actionButtons,
       } = this.elements;
 
-      if (!undoBtn || !renameBtn || !translateBtn || !actionButtons) return;
+      if (!undoBtn || !redoBtn || !renameBtn || !translateBtn || !actionButtons)
+        return;
 
       if (window.innerWidth <= 768) {
         // Mobile: keep buttons in header - they're already there
@@ -122,6 +128,9 @@ class UnifiedRecipeApp {
         // Desktop: move buttons to editor header and show desktop photo button
         if (!actionButtons.contains(undoBtn)) {
           actionButtons.appendChild(undoBtn);
+        }
+        if (!actionButtons.contains(redoBtn)) {
+          actionButtons.appendChild(redoBtn);
         }
         if (!actionButtons.contains(renameBtn)) {
           actionButtons.appendChild(renameBtn);
@@ -167,6 +176,7 @@ class UnifiedRecipeApp {
       editorInterface,
       sidebar,
       undoBtn,
+      redoBtn,
       renameBtn,
       translateBtn,
       formatBtn,
@@ -187,6 +197,7 @@ class UnifiedRecipeApp {
 
       // Show action buttons when file is open
       if (undoBtn) undoBtn.style.display = "inline-flex";
+      if (redoBtn) redoBtn.style.display = "inline-flex";
       if (renameBtn) renameBtn.style.display = "inline-flex";
       if (translateBtn) translateBtn.style.display = "inline-flex";
       if (formatBtn) formatBtn.style.display = "inline-flex";
@@ -203,6 +214,7 @@ class UnifiedRecipeApp {
 
       // Hide action buttons when no file is open
       if (undoBtn) undoBtn.style.display = "none";
+      if (redoBtn) redoBtn.style.display = "none";
       if (renameBtn) renameBtn.style.display = "none";
       if (translateBtn) translateBtn.style.display = "none";
       if (formatBtn) formatBtn.style.display = "none";
