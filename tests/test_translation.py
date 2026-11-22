@@ -84,7 +84,7 @@ async def test_translation_service_integration():
         # Basic validation that translation occurred
         assert len(result) > 0
         assert "recette" in result.lower() or "ingrédients" in result.lower()
-    except Exception as e:
+    except LLMError as e:
         # Skip test if API key not available or API call fails
         pytest.skip(f"Integration test skipped: {e!s}")
 
@@ -160,17 +160,15 @@ def test_cache_translation():
     translation_cache.clear()
 
     file_path = "test-recipe.md"
-    translated_content = "# Recette de Test"
     html_content = "<html><body><h1>Recette de Test</h1></body></html>"
     file_mtime = 1234567890.0
 
     # Cache the translation
-    cache_translation(file_path, translated_content, html_content, file_mtime, True)
+    cache_translation(file_path, html_content, file_mtime, True)
 
     # Verify it's in cache
     assert file_path in translation_cache
     cached = translation_cache[file_path]
-    assert cached.translated_content == translated_content
     assert cached.html_content == html_content
     assert cached.file_mtime == file_mtime
     assert cached.has_photo is True
@@ -182,17 +180,15 @@ def test_get_cached_translation_hit():
     translation_cache.clear()
 
     file_path = "test-recipe.md"
-    translated_content = "# Recette de Test"
     html_content = "<html><body><h1>Recette de Test</h1></body></html>"
     file_mtime = 1234567890.0
 
     # Cache the translation
-    cache_translation(file_path, translated_content, html_content, file_mtime, False)
+    cache_translation(file_path, html_content, file_mtime, False)
 
     # Get from cache with same mtime (cache hit)
     cached = get_cached_translation(file_path, file_mtime)
     assert cached is not None
-    assert cached.translated_content == translated_content
     assert cached.html_content == html_content
 
 
@@ -202,12 +198,11 @@ def test_get_cached_translation_miss_newer_file():
     translation_cache.clear()
 
     file_path = "test-recipe.md"
-    translated_content = "# Recette de Test"
     html_content = "<html><body><h1>Recette de Test</h1></body></html>"
     file_mtime = 1234567890.0
 
     # Cache the translation
-    cache_translation(file_path, translated_content, html_content, file_mtime, False)
+    cache_translation(file_path, html_content, file_mtime, False)
 
     # Get from cache with newer mtime (cache miss)
     newer_mtime = file_mtime + 100.0

@@ -1,7 +1,7 @@
 import logging
 import re
 import time
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, Response
@@ -23,13 +23,9 @@ router = APIRouter(prefix="/api", tags=["files"])
 fs_manager = FileSystemManager()
 
 
-class FileCreateContent(BaseModel):
-    content: str
-
-
 class FileUpdateContent(BaseModel):
     content: str
-    version: int  # Required for updates to prevent conflicts
+    version: int | None = None  # Required for conflict detection on updates
 
 
 class FileMoveRequest(BaseModel):
@@ -75,12 +71,6 @@ async def move_file(path: str, move_data: FileMoveRequest) -> dict[str, str]:
     return {"message": f"File moved from {path} to {move_data.destination}"}
 
 
-@router.post("/files/{path:path}")
-async def create_file(path: str, file_data: FileCreateContent) -> dict[str, Any]:
-    """Create a new file with content"""
-    return await fs_manager.write_file(path, file_data.content)
-
-
 @router.delete("/files/{path:path}")
 async def delete_file(path: str) -> dict[str, str]:
     """Delete a specific file"""
@@ -114,15 +104,6 @@ async def delete_directory(path: str) -> dict[str, str]:
 # Recipe-specific endpoints
 
 
-@router.put("/recipes/{path:path}")
-async def save_recipe(path: str, recipe_data: FileUpdateContent) -> dict[str, Any]:
-    """Save a recipe file with version conflict detection"""
-    if not path.endswith(".md"):
-        path += ".md"
-
-    return await fs_manager.write_file(path, recipe_data.content, recipe_data.version)
-
-
 @router.post("/recipes/{path:path}/format")
 async def format_recipe(path: str) -> dict[str, str]:
     """Format a recipe using LLM and return the reformatted markdown content"""
@@ -146,7 +127,7 @@ async def format_recipe(path: str) -> dict[str, str]:
         raise HTTPException(
             status_code=503, detail="Formatting service temporarily unavailable"
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error formatting '{path}': {e!s}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -276,7 +257,7 @@ async def _search_file_contents(query: str, limit: int) -> list[dict[str, Any]]:
                     }
                 )
 
-        except Exception as e:
+        except HTTPException as e:
             logger.warning(f"Failed to search file '{file_info['path']}': {e!s}")
             continue
 
@@ -332,7 +313,7 @@ async def _get_all_files_recursive(path: str) -> list[dict[str, Any]]:
                 sub_files = await _get_all_files_recursive(subpath)
                 all_files.extend(sub_files)
 
-    except Exception as e:
+    except HTTPException as e:
         # A directory can't be read — log it and continue with what we have.
         logger.warning(f"Failed to list directory '{path}': {e!s}")
 
@@ -419,7 +400,9 @@ async def get_photo(path: str) -> Response:
 
 
 @router.post("/photos/{path:path}")
-async def upload_photo(path: str, file: UploadFile = File(...)) -> dict[str, str]:
+async def upload_photo(
+    path: str, file: Annotated[UploadFile, File()]
+) -> dict[str, str]:
     """Upload a photo for a recipe - only JPEG files allowed"""
     # Ensure path ends with .md for consistency
     if not path.endswith(".md"):
@@ -501,7 +484,7 @@ async def translate_recipe(path: str) -> HTMLResponse:
         html_content = markdown_to_html(translated_content, title, photo_url)
 
         # Cache the result
-        cache_translation(path, translated_content, html_content, file_mtime, has_photo)
+        cache_translation(path, html_content, file_mtime, has_photo)
 
         return HTMLResponse(content=html_content, status_code=200)
 
@@ -516,6 +499,6 @@ async def translate_recipe(path: str) -> HTMLResponse:
         raise HTTPException(
             status_code=503, detail="Translation service temporarily unavailable"
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error translating '{path}': {e!s}")
         raise HTTPException(status_code=500, detail="Internal server error")

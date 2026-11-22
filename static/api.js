@@ -88,12 +88,6 @@ class RecipeAPI {
     });
   }
 
-  async createFile(path, content) {
-    return this.request("POST", `/files/${encodeURIComponent(path)}`, {
-      content,
-    });
-  }
-
   async deleteFile(path) {
     return this.request("DELETE", `/files/${encodeURIComponent(path)}`);
   }

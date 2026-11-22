@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test script to verify version conflict detection works properly.
 This creates a test recipe, simulates concurrent modifications, and tests conflict detection.
@@ -8,7 +7,7 @@ import os
 import tempfile
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
 from api.filesystem import FileSystemManager
@@ -52,21 +51,13 @@ async def test_version_conflict():
         # Simulate second user trying to modify with old version (should conflict)
         modified_content2 = initial_content + "\n- Different ingredient"
 
-        conflict_detected = False
-        try:
+        with pytest.raises(HTTPException) as exc_info:
             await fs_manager.write_file(
                 test_path, modified_content2, file_data["version"]
             )
-            print("ERROR: Version conflict not detected!")
-        except Exception as e:
-            if "version_conflict" in str(e):
-                print("SUCCESS: Version conflict detected correctly!")
-                print(f"Conflict details: {e}")
-                conflict_detected = True
-            else:
-                print(f"ERROR: Unexpected error: {e}")
 
-        assert conflict_detected, "Version conflict should have been detected"
+        assert exc_info.value.status_code == 409
+        assert "version_conflict" in str(exc_info.value.detail)
 
 
 @pytest.mark.asyncio
@@ -103,7 +94,7 @@ def test_api_endpoints():
         os.environ["RECIPES_DIR"] = temp_dir
 
         # Create a test file
-        response = client.post(
+        response = client.put(
             "/api/files/test.md", json={"content": "# Test\nInitial content"}
         )
         assert response.status_code == 200

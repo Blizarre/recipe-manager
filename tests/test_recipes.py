@@ -67,7 +67,8 @@ Test
 
     # Now save with version
     response = client.put(
-        "/api/recipes/test-recipe", json={"content": recipe_content, "version": version}
+        "/api/files/test-recipe.md",
+        json={"content": recipe_content, "version": version},
     )
     assert response.status_code == 200
 
@@ -91,7 +92,7 @@ This should work fine now.
     version = create_response.json()["version"]
 
     response = client.put(
-        "/api/recipes/simple-recipe",
+        "/api/files/simple-recipe.md",
         json={"content": recipe_content, "version": version},
     )
     assert response.status_code == 200
@@ -129,7 +130,7 @@ def test_save_recipe_updates_existing():
 
     initial_content = "# Test Recipe\n\nInitial content"
     response = client.put(
-        "/api/recipes/update-test",
+        "/api/files/update-test.md",
         json={"content": initial_content, "version": version1},
     )
     assert response.status_code == 200
@@ -138,7 +139,7 @@ def test_save_recipe_updates_existing():
     # Update the recipe
     updated_content = "# Test Recipe\n\nUpdated content with more details"
     response = client.put(
-        "/api/recipes/update-test",
+        "/api/files/update-test.md",
         json={"content": updated_content, "version": version2},
     )
     assert response.status_code == 200

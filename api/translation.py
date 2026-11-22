@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 class CachedTranslation:
     """Cached translation with file modification time"""
 
-    translated_content: str
     html_content: str
     file_mtime: float
     has_photo: bool
@@ -46,14 +45,12 @@ def get_cached_translation(
 
 def cache_translation(
     file_path: str,
-    translated_content: str,
     html_content: str,
     file_mtime: float,
     has_photo: bool,
 ):
     """Cache a translation with file modification time"""
     translation_cache[file_path] = CachedTranslation(
-        translated_content=translated_content,
         html_content=html_content,
         file_mtime=file_mtime,
         has_photo=has_photo,

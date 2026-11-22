@@ -51,7 +51,7 @@ def test_create_and_read_file():
     """Test creating and reading a file"""
     # Create a file
     file_content = {"content": "# Test Recipe\n\nThis is a test recipe."}
-    response = client.post("/api/files/test.md", json=file_content)
+    response = client.put("/api/files/test.md", json=file_content)
     assert response.status_code == 200
 
     # Read the file
@@ -66,7 +66,7 @@ def test_update_file():
     """Test updating a file"""
     # Create a file
     file_content = {"content": "Original content"}
-    create_response = client.post("/api/files/update_test.md", json=file_content)
+    create_response = client.put("/api/files/update_test.md", json=file_content)
     version = create_response.json()["version"]
 
     # Update the file
@@ -84,7 +84,7 @@ def test_delete_file():
     """Test deleting a file"""
     # Create a file
     file_content = {"content": "To be deleted"}
-    client.post("/api/files/delete_test.md", json=file_content)
+    client.put("/api/files/delete_test.md", json=file_content)
 
     # Delete the file
     response = client.delete("/api/files/delete_test.md")
@@ -130,7 +130,7 @@ def test_search_content():
     file_content = {
         "content": "# Test Recipe\n\nThis is about chocolate cake with eggs."
     }
-    client.post("/api/files/search_test.md", json=file_content)
+    client.put("/api/files/search_test.md", json=file_content)
 
     # Search for content
     response = client.get("/api/search?q=chocolate")
@@ -144,8 +144,8 @@ def test_search_content():
 def test_search_files():
     """Test filename search functionality"""
     # Create test files
-    client.post("/api/files/chocolate-cookies.md", json={"content": "# Cookies"})
-    client.post("/api/files/vanilla-cake.md", json={"content": "# Cake"})
+    client.put("/api/files/chocolate-cookies.md", json={"content": "# Cookies"})
+    client.put("/api/files/vanilla-cake.md", json={"content": "# Cake"})
 
     # Search for files by name
     response = client.get("/api/search/files?q=chocolate")
@@ -164,7 +164,7 @@ def test_directory_operations():
 
     # Create a file in the directory
     file_content = {"content": "# Category Recipe"}
-    response = client.post("/api/files/test_category/recipe.md", json=file_content)
+    response = client.put("/api/files/test_category/recipe.md", json=file_content)
     assert response.status_code == 200
 
     # List files in directory

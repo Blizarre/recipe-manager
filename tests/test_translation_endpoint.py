@@ -130,7 +130,7 @@ def test_translate_recipe_with_md_extension(mock_fs_manager, mock_translation):
     mock_fs_manager.read_file.assert_called_once_with("test-recipe.md")
 
 
-def test_translate_recipe_file_not_found(mock_fs_manager, mock_translation):
+def test_translate_recipe_file_not_found(mock_fs_manager):
     """Test translation with non-existent recipe file"""
     mock_fs_manager.read_file.side_effect = FileNotFoundError()
 
@@ -142,7 +142,7 @@ def test_translate_recipe_file_not_found(mock_fs_manager, mock_translation):
 
 def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
     """Test translation service error handling"""
-    mock_translate, mock_html = mock_translation
+    mock_translate, _mock_html = mock_translation
 
     # Clear cache to ensure clean test
     translation_cache.clear()
@@ -159,7 +159,7 @@ def test_translate_recipe_translation_error(mock_fs_manager, mock_translation):
 
 def test_translate_recipe_validation_error(mock_fs_manager, mock_translation):
     """Test translation with validation error"""
-    mock_translate, mock_html = mock_translation
+    mock_translate, _mock_html = mock_translation
 
     # Setup mocks
     mock_fs_manager.read_file.return_value = ""
@@ -209,7 +209,7 @@ def test_translate_recipe_path_without_title(mock_fs_manager, mock_translation):
 
 def test_translate_recipe_unexpected_error(mock_fs_manager, mock_translation):
     """Test unexpected error handling"""
-    mock_translate, mock_html = mock_translation
+    mock_translate, _mock_html = mock_translation
 
     # Clear cache to ensure clean test
     translation_cache.clear()
@@ -226,7 +226,7 @@ def test_translate_recipe_unexpected_error(mock_fs_manager, mock_translation):
 
 def test_translate_recipe_path_validation(mock_fs_manager, mock_translation):
     """Test that path validation uses existing filesystem security"""
-    mock_translate, mock_html = mock_translation
+    _mock_translate, _mock_html = mock_translation
 
     # Test with potentially dangerous path
     mock_fs_manager.read_file.side_effect = FileNotFoundError()

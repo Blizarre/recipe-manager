@@ -11,7 +11,7 @@ from fastapi import HTTPException
 class FileSystemManager:
     """Secure file system operations for recipe management"""
 
-    def __init__(self, base_dir: str = None):
+    def __init__(self, base_dir: str | None = None):
         if base_dir is None:
             base_dir = os.getenv("RECIPES_DIR", "recipes")
         self.base_dir = Path(base_dir).resolve()
@@ -54,7 +54,7 @@ class FileSystemManager:
             return sorted(items, key=lambda x: (x["type"] == "file", x["name"]))
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to list directory: {e!s}"
             )
@@ -70,7 +70,7 @@ class FileSystemManager:
                 return await f.read()
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             raise HTTPException(status_code=500, detail=f"Failed to read file: {e!s}")
 
     async def read_file_with_version(self, path: str) -> dict[str, Any]:
@@ -89,11 +89,11 @@ class FileSystemManager:
             return {"path": path, "content": content, "version": version}
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             raise HTTPException(status_code=500, detail=f"Failed to read file: {e!s}")
 
     async def write_file(
-        self, path: str, content: str, expected_version: int = None
+        self, path: str, content: str, expected_version: int | None = None
     ) -> dict[str, Any]:
         """Write content to file with optional version conflict detection"""
         try:
@@ -137,7 +137,7 @@ class FileSystemManager:
             }
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             raise HTTPException(status_code=500, detail=f"Failed to write file: {e!s}")
 
     async def delete_file(self, path: str) -> dict[str, str]:
@@ -158,7 +158,7 @@ class FileSystemManager:
                 raise HTTPException(status_code=400, detail="Path is not a file")
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             raise HTTPException(status_code=500, detail=f"Failed to delete file: {e!s}")
 
     async def create_directory(self, path: str) -> dict[str, str]:
@@ -172,7 +172,7 @@ class FileSystemManager:
             }
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to create directory: {e!s}"
             )
@@ -213,7 +213,7 @@ class FileSystemManager:
                 "message": "Photo saved successfully",
                 "path": str(photo_path.relative_to(self.base_dir)),
             }
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to write photo for {recipe_path}: {e!s}")
             raise HTTPException(status_code=500, detail=f"Failed to save photo: {e!s}")
 
@@ -228,7 +228,7 @@ class FileSystemManager:
                 return await f.read()
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to read photo for {recipe_path}: {e!s}")
             raise HTTPException(status_code=500, detail=f"Failed to read photo: {e!s}")
 
@@ -244,7 +244,7 @@ class FileSystemManager:
                 raise HTTPException(status_code=404, detail="Photo not found")
         except HTTPException:
             raise
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to delete photo for {recipe_path}: {e!s}")
             raise HTTPException(
                 status_code=500, detail=f"Failed to delete photo: {e!s}"

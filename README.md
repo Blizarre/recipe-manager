@@ -99,14 +99,12 @@ OPENROUTER_API_KEY=sk-or-... uv run python main.py
 
 - `GET /api/files` - List files and directories
 - `GET /api/files/{path}` - Get file content
-- `PUT /api/files/{path}` - Update file content
-- `POST /api/files/{path}` - Create new file
+- `PUT /api/files/{path}` - Create or update file content
 - `DELETE /api/files/{path}` - Delete file
 - `POST /api/files/{path}/move` - Rename/move file
 
 ### Recipes
 
-- `PUT /api/recipes/{path}` - Save recipe
 - `POST /api/recipes/{path}` - Create recipe with template
 - `POST /api/recipes/{path}/format` - Auto-format recipe (returns reformatted markdown)
 - `GET /api/recipes/{path}/translate` - Translate recipe to French (returns HTML)
